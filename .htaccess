@@ -1,0 +1,29 @@
+# HARDEM Editor - Proteção de Arquivos
+# Bloquear acesso direto aos arquivos de conteúdo
+
+# Bloquear acesso ao site-content.json
+<Files "site-content.json">
+    Order Allow,Deny
+    Deny from all
+</Files>
+
+# Bloquear acesso aos backups
+<FilesMatch "site-content-backup-.*\.json">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Permitir apenas para localhost durante desenvolvimento
+<Files "site-content.json">
+    Order Deny,Allow
+    Deny from all
+    Allow from 127.0.0.1
+    Allow from ::1
+    Allow from localhost
+</Files>
+
+# Bloquear acesso a arquivos de configuração
+<FilesMatch "\.(htaccess|htpasswd|ini|log|sh|sql)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch> 

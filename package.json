@@ -1,0 +1,27 @@
+{
+  "name": "hardem-editor",
+  "version": "1.0.0",
+  "description": "Sistema de edição in-line para o template HTML Hardem",
+  "main": "index.js",
+  "scripts": {
+    "add-editor": "node apply-editor-to-all-pages.js",
+    "add-keys": "node add-data-keys.js",
+    "setup": "npm install && npm run add-keys && npm run add-editor",
+    "serve": "npx http-server . -p 8000",
+    "process-all": "node process-all-pages.js"
+  },
+  "keywords": [
+    "editor",
+    "template",
+    "html",
+    "inline-editing"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.12"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+} 
