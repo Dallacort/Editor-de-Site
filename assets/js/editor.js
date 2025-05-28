@@ -15,6 +15,12 @@ class HardemEditor {
         this.toolbar = null;
         this.currentElement = null;
         this.mutationObserver = null;
+        this.debouncedSetupEditableElements = this.debounce(() => {
+            if (this.editMode) { // Só executar se ainda estiver em modo de edição
+                console.log("HARDEM Editor: Executando setupEditableElements via debounce.");
+                this.setupEditableElements(document.body);
+            }
+        }, 300); // 300ms delay, ajuste conforme necessário
         
         // Seletores de elementos editáveis
         this.editableSelectors = [
@@ -55,9 +61,11 @@ class HardemEditor {
         this.createStyles();
         this.createToolbar();
         this.createSidePanel();
-        this.loadContent();
-        this.setupMutationObserver();
+        // Mover setupMutationObserver e bindEvents para antes de loadContent
+        this.setupMutationObserver(); 
         this.bindEvents();
+        // Chamar loadContent mais tarde na inicialização
+        this.loadContent(); 
         
         console.log('🎯 HARDEM Editor iniciado com sucesso!');
     }
@@ -632,48 +640,32 @@ class HardemEditor {
                     pointer-events: none !important;
                 }
 
-                /* Permitir que a UI do editor ainda funcione e seja interativa e animada, se necessário */
+                /* Permitir que elementos editáveis e a UI do editor ainda funcionem e sejam interativos */
+                body.hardem-static-mode .hardem-editable-element,
+                body.hardem-static-mode .hardem-editable-element *,
                 body.hardem-static-mode .hardem-editor-toolbar,
                 body.hardem-static-mode .hardem-editor-toolbar *,
                 body.hardem-static-mode .hardem-editor-sidepanel,
                 body.hardem-static-mode .hardem-editor-sidepanel *,
                 body.hardem-static-mode .hardem-editor-alert,
                 body.hardem-static-mode .hardem-editor-alert *,
-                body.hardem-static-mode #hardem-editor-styles
+                body.hardem-static-mode #hardem-editor-styles /* Evitar que os próprios estilos do editor sejam afetados */
                 {
-                    pointer-events: auto !important;
-                    /* Permite que a UI do editor tenha suas próprias transições/animações específicas */
-                    animation-play-state: running !important; /* Se a UI tiver animações, elas rodam */
-                    animation-name: initial !important; 
-                    transition-property: initial !important; 
-                    transition-duration: initial !important; 
+                    transition-property: all !important; /* Restaura transições para a UI */
+                    transition-duration: initial !important; /* Restaura duração original */
+                    /* Não forçar animation-play-state: running aqui; deixar pausado pelo seletor '*' do static-mode */
+                    /* As animações da UI do editor (toolbar, sidepanel fade-in) são geralmente controladas por classes ou JS e não seriam afetadas pelo 'paused' do '*' se forem bem definidas */
+                    animation-name: initial !important; /* Para que não herde 'none' do '*' e permita animações específicas da UI se houver */
+                    pointer-events: auto !important; /* Essencial: reativa interações do mouse */
                 }
 
-                /* Elementos editáveis na página: devem ser interativos (clicáveis) mas estáticos (sem animações/transições) */
-                body.hardem-static-mode .hardem-editable-element,
-                body.hardem-static-mode .hardem-editable-element * /* E seus filhos */
-                {
-                    pointer-events: auto !important; /* Para permitir seleção e edição */
-                    
-                    /* Forçar o estado estático */
-                    animation-play-state: paused !important;
-                    animation-name: none !important;
-                    animation-duration: 0s !important;
-                    transition-property: none !important;
-                    transition-duration: 0s !important;
-                    transform: none !important; /* Útil para botões com transform no hover/active */
-                }
-
-                /* 
-                  Suprimir .hidden-content (overlay) quando o irmão img ou o pai .thumbnail são hoverados no modo estático,
-                  mas apenas se a img é um elemento editável (foco na edição da imagem).
-                */
-                body.hardem-static-mode .thumbnail:has(> img.hardem-editable-element):hover > .hidden-content,
-                body.hardem-static-mode .thumbnail > img.hardem-editable-element:hover + .hidden-content {
-                    display: none !important;
-                    opacity: 0 !important;
-                    visibility: hidden !important;
-                    pointer-events: none !important; /* Garantir que o overlay não seja interativo */
+                body.hardem-static-mode .hardem-editable-element * { /* Filhos de elementos editáveis */
+                    pointer-events: auto !important; /* Reativa interações */
+                     /* Não forçar animation-play-state: running aqui */
+                    animation-name: initial !important; /* Para que não herde 'none' do '*' */
+                    /* Transições para filhos de elementos editáveis geralmente não são necessárias, a menos que tenham seu próprio feedback de edição */
+                    /* transition-property: initial !important; */ /* Pode ser muito permissivo */
+                    /* transition-duration: initial !important; */
                 }
 
                 /* Manter Swiper e Owl Carousel navegáveis se necessário (caso a pausa via JS não seja suficiente) */
@@ -928,20 +920,34 @@ class HardemEditor {
      */
     setupMutationObserver() {
         this.mutationObserver = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                if (mutation.type === 'childList') {
-                    mutation.addedNodes.forEach((node) => {
-                        if (node.nodeType === Node.ELEMENT_NODE) {
-                            this.setupEditableElements(node);
+            let relevantChange = false;
+            for (const mutation of mutations) {
+                if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                    for (const node of mutation.addedNodes) {
+                        if (node.nodeType === Node.ELEMENT_NODE &&
+                            !node.closest('.hardem-editor-toolbar') &&
+                            !node.closest('.hardem-editor-sidepanel') &&
+                            !node.classList.contains('hardem-editable-element') && // Evitar elementos já processados
+                            !node.closest('.hardem-editable-element')) { // Evitar filhos de elementos já processados que podem ser adicionados pelo editor
+                            relevantChange = true;
+                            break;
                         }
-                    });
+                    }
                 }
-            });
+                if (relevantChange) break;
+            }
+
+            if (relevantChange && this.editMode) { // Só acionar se estiver em modo de edição
+                console.log("HARDEM Editor: Mudança relevante detectada no DOM.");
+                this.debouncedSetupEditableElements();
+            }
         });
 
         this.mutationObserver.observe(document.body, {
             childList: true,
-            subtree: true
+            subtree: true,
+            attributes: false, 
+            characterData: false
         });
     }
 
@@ -1009,20 +1015,18 @@ class HardemEditor {
             toggleBtn.innerHTML = '🔒 Desativar Edição';
             toggleBtn.classList.add('active');
             statusSpan.textContent = 'Editando';
-            this.setupEditableElements();
+            console.log("HARDEM Editor: Modo de edição ativado. Chamando setupEditableElements diretamente.");
+            this.setupEditableElements(); // Chamada direta aqui
             this.showAlert('Modo de edição ativado!', 'success');
 
             // Se o modo estático (pause) estiver ativo, reforçar a pausa das bibliotecas JS
             if (this.staticMode) {
-                console.log("HARDEM Editor: Modo Edição ativado com Modo Estático. Reforçando classe e pausa das bibliotecas JS com delay...");
-                document.body.classList.remove('hardem-static-mode'); // Remove para garantir re-aplicação
-                void document.body.offsetWidth; // Força reflow
-                document.body.classList.add('hardem-static-mode'); // Re-adiciona
-                
+                console.log("HARDEM Editor: Modo Edição ativado com Modo Estático. Reforçando pausa das bibliotecas JS com delay...");
+                // Adicionar um pequeno delay para garantir que o setupEditableElements concluiu qualquer reativação
                 setTimeout(() => {
-                    console.log("HARDEM Editor: Executando _updateAnimationLibrariesState(true) após delay e re-aplicação de classe.");
+                    console.log("HARDEM Editor: Executando _updateAnimationLibrariesState(true) após delay.");
                     this._updateAnimationLibrariesState(true);
-                }, 150); // Aumentar um pouco o delay para 150ms
+                }, 100); // 100ms de delay, pode ser ajustado
             }
 
         } else {
@@ -1048,7 +1052,10 @@ class HardemEditor {
     setupEditableElements(container = document) {
         if (!this.editMode) return;
 
-        console.log('🔧 Configurando elementos editáveis...');
+        // Desconectar temporariamente o observer para evitar auto-triggering
+        if (this.mutationObserver) this.mutationObserver.disconnect();
+
+        console.log('🔧 Configurando elementos editáveis...', container === document.body ? '(Document Body)' : container);
 
         // Textos editáveis
         let textCount = 0;
@@ -1126,6 +1133,16 @@ class HardemEditor {
         this.setupCarouselEditing(container);
 
         console.log(`✅ Configuração concluída: ${textCount} textos, ${imageCount} imagens, ${backgroundCount} backgrounds editáveis`);
+    
+        // Reconectar o observer
+        if (this.mutationObserver) {
+            this.mutationObserver.observe(document.body, {
+                childList: true,
+                subtree: true,
+                attributes: false,
+                characterData: false
+            });
+        }
     }
 
     /**
@@ -1243,6 +1260,9 @@ class HardemEditor {
      * Tornar background image editável
      */
     makeBackgroundImageEditable(element) {
+        // Ignorar elementos do editor
+        if (this.isEditorElement(element)) return;
+        
         if (element.classList.contains('hardem-editable-element')) return;
         
         element.classList.add('hardem-editable-element');
@@ -1250,22 +1270,14 @@ class HardemEditor {
         const dataKey = element.getAttribute('data-key') || this.generateDataKey(element);
         element.setAttribute('data-key', dataKey);
 
-        // Não forçar position relative para evitar problemas de layout
-        // O elemento manterá sua posição original
-
-        // Indicador de data-key removido - não é mais necessário pois já aparece no painel
-
-        // Evento de clique para painel lateral
         element.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
             this.selectElement(element);
         });
 
-        // Tooltip
         element.title = `Editar Background: ${dataKey}`;
         
-        // Neutralizar efeitos problemáticos
         this.neutralizeElementEffects(element);
         
         console.log(`🖼️ Background editável: ${dataKey} (${element.tagName})`);
@@ -2084,44 +2096,130 @@ class HardemEditor {
             const saved = localStorage.getItem('siteContent');
             if (saved) {
                 const parsedContent = JSON.parse(saved);
-                // Validar se o conteúdo é um objeto válido
                 if (typeof parsedContent === 'object' && parsedContent !== null) {
                     this.contentMap = parsedContent;
-                    // Só aplicar conteúdo se não estiver vazio e for válido
+                    console.log('📂 Conteúdo carregado do localStorage:', this.contentMap);
+                    
                     if (Object.keys(this.contentMap).length > 0) {
-                        this.applyLoadedContent();
+                        // Primeira tentativa após 500ms
+                        setTimeout(() => {
+                            console.log("HardemEditor: Primeira tentativa de aplicar conteúdo");
+                            this.applyLoadedContent();
+                            
+                            // Segunda tentativa após 1.5s
+                            setTimeout(() => {
+                                console.log("HardemEditor: Segunda tentativa de aplicar conteúdo");
+                                this.applyLoadedContent();
+                                
+                                // Terceira tentativa após 3s
+                                setTimeout(() => {
+                                    console.log("HardemEditor: Terceira tentativa de aplicar conteúdo");
+                                    this.applyLoadedContent();
+                                    
+                                    // Verificação final
+                                    this.verifyBackgroundsApplied();
+                                }, 1500);
+                            }, 1500);
+                        }, 500);
                     }
-                    console.log('📂 Conteúdo carregado:', this.contentMap);
                 }
             }
         } catch (error) {
-            console.error('Erro ao carregar conteúdo, limpando localStorage:', error);
-            // Se há erro no conteúdo salvo, limpar localStorage
+            console.error('Erro ao carregar conteúdo:', error);
             localStorage.removeItem('siteContent');
             this.contentMap = {};
         }
     }
 
     /**
+     * Verificar se os backgrounds foram aplicados corretamente
+     */
+    verifyBackgroundsApplied() {
+        console.log("HardemEditor: Verificando backgrounds aplicados...");
+        
+        Object.entries(this.contentMap).forEach(([dataKey, content]) => {
+            if (typeof content === 'object' && content !== null && content.backgroundImage) {
+                const element = document.querySelector(`[data-key="${dataKey}"]`);
+                
+                if (!element) {
+                    console.warn(`HardemEditor: Elemento ainda não encontrado para ${dataKey}`);
+                    // Tentar buscar por outros atributos ou classes específicas
+                    const possibleElements = document.querySelectorAll('*');
+                    possibleElements.forEach(el => {
+                        // Ignorar elementos do editor
+                        if (this.isEditorElement(el)) return;
+                        
+                        if (!el.hasAttribute('data-key')) {
+                            const computedStyle = window.getComputedStyle(el);
+                            if (computedStyle.backgroundImage.includes(content.backgroundImage.substring(0, 20))) {
+                                console.log(`HardemEditor: Encontrado elemento sem data-key com background correspondente`);
+                                el.setAttribute('data-key', dataKey);
+                                this.ensureBackgroundApplied(el, content.backgroundImage);
+                            }
+                        }
+                    });
+                } else if (!this.isEditorElement(element)) {
+                    const computedStyle = window.getComputedStyle(element);
+                    if (!computedStyle.backgroundImage.includes('data:image')) {
+                        console.log(`HardemEditor: Reaplicando background para ${dataKey}`);
+                        this.ensureBackgroundApplied(element, content.backgroundImage);
+                    }
+                }
+            }
+        });
+    }
+
+    /**
      * Aplicar conteúdo carregado
      */
     applyLoadedContent() {
+        console.log("HardemEditor: Executando applyLoadedContent");
+        
         Object.entries(this.contentMap).forEach(([dataKey, content]) => {
-            const element = document.querySelector(`[data-key="${dataKey}"]`);
-            if (!element) return;
+            let element = document.querySelector(`[data-key="${dataKey}"]`);
+            
+            // Se não encontrar pelo data-key, tentar encontrar por outros meios
+            if (!element && typeof content === 'object' && content.backgroundImage) {
+                console.log(`HardemEditor: Tentando encontrar elemento para ${dataKey} por outros meios`);
+                
+                // Procurar em todos os elementos que podem ter background
+                document.querySelectorAll('*').forEach(el => {
+                    // Ignorar elementos do editor
+                    if (this.isEditorElement(el)) return;
+                    
+                    if (!el.hasAttribute('data-key')) {
+                        const computedStyle = window.getComputedStyle(el);
+                        // Se o elemento tem background e não tem data-key, pode ser nosso alvo
+                        if (computedStyle.backgroundImage && computedStyle.backgroundImage !== 'none') {
+                            el.setAttribute('data-key', dataKey);
+                            element = el;
+                            console.log(`HardemEditor: Elemento encontrado e marcado com data-key ${dataKey}`);
+                        }
+                    }
+                });
+            }
+
+            // Verificar se o elemento encontrado não é parte do editor
+            if (element && this.isEditorElement(element)) {
+                console.log(`HardemEditor: Ignorando elemento do editor para ${dataKey}`);
+                return;
+            }
+
+            if (!element) {
+                console.warn(`HardemEditor: Elemento não encontrado para dataKey: ${dataKey}`);
+                return;
+            }
 
             try {
                 if (element.tagName.toLowerCase() === 'img') {
-                    // Para imagens normais
                     if (typeof content === 'object' && content !== null) {
                         if (content.src) element.src = content.src;
                         if (content.alt) element.alt = content.alt;
                     }
                 } else if (typeof content === 'object' && content !== null && content.backgroundImage) {
-                    // Para background images
-                    element.style.backgroundImage = `url(${content.backgroundImage})`;
+                    console.log(`HardemEditor: Aplicando background para ${dataKey}`);
+                    this.ensureBackgroundApplied(element, content.backgroundImage);
                 } else if (typeof content === 'string' && content.trim()) {
-                    // Para textos - só aplicar se for string válida
                     element.textContent = content;
                 }
             } catch (error) {
@@ -2130,7 +2228,57 @@ class HardemEditor {
         });
     }
 
- 
+    /**
+     * Aplicar background com garantia
+     * @param {HTMLElement} element - Elemento para aplicar o background
+     * @param {string} backgroundImage - URL da imagem em formato data URL
+     */
+    ensureBackgroundApplied(element, backgroundImage) {
+        if (!element || !backgroundImage) return;
+
+        console.log(`HardemEditor: Garantindo aplicação de background`);
+        console.log(`- Elemento:`, element.tagName);
+        console.log(`- Background URL (início):`, backgroundImage.substring(0, 50) + "...");
+
+        // Limpar qualquer background existente
+        element.style.removeProperty('background-image');
+        
+        // Aplicar o novo background de várias formas
+        const bgUrl = `url("${backgroundImage}")`;
+        
+        // Método 1: Direto
+        element.style.backgroundImage = bgUrl;
+        
+        // Método 2: Com !important
+        element.style.setProperty('background-image', bgUrl, 'important');
+        
+        // Método 3: Via CSS inline completo
+        const bgStyles = `
+            background-image: ${bgUrl} !important;
+            background-repeat: no-repeat !important;
+            background-position: center center !important;
+            background-size: cover !important;
+        `;
+        element.setAttribute('style', element.getAttribute('style') + ';' + bgStyles);
+        
+        // Forçar repaint
+        void element.offsetHeight;
+        
+        // Verificar se foi aplicado
+        setTimeout(() => {
+            const computedStyle = window.getComputedStyle(element);
+            console.log(`- Background computado:`, computedStyle.backgroundImage);
+            
+            // Se ainda não foi aplicado, tentar uma última vez
+            if (!computedStyle.backgroundImage.includes(backgroundImage.substring(0, 20))) {
+                console.warn(`- Background não detectado, tentando novamente...`);
+                element.style.cssText += bgStyles;
+            }
+        }, 100);
+
+        // Marcar como processado
+        element.setAttribute('data-bg-processed', 'true');
+    }
 
     /**
      * Mostrar alerta
@@ -2498,6 +2646,36 @@ class HardemEditor {
             console.error('Erro ao exportar:', error);
             this.showAlert('Erro ao exportar conteúdo!', 'error');
         }
+    }
+
+    /**
+     * Função Debounce
+     */
+    debounce(func, delay) {
+        let timeout;
+        return function(...args) {
+            const context = this;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(context, args), delay);
+        };
+    }
+
+    /**
+     * Verificar se o elemento é parte do editor
+     * @param {HTMLElement} element - Elemento para verificar
+     * @returns {boolean} - True se o elemento for parte do editor
+     */
+    isEditorElement(element) {
+        return element.closest('.hardem-editor-toolbar') !== null ||
+               element.closest('.hardem-editor-sidepanel') !== null ||
+               element.classList.contains('hardem-editor-toolbar') ||
+               element.classList.contains('hardem-editor-sidepanel') ||
+               element.classList.contains('hardem-editor-btn') ||
+               element.classList.contains('hardem-editor-controls') ||
+               element.hasAttribute('id') && (
+                   element.id.startsWith('hardem-') ||
+                   element.id.includes('editor')
+               );
     }
 }
 
