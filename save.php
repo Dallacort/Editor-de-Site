@@ -33,6 +33,34 @@ function sendResponse($status, $message, $data = null) {
     exit();
 }
 
+// Função para criar pasta de backups
+function createBackupsDir() {
+    $backupsDir = 'backups';
+    
+    if (!is_dir($backupsDir)) {
+        if (!mkdir($backupsDir, 0755, true)) {
+            return false;
+        }
+        
+        // Criar arquivo .htaccess para proteger a pasta de backups
+        $htaccessContent = "# Proteger pasta de backups\n";
+        $htaccessContent .= "Order deny,allow\n";
+        $htaccessContent .= "Deny from all\n";
+        $htaccessContent .= "# Permitir apenas acesso local para desenvolvimento\n";
+        $htaccessContent .= "Allow from 127.0.0.1\n";
+        $htaccessContent .= "Allow from ::1\n";
+        $htaccessContent .= "Allow from localhost\n";
+        
+        file_put_contents($backupsDir . '/.htaccess', $htaccessContent);
+        
+        // Criar arquivo index.php para maior segurança
+        $indexContent = "<?php\n// Acesso negado\nheader('HTTP/1.0 403 Forbidden');\nexit('Acesso negado');";
+        file_put_contents($backupsDir . '/index.php', $indexContent);
+    }
+    
+    return $backupsDir;
+}
+
 // Verificar se é uma requisição POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     sendResponse('error', 'Apenas requisições POST são aceitas.');
@@ -75,11 +103,40 @@ try {
     
     // Nome do arquivo de destino
     $filename = 'site-content.json';
+    $backupCreated = false;
+    $backupPath = null;
     
     // Fazer backup do arquivo anterior (se existir)
     if (file_exists($filename)) {
+        $backupsDir = createBackupsDir();
+        
+        if ($backupsDir === false) {
+            sendResponse('error', 'Não foi possível criar a pasta de backups.');
+        }
+        
         $backupName = 'site-content-backup-' . date('Y-m-d-H-i-s') . '.json';
-        copy($filename, $backupName);
+        $backupPath = $backupsDir . '/' . $backupName;
+        
+        if (copy($filename, $backupPath)) {
+            $backupCreated = true;
+            
+            // Limpar backups antigos (manter apenas os últimos 30)
+            $backupFiles = glob($backupsDir . '/site-content-backup-*.json');
+            if (count($backupFiles) > 30) {
+                // Ordenar por data de modificação (mais antigos primeiro)
+                usort($backupFiles, function($a, $b) {
+                    return filemtime($a) - filemtime($b);
+                });
+                
+                // Remover os mais antigos, mantendo apenas os últimos 30
+                $filesToRemove = array_slice($backupFiles, 0, count($backupFiles) - 30);
+                foreach ($filesToRemove as $fileToRemove) {
+                    unlink($fileToRemove);
+                }
+            }
+        } else {
+            sendResponse('error', 'Erro ao criar backup. Verifique as permissões da pasta backups.');
+        }
     }
     
     // Salvar dados no arquivo JSON
@@ -101,12 +158,20 @@ try {
     }
     
     // Sucesso!
-    sendResponse('success', 'Conteúdo salvo com sucesso.', [
+    $responseData = [
         'filename' => $filename,
         'size' => $bytesWritten,
-        'elements' => count($contentMap),
-        'backup' => isset($backupName) ? $backupName : null
-    ]);
+        'elements' => count($contentMap)
+    ];
+    
+    if ($backupCreated && $backupPath) {
+        $responseData['backup'] = $backupPath;
+        $responseData['backup_created'] = true;
+    } else {
+        $responseData['backup_created'] = false;
+    }
+    
+    sendResponse('success', 'Conteúdo salvo com sucesso.', $responseData);
     
 } catch (Exception $e) {
     sendResponse('error', 'Erro interno do servidor: ' . $e->getMessage());
