@@ -854,6 +854,131 @@ class HardemEditor {
                     transition-property: none !important; /* Também para transições, caso AOS use */
                     transition-duration: 0s !important;
                 }
+
+                /* ===== PAINEL DE ELEMENTOS SOBREPOSTOS ===== */
+                .overlapping-elements-list {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                    max-height: 300px;
+                    overflow-y: auto;
+                    padding-right: 5px;
+                }
+
+                .overlapping-element-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    background: white;
+                    padding: 8px 12px;
+                    border-radius: 4px;
+                    border: 1px solid #ddd;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                }
+
+                .overlapping-element-item:hover {
+                    border-color: #3498db;
+                    background: #f0f8ff;
+                    transform: translateY(-1px);
+                }
+
+                .element-icon {
+                    font-size: 18px;
+                }
+
+                .element-info {
+                    flex: 1;
+                }
+
+                .element-type {
+                    font-size: 12px;
+                    color: #666;
+                    font-family: monospace;
+                }
+
+                .element-preview {
+                    font-size: 13px;
+                    color: #333;
+                    max-width: 180px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+
+                .element-indicator {
+                    width: 20px;
+                    height: 20px;
+                    background: #3498db;
+                    color: white;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 11px;
+                    font-weight: bold;
+                }
+
+                /* Desativar efeitos hover em elementos selecionados */
+                .hardem-disable-hover,
+                .hardem-disable-hover:hover,
+                .hardem-disable-hover * {
+                    animation: none !important;
+                    transition: none !important;
+                    transform: none !important;
+                }
+
+                .hardem-disable-hover [class*="hidden-content"],
+                .hardem-disable-hover [class*="overlay"],
+                .hardem-disable-hover [class*="hover"] {
+                    display: none !important;
+                    opacity: 0 !important;
+                    visibility: hidden !important;
+                }
+
+                
+                 /* Indicador de processamento */
+                .hardem-editor-processing {
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: rgba(0, 0, 0, 0.8);
+                    color: white;
+                    padding: 20px 30px;
+                    border-radius: 8px;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 15px;
+                    z-index: 999999;
+                    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+                    transition: opacity 0.3s ease;
+                }
+
+                .hardem-editor-processing.fade-out {
+                    opacity: 0;
+                }
+
+                .processing-spinner {
+                    width: 30px;
+                    height: 30px;
+                    border: 3px solid rgba(255, 255, 255, 0.3);
+                    border-radius: 50%;
+                    border-top-color: white;
+                    animation: spin 1s linear infinite;
+                }
+
+                .processing-message {
+                    font-size: 14px;
+                    font-weight: 500;
+                }
+
+                @keyframes spin {
+                    to { transform: rotate(360deg); }
+                }
+
+
             </style>
         `;
         
@@ -986,16 +1111,6 @@ class HardemEditor {
             e.stopPropagation();
         });
 
-        // Fechar painel ao clicar fora
-        document.addEventListener('click', (e) => {
-            if (this.sidePanel.classList.contains('visible') && 
-                !this.sidePanel.contains(e.target) && 
-                !e.target.closest('.hardem-editor-toolbar')) {
-                if (!e.target.closest('.hardem-editable-element')) {
-                    this.closeSidePanel();
-                }
-            }
-        });
 
         // Modo estático
         document.getElementById('hardem-toggle-static').addEventListener('click', () => {
@@ -1161,11 +1276,6 @@ class HardemEditor {
         const dataKey = element.getAttribute('data-key') || this.generateDataKey(element);
         element.setAttribute('data-key', dataKey);
         
-        // Não forçar position relative para evitar problemas de layout
-        // O elemento manterá sua posição original
-        
-        // Indicador de data-key removido - não é mais necessário pois já aparece no painel
-
         // Tooltip
         element.title = `Editar: ${dataKey}`;
 
@@ -1176,10 +1286,11 @@ class HardemEditor {
             this.startInlineEditing(element);
         };
 
+        // Substituir o evento de clique pelo nosso novo manipulador
         const handleClick = (e) => {
             e.preventDefault();
             e.stopPropagation();
-            this.selectElement(element);
+            this.handleElementClick(e);
         };
 
         element.addEventListener('dblclick', handleDoubleClick);
@@ -1387,7 +1498,9 @@ class HardemEditor {
                 <strong>Elemento:</strong> &lt;${tagName}&gt;${element.className ? '.' + element.className.split(' ').join('.') : ''}
             </div>
         `;
-
+        
+        // Removidas as verificações de isInServiceCard e os alertas relacionados
+        
         if (tagName === 'img') {
             // Seção de edição de imagem normal
             panelHTML += `
@@ -1808,13 +1921,19 @@ class HardemEditor {
                 
                 // Preview antes de aplicar
                 if (confirm('Deseja substituir a imagem atual?')) {
-                    imgElement.src = newSrc;
-                    const dataKey = imgElement.getAttribute('data-key');
-                    this.contentMap[dataKey] = {
-                        src: newSrc,
-                        alt: imgElement.alt
-                    };
-                    this.showAlert('Imagem atualizada!', 'success');
+                    // Redimensionar a imagem antes de aplicar
+                    this.resizeImageToFit(imgElement, newSrc, (resizedImage) => {
+                        // Aplicar a imagem redimensionada
+                        imgElement.src = resizedImage;
+                        
+                        const dataKey = imgElement.getAttribute('data-key');
+                        this.contentMap[dataKey] = {
+                            src: resizedImage,
+                            alt: imgElement.alt || ''
+                        };
+                        
+                        this.showAlert('Imagem atualizada com sucesso!', 'success');
+                    });
                 }
             };
             reader.readAsDataURL(file);
@@ -1852,7 +1971,7 @@ class HardemEditor {
         }, 500);
     }
 
-    /**
+        /**
      * Upload de background image
      */
     uploadBackgroundImage(element) {
@@ -1869,12 +1988,89 @@ class HardemEditor {
                 const newSrc = e.target.result;
                 
                 if (confirm('Deseja substituir o background atual?')) {
-                    element.style.backgroundImage = `url(${newSrc})`;
-                    const dataKey = element.getAttribute('data-key');
-                    this.contentMap[dataKey] = {
-                        backgroundImage: newSrc
+                    // Extrair as dimensões do background atual
+                    // Para backgrounds, precisamos criar temporariamente uma imagem
+                    // para obter as dimensões atuais
+                    const tempImg = new Image();
+                    tempImg.onload = () => {
+                        // Agora temos as dimensões da imagem de background atual
+                        const originalWidth = tempImg.width;
+                        const originalHeight = tempImg.height;
+                        
+                        // Configurar o elemento para simular uma imagem
+                        const pseudoImg = {
+                            naturalWidth: originalWidth,
+                            naturalHeight: originalHeight,
+                            closest: (selector) => element.closest(selector)
+                        };
+                        
+                        // Mostrar feedback de processamento
+                        const removeProcessingMessage = this.showProcessingMessage('Processando imagem...');
+                        
+                        // Redimensionar
+                        this.resizeImageToFit(pseudoImg, newSrc, (resizedImage) => {
+                            // Remover mensagem de processamento
+                            removeProcessingMessage();
+                            
+                            // Aplicar o background redimensionado
+                            element.style.backgroundImage = `url("${resizedImage}")`;
+                            
+                            const dataKey = element.getAttribute('data-key');
+                            if (dataKey) {
+                                this.contentMap[dataKey] = {
+                                    backgroundImage: resizedImage
+                                };
+                            }
+                            
+                            this.showAlert('Background atualizado com sucesso!', 'success');
+                        });
                     };
-                    this.showAlert('Background atualizado!', 'success');
+                    
+                    // Obter a URL atual do background para carregar na imagem temporária
+                    const currentBg = window.getComputedStyle(element).backgroundImage;
+                    if (currentBg && currentBg !== 'none') {
+                        // Extrair a URL da string 'url("...")'
+                        const urlMatch = currentBg.match(/url\(['"]?([^'"]+)['"]?\)/i);
+                        if (urlMatch && urlMatch[1]) {
+                            tempImg.src = urlMatch[1];
+                        } else {
+                            // Se não conseguir extrair, usar dimensões padrão
+                            this.resizeImageToFit({
+                                naturalWidth: 800,
+                                naturalHeight: 600,
+                                closest: (selector) => element.closest(selector)
+                            }, newSrc, (resizedImage) => {
+                                element.style.backgroundImage = `url("${resizedImage}")`;
+                                
+                                const dataKey = element.getAttribute('data-key');
+                                if (dataKey) {
+                                    this.contentMap[dataKey] = {
+                                        backgroundImage: resizedImage
+                                    };
+                                }
+                                
+                                this.showAlert('Background atualizado!', 'success');
+                            });
+                        }
+                    } else {
+                        // Se não houver background atual, usar dimensões padrão
+                        this.resizeImageToFit({
+                            naturalWidth: 800,
+                            naturalHeight: 600,
+                            closest: (selector) => element.closest(selector)
+                        }, newSrc, (resizedImage) => {
+                            element.style.backgroundImage = `url("${resizedImage}")`;
+                            
+                            const dataKey = element.getAttribute('data-key');
+                            if (dataKey) {
+                                this.contentMap[dataKey] = {
+                                    backgroundImage: resizedImage
+                                };
+                            }
+                            
+                            this.showAlert('Background atualizado!', 'success');
+                        });
+                    }
                 }
             };
             reader.readAsDataURL(file);
@@ -1911,20 +2107,26 @@ class HardemEditor {
                 const newSrc = e.target.result;
                 
                 if (confirm('Deseja substituir esta imagem do slide?')) {
-                    imgElement.src = newSrc;
-                    const dataKey = imgElement.getAttribute('data-key');
-                    this.contentMap[dataKey] = {
-                        src: newSrc,
-                        alt: imgElement.alt
-                    };
-                    
-                    // Atualizar preview no painel
-                    const preview = document.querySelector(`#slide-alt-${index}`).previousElementSibling;
-                    if (preview && preview.tagName.toLowerCase() === 'img') {
-                        preview.src = newSrc;
-                    }
-                    
-                    this.showAlert('Imagem do slide atualizada!', 'success');
+                    // Usar a função de redimensionamento
+                    this.resizeImageToFit(imgElement, newSrc, (resizedImage) => {
+                        imgElement.src = resizedImage;
+                        
+                        const dataKey = imgElement.getAttribute('data-key');
+                        if (dataKey) {
+                            this.contentMap[dataKey] = {
+                                src: resizedImage,
+                                alt: imgElement.alt || ''
+                            };
+                        }
+                        
+                        this.showAlert('Imagem do slide atualizada!', 'success');
+                        
+                        // Atualizar preview no painel se necessário
+                        const previewImg = document.getElementById(`slide-img-preview-${index}`);
+                        if (previewImg) {
+                            previewImg.src = resizedImage;
+                        }
+                    });
                 }
             };
             reader.readAsDataURL(file);
@@ -1989,6 +2191,28 @@ class HardemEditor {
         input.click();
     }
 
+
+            /**
+     * Mostrar feedback visual durante o processamento de imagens
+     * @param {string} message - Mensagem a ser exibida
+     */
+    showProcessingMessage(message) {
+        const processingDiv = document.createElement('div');
+        processingDiv.className = 'hardem-editor-processing';
+        processingDiv.innerHTML = `
+            <div class="processing-spinner"></div>
+            <div class="processing-message">${message}</div>
+        `;
+        
+        document.body.appendChild(processingDiv);
+        
+        // Retornar função para remover a mensagem
+        return () => {
+            processingDiv.classList.add('fade-out');
+            setTimeout(() => processingDiv.remove(), 500);
+        };
+    }
+
     /**
      * Desabilitar edição
      */
@@ -1996,12 +2220,6 @@ class HardemEditor {
         document.querySelectorAll('.hardem-editable-element').forEach(element => {
             element.classList.remove('hardem-editable-element', 'editing', 'hardem-highlight-element');
             element.contentEditable = false;
-            element.removeAttribute('title');
-            
-            // Restaurar efeitos originais
-            this.restoreElementEffects(element);
-            
-            // Indicador de data-key removido - não há mais necessidade de limpeza
 
             // Remover overlays
             const overlay = element.querySelector('.hardem-image-overlay');
@@ -2677,6 +2895,396 @@ class HardemEditor {
                    element.id.includes('editor')
                );
     }
+
+    /**
+     * Identificar elementos sobrepostos no ponto de clique
+     * @param {Event} event - O evento de clique
+     * @returns {Array} - Array de elementos sobrepostos
+     */
+    getOverlappingElements(event) {
+        const elements = [];
+        const elementsFromPoint = document.elementsFromPoint(event.clientX, event.clientY);
+        
+        // Primeiro, coletar todos os elementos potencialmente editáveis
+        for (const el of elementsFromPoint) {
+            // Ignorar elementos do editor
+            if (this.isEditorElement(el)) continue;
+            
+            // Verificar se é um elemento potencialmente editável
+            if (el.hasAttribute('data-key') || 
+                this.editableSelectors.some(selector => el.matches(selector)) ||
+                el.tagName === 'IMG' ||
+                (window.getComputedStyle(el).backgroundImage !== 'none' && 
+                 !window.getComputedStyle(el).backgroundImage.includes('gradient'))) {
+                elements.push(el);
+            }
+        }
+        
+        // Agora, filtrar elementos problemáticos
+        const filteredElements = elements.filter(el => {
+            // Filtrar elementos que causam problemas específicos
+            
+            // Não permitir edição do container inteiro single-service-style-4
+            if (el.classList.contains('single-service-style-4')) {
+                return false;
+            }
+            
+            // Se for o link principal do serviço, ignorar
+            if (el.tagName === 'A' && el.classList.contains('single-service-style-4')) {
+                return false;
+            }
+            
+            // Se for span dentro do hidden-content (botão "View Details"), permitir - é seguro
+            if (el.closest('.hidden-content') && el.tagName === 'SPAN') {
+                return true;
+            }
+            
+            // Se for div.hidden-content, ignorar - editar apenas elementos dentro dela
+            if (el.classList.contains('hidden-content')) {
+                return false;
+            }
+            
+            // Se for div.top dentro dos serviços, permitir - é seguro para edição de conteúdo
+            if (el.classList.contains('top') && el.closest('.single-service-style-4')) {
+                return true;
+            }
+            
+            // Permitir elementos específicos dentro dos serviços (textos e imagens)
+            if (el.closest('.single-service-style-4')) {
+                return el.tagName === 'H5' || 
+                       el.tagName === 'P' || 
+                       el.tagName === 'IMG' || 
+                       el.tagName === 'SPAN';
+            }
+            
+            // Por padrão, permitir outros elementos
+            return true;
+        });
+        
+        // Limitar a 5 elementos mais externos para evitar elementos muito pequenos/internos
+        return filteredElements.slice(0, 5);
+    }
+
+    /**
+     * Verificar se um elemento é seguro para edição direta sem quebrar o layout
+     * @param {HTMLElement} element - Elemento para verificar
+     * @returns {boolean} - true se for seguro para edição
+     */
+    isSafeForDirectEdit(element) {
+        // Se for o container do serviço inteiro, não é seguro editar diretamente
+        if (element.classList.contains('single-service-style-4')) {
+            return false;
+        }
+        
+        // Se for o link principal do serviço, não é seguro
+        if (element.tagName === 'A' && element.classList.contains('single-service-style-4')) {
+            return false;
+        }
+        
+        // Por padrão, outros elementos são considerados seguros
+        return true;
+    }
+
+    /**
+     * Quando um elemento é clicado, verificar se há sobreposições e se é seguro editar
+     * @param {Event} event - Evento de clique
+     */
+    handleElementClick(event) {
+        // Impedir comportamento padrão
+        event.preventDefault();
+        event.stopPropagation();
+        
+        // Obter elementos sobrepostos usando o método filtrado
+        const overlappingElements = this.getOverlappingElements(event);
+        
+        // Caso especial para overlay de imagens (hidden-content)
+        if (event.target.closest('.hidden-content') || event.target.classList.contains('hidden-content')) {
+            // Se clicar no overlay, sempre mostrar o painel de sobreposições
+            // incluindo tanto o texto do botão quanto a imagem de fundo
+            if (overlappingElements.length > 0) {
+                this.showOverlappingElementsPanel(overlappingElements);
+                return;
+            }
+        }
+        
+        // Tratar situação específica de cards de serviço
+        const clickedElement = event.target;
+        if (clickedElement.classList.contains('single-service-style-4') || 
+            (clickedElement.tagName === 'A' && clickedElement.classList.contains('single-service-style-4'))) {
+            
+            // Encontrar elementos seguros dentro do serviço para edição
+            const safeElements = [];
+            
+            // Adicionar título
+            const title = clickedElement.querySelector('h5.title');
+            if (title) safeElements.push(title);
+            
+            // Adicionar descrição
+            const desc = clickedElement.querySelector('p.disc');
+            if (desc) safeElements.push(desc);
+            
+            // Adicionar imagem
+            const img = clickedElement.querySelector('img');
+            if (img) safeElements.push(img);
+            
+            // Adicionar botão "View Details"
+            const viewBtn = clickedElement.querySelector('.hidden-content span');
+            if (viewBtn) safeElements.push(viewBtn);
+            
+            // Se encontramos elementos seguros, mostrar painel de elementos sobrepostos com eles
+            if (safeElements.length > 0) {
+                this.showOverlappingElementsPanel(safeElements);
+                return;
+            }
+        }
+        
+        // Forçar exibição de panel para elementos sobrepostos quando há mais de um
+        // Isto é uma mudança importante - removemos a verificação isSafeForDirectEdit
+        if (overlappingElements.length > 1) {
+            this.showOverlappingElementsPanel(overlappingElements);
+            return;
+        }
+        
+        // Se houver apenas um elemento, selecionar normalmente
+        if (overlappingElements.length === 1) {
+            this.selectElement(overlappingElements[0]);
+            return;
+        }
+        
+        // Se não há elementos editáveis após a filtragem, informar ao usuário
+        if (overlappingElements.length === 0) {
+            this.showAlert('Nenhum elemento editável encontrado nesta área.', 'error');
+        }
+    }
+
+    /**
+     * Mostrar painel com elementos sobrepostos
+     * @param {Array} elements - Elementos sobrepostos
+     */
+    showOverlappingElementsPanel(elements) {
+        // Abrir painel lateral
+        this.openSidePanel();
+        
+        // Armazenar elementos para uso posterior
+        this.overlappingElements = elements;
+        
+        // Gerar conteúdo do painel
+        const content = document.getElementById('hardem-panel-content');
+        
+        let panelHTML = `
+            <div class="hardem-editor-info">
+                <strong>Elementos sobrepostos detectados!</strong><br>
+                Selecione qual elemento você deseja editar:
+            </div>
+            <div class="hardem-editor-section">
+                <div class="hardem-editor-section-header">
+                    <span>Camadas disponíveis (${elements.length})</span>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="hardem-editor-section-content">
+                    <div class="overlapping-elements-list">
+        `;
+        
+        // Adicionar cada elemento à lista
+        elements.forEach((element, index) => {
+            const elementType = element.tagName.toLowerCase();
+            const dataKey = element.getAttribute('data-key') || `elemento-${index + 1}`;
+            const hasImage = element.tagName === 'IMG' || element.querySelector('img');
+            const hasBackground = window.getComputedStyle(element).backgroundImage !== 'none';
+            
+            // Identificar o tipo de conteúdo para o ícone
+            let icon = '📄';
+            if (hasImage) icon = '🖼️';
+            else if (hasBackground) icon = '🎨';
+            
+            // Extrair texto representativo
+            let previewText = '';
+            if (element.textContent) {
+                previewText = element.textContent.trim().substring(0, 20) + (element.textContent.length > 20 ? '...' : '');
+            } else if (element.alt) {
+                previewText = `Imagem: ${element.alt}`;
+            } else if (hasBackground) {
+                previewText = 'Background image';
+            } else {
+                previewText = `${elementType}`;
+            }
+            
+            panelHTML += `
+                <div class="overlapping-element-item" data-index="${index}">
+                    <div class="element-icon">${icon}</div>
+                    <div class="element-info">
+                        <div class="element-type">&lt;${elementType}&gt;${element.className ? ' .' + element.className.split(' ')[0] : ''}</div>
+                        <div class="element-preview">${previewText}</div>
+                    </div>
+                    <div class="element-indicator">${index + 1}</div>
+                </div>
+            `;
+        });
+        
+        panelHTML += `
+                    </div>
+                    <button class="hardem-editor-btn-outline" style="margin-top: 10px;" 
+                            id="highlight-overlapping-elements">
+                        Destacar todas as camadas
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Adicionar o HTML ao painel
+        content.innerHTML = panelHTML;
+        
+        // Adicionar eventos aos itens da lista
+        document.querySelectorAll('.overlapping-element-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const index = parseInt(item.getAttribute('data-index'));
+                this.selectElementFromOverlap(index);
+            });
+        });
+        
+        // Adicionar evento ao botão de destaque
+        document.getElementById('highlight-overlapping-elements')?.addEventListener('click', () => {
+            this.highlightOverlappingElements();
+        });
+    }
+
+    /**
+     * Selecionar elemento a partir da lista de sobrepostos
+     * @param {number} index - Índice do elemento no array
+     */
+    selectElementFromOverlap(index) {
+        const element = this.overlappingElements[index];
+        if (!element) return;
+        
+        // Desativar animações de hover temporariamente para esse elemento
+        this.disableHoverEffects(element);
+        
+        // Selecionar o elemento
+        this.selectElement(element);
+    }
+
+    /**
+     * Destacar todos os elementos sobrepostos
+     */
+    highlightOverlappingElements() {
+        if (!this.overlappingElements || !this.overlappingElements.length) return;
+        
+        // Remover destaques existentes
+        document.querySelectorAll('.hardem-highlight-element').forEach(el => {
+            el.classList.remove('hardem-highlight-element');
+        });
+        
+        // Adicionar destaque a cada elemento com um atraso
+        this.overlappingElements.forEach((element, index) => {
+            setTimeout(() => {
+                element.classList.add('hardem-highlight-element');
+                
+                // Remover o destaque após um tempo
+                setTimeout(() => {
+                    element.classList.remove('hardem-highlight-element');
+                }, 1000);
+            }, index * 500); // Destaque sequencial com 500ms de diferença
+        });
+    }
+
+    /**
+     * Desativar efeitos de hover em um elemento específico
+     * @param {Element} element - O elemento alvo
+     */
+    disableHoverEffects(element) {
+        // Adicionar uma classe especial para desativar hover
+        element.classList.add('hardem-disable-hover');
+        
+        // Voltar ao normal após a edição
+        setTimeout(() => {
+            element.classList.remove('hardem-disable-hover');
+        }, 5000); // 5 segundos é tempo suficiente para edição
+    }
+
+    /**
+     * Redimensiona uma imagem para manter as dimensões desejadas
+     * @param {HTMLImageElement} imageElement - Elemento de imagem a ser substituído
+     * @param {string} newImageSrc - Nova fonte da imagem (geralmente uma data URL)
+     * @param {Function} callback - Função de callback que recebe a imagem redimensionada
+     */
+    resizeImageToFit(imageElement, newImageSrc, callback) {
+        // Salvar as dimensões da imagem original
+        const originalWidth = imageElement.naturalWidth || imageElement.width;
+        const originalHeight = imageElement.naturalHeight || imageElement.height;
+        
+        // Verificar se está em uma área de serviços ou outro conjunto padronizado
+        const isServiceImage = imageElement.closest('.single-service-style-4') !== null;
+        const isPortfolioImage = imageElement.closest('.single-project-area-one') !== null;
+        
+        // Criar uma nova imagem para obter dimensões do novo arquivo
+        const img = new Image();
+        img.onload = () => {
+            let canvas = document.createElement('canvas');
+            let ctx = canvas.getContext('2d');
+            
+            // Configurar o canvas para as dimensões desejadas
+            if (isServiceImage || isPortfolioImage) {
+                // Manter as dimensões exatas da imagem original
+                canvas.width = originalWidth;
+                canvas.height = originalHeight;
+            } else {
+                // Para outras imagens, manter pelo menos a proporção
+                const aspectRatio = originalWidth / originalHeight;
+                const newAspectRatio = img.width / img.height;
+                
+                if (Math.abs(aspectRatio - newAspectRatio) > 0.1) {
+                    // Se a proporção for significativamente diferente
+                    canvas.width = originalWidth;
+                    canvas.height = originalHeight;
+                } else {
+                    // Se a proporção for semelhante, ajustar para não perder qualidade
+                    const maxDimension = Math.max(originalWidth, originalHeight);
+                    if (img.width > maxDimension || img.height > maxDimension) {
+                        // Redimensionar imagens grandes
+                        const scale = maxDimension / Math.max(img.width, img.height);
+                        canvas.width = img.width * scale;
+                        canvas.height = img.height * scale;
+                    } else {
+                        // Manter tamanho original se for menor
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                    }
+                }
+            }
+            
+            // Desenhar a imagem com as novas dimensões
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            // Convertê-la para data URL com qualidade adequada
+            let resizedImageData;
+            try {
+                // Tentar usar o formato original (normalmente JPEG para fotos, PNG para transparência)
+                const format = newImageSrc.includes('data:image/png') ? 'image/png' : 'image/jpeg';
+                resizedImageData = canvas.toDataURL(format, 0.9);  // 0.9 = 90% de qualidade para JPEGs
+            } catch (e) {
+                // Fallback para JPEG em caso de erro
+                resizedImageData = canvas.toDataURL('image/jpeg', 0.9);
+            }
+            
+            // Reportar dimensões para debug
+            console.log(`Imagem redimensionada: ${canvas.width}x${canvas.height}`);
+            
+            // Chamar o callback com a imagem redimensionada
+            callback(resizedImageData);
+        };
+        
+        // Se ocorrer erro no carregamento, usar a imagem original
+        img.onerror = () => {
+            console.error('Erro ao carregar imagem para redimensionamento');
+            callback(newImageSrc);
+        };
+        
+        // Iniciar o processo carregando a imagem
+        img.src = newImageSrc;
+    }
 }
 
 // Inicialização automática quando o DOM estiver pronto
@@ -2722,4 +3330,4 @@ if (document.readyState === 'loading') {
 }
 
 // Exportar para uso global
-window.HardemEditor = HardemEditor; 
+window.HardemEditor = HardemEditor;
