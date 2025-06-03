@@ -1,12 +1,12 @@
 {
     "contentMap": {
-        "index_content_label_6": "View Detailsss"
+        "null": "55"
     },
     "metadata": {
-        "lastUpdate": "2025-06-01 05:56:07",
+        "lastUpdate": "2025-06-02 00:59:35",
         "userAgent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/134.0.0.0 Safari\/537.36 OPR\/119.0.0.0",
         "ip": "::1",
-        "url": "http:\/\/localhost:8000\/",
+        "url": "http:\/\/localhost:8000\/index.html",
         "totalElements": 1,
         "version": "1.0.0"
     }
