@@ -9,7 +9,6 @@ class HardemEditor {
     constructor() {
         // Estado do editor
         this.editMode = false;
-        this.staticMode = false;
         this.contentMap = {};
         this.sidePanel = null;
         this.toolbar = null;
@@ -1003,9 +1002,6 @@ class HardemEditor {
                 <button id="hardem-open-panel" class="hardem-editor-btn">
                     ⚙️ Painel
                 </button>
-                <button id="hardem-toggle-static" class="hardem-editor-btn">
-                    ⏸️ Pausar
-                </button>
                 <button id="hardem-save-content" class="hardem-editor-btn success">
                     💾 Salvar
                 </button>
@@ -1099,8 +1095,6 @@ class HardemEditor {
             this.saveContent();
         });
 
-    
-
         // Reset de emergência
         document.getElementById('hardem-emergency-reset').addEventListener('click', () => {
             this.emergencyReset();
@@ -1109,12 +1103,6 @@ class HardemEditor {
         // Scroll inteligente no painel
         this.sidePanel.addEventListener('wheel', (e) => {
             e.stopPropagation();
-        });
-
-
-        // Modo estático
-        document.getElementById('hardem-toggle-static').addEventListener('click', () => {
-            this.toggleStaticMode();
         });
     }
 
@@ -1134,16 +1122,6 @@ class HardemEditor {
             this.setupEditableElements(); // Chamada direta aqui
             this.showAlert('Modo de edição ativado!', 'success');
 
-            // Se o modo estático (pause) estiver ativo, reforçar a pausa das bibliotecas JS
-            if (this.staticMode) {
-                console.log("HARDEM Editor: Modo Edição ativado com Modo Estático. Reforçando pausa das bibliotecas JS com delay...");
-                // Adicionar um pequeno delay para garantir que o setupEditableElements concluiu qualquer reativação
-                setTimeout(() => {
-                    console.log("HARDEM Editor: Executando _updateAnimationLibrariesState(true) após delay.");
-                    this._updateAnimationLibrariesState(true);
-                }, 100); // 100ms de delay, pode ser ajustado
-            }
-
         } else {
             toggleBtn.innerHTML = '🔓 Ativar Edição';
             toggleBtn.classList.remove('active');
@@ -1152,12 +1130,6 @@ class HardemEditor {
             this.closeSidePanel();
             this.showAlert('Modo de edição desativado!', 'success');
 
-            // Se o modo estático (pause) NÃO estiver ativo, garantir que as bibliotecas JS sejam resumidas
-            // (Caso tivessem sido pausadas por alguma lógica específica do modo edição, o que não é o caso aqui, mas é seguro)
-            if (!this.staticMode) {
-                console.log("HARDEM Editor: Modo Edição desativado sem Modo Estático. Tentando resumir bibliotecas JS.");
-                this._updateAnimationLibrariesState(false);
-            }
         }
     }
 
@@ -1410,8 +1382,12 @@ class HardemEditor {
         
         element.classList.add('hardem-editable-element');
         
-        const dataKey = element.getAttribute('data-key') || this.generateDataKey(element);
+        const dataKey = element.getAttribute('data-key') || this.generateUniqueDataKey(element);
         element.setAttribute('data-key', dataKey);
+
+        // NÃO criar entrada no contentMap ainda - apenas quando houver upload real
+        // Apenas marcar como preparado para edição de background
+        element.setAttribute('data-hardem-bg-editable', 'true');
 
         element.addEventListener('click', (e) => {
             e.preventDefault();
@@ -1423,7 +1399,7 @@ class HardemEditor {
         
         this.neutralizeElementEffects(element);
         
-        console.log(`🖼️ Background editável: ${dataKey} (${element.tagName})`);
+        console.log(`🖼️ Background editável preparado: ${dataKey} (${element.tagName})`);
     }
 
     /**
@@ -1456,7 +1432,12 @@ class HardemEditor {
 
             // Salvar alteração
             const dataKey = element.getAttribute('data-key');
-            this.contentMap[dataKey] = element.textContent || element.innerText;
+            this.contentMap[dataKey] = {
+                type: 'text',
+                content: element.textContent || element.innerText,
+                pageUrl: window.location.pathname,
+                timestamp: new Date().toISOString()
+            };
             this.showAlert('Texto atualizado!', 'success');
         };
 
@@ -2037,14 +2018,14 @@ class HardemEditor {
                 element.style.backgroundPosition = 'center';
                 element.style.backgroundRepeat = 'no-repeat';
                 
-                // Usar a nova função para salvar corretamente
+                // Usar a nova função para salvar corretamente com informações detalhadas
                 const dataKey = this.saveBackgroundImage(element, newSrc, {
                     originalFile: file.name,
                     uploadTime: new Date().toISOString()
                 });
                 
                 this.showAlert(`Background atualizado! (${dataKey})`, 'success');
-                console.log(`✅ Background salvo com chave única: ${dataKey}`);
+                console.log(`✅ Background salvo com chave única e informações detalhadas: ${dataKey}`);
                 
                 // Salvar automaticamente
                 this.saveContent();
@@ -2300,6 +2281,7 @@ class HardemEditor {
                         // Primeira tentativa após 500ms
                         setTimeout(() => {
                             console.log("HardemEditor: Primeira tentativa de aplicar conteúdo");
+                            this.detectAndRepairLostDataKeys(); // Reparar data-keys perdidos primeiro
                             this.applyLoadedContent();
                             
                             // Segunda tentativa após 1.5s
@@ -2324,6 +2306,165 @@ class HardemEditor {
             console.error('Erro ao carregar conteúdo:', error);
             localStorage.removeItem('siteContent');
             this.contentMap = {};
+        }
+    }
+
+    /**
+     * Encontrar elemento similar para background baseado em características
+     */
+    findSimilarBackgroundElement(content, dataKey) {
+        console.log(`HardemEditor: Procurando elemento similar para background ${dataKey}`);
+        
+        // Buscar elementos com background-image que não têm data-key
+        const elementsWithBackground = Array.from(document.querySelectorAll('*')).filter(el => {
+            // Ignorar elementos do editor
+            if (this.isEditorElement(el)) return false;
+            
+            // Ignorar elementos que já têm data-key
+            if (el.hasAttribute('data-key')) return false;
+            
+            // IMPORTANTE: Ignorar elementos do carrossel se não estamos procurando por carrossel
+            if (!dataKey.includes('carousel') && !dataKey.includes('slide')) {
+                if (el.closest('.swiper') || el.classList.contains('swiper-slide') || 
+                    el.closest('.banner-swiper-main-wrapper-four')) {
+                    return false;
+                }
+            }
+            
+            // IMPORTANTE: Se estamos procurando por carrossel, só aceitar elementos do carrossel
+            if (dataKey.includes('carousel') || dataKey.includes('slide')) {
+                if (!el.closest('.swiper') && !el.classList.contains('swiper-slide') && 
+                    !el.closest('.banner-swiper-main-wrapper-four')) {
+                    return false;
+                }
+            }
+            
+            // Verificar se tem background-image
+            const computedStyle = window.getComputedStyle(el);
+            const bgImage = computedStyle.backgroundImage;
+            return bgImage && bgImage !== 'none' && !bgImage.includes('gradient');
+        });
+        
+        console.log(`HardemEditor: Encontrados ${elementsWithBackground.length} elementos compatíveis com background para ${dataKey}`);
+        
+        // Se há informações detalhadas do elemento, usar para busca mais precisa
+        if (content.elementInfo) {
+            let bestCandidate = null;
+            let bestScore = 0;
+            
+            for (let candidate of elementsWithBackground) {
+                let score = 0;
+                const info = content.elementInfo;
+                
+                // Verificar tag (peso 2)
+                if (candidate.tagName.toLowerCase() === info.tagName) score += 2;
+                
+                // Verificar classe completa primeiro (peso 5)
+                if (info.className && candidate.className === info.className) {
+                    score += 5;
+                } else if (info.className && candidate.className.includes(info.className.split(' ')[0])) {
+                    score += 3; // Classe principal (peso 3)
+                }
+                
+                // Verificar ID se houver (peso 4)
+                if (info.id && candidate.id === info.id) score += 4;
+                
+                // Verificar contexto do pai (peso 2)
+                if (info.parentClasses && candidate.parentElement && 
+                    candidate.parentElement.className.includes(info.parentClasses.split(' ')[0])) score += 2;
+                
+                // Verificar posição similar (peso 1)
+                if (info.position) {
+                    const rect = candidate.getBoundingClientRect();
+                    if (Math.abs(rect.width - info.position.width) < 100 &&
+                        Math.abs(rect.height - info.position.height) < 100) {
+                        score += 1;
+                    }
+                }
+                
+                // Atualizar melhor candidato
+                if (score > bestScore && score >= 6) { // Requer score mínimo de 6
+                    bestScore = score;
+                    bestCandidate = candidate;
+                }
+            }
+            
+            if (bestCandidate) {
+                console.log(`HardemEditor: Candidato encontrado com score ${bestScore}`, bestCandidate);
+                return bestCandidate;
+            }
+        }
+        
+        // Se não conseguiu encontrar por informações detalhadas, tentar métodos mais seguros
+        // Priorizar elementos com classes específicas conhecidas
+        for (let candidate of elementsWithBackground) {
+            // Para carrossel, verificar se é realmente elemento de carrossel
+            if (dataKey.includes('carousel') || dataKey.includes('slide')) {
+                if (candidate.classList.contains('bg-banner-four') || 
+                    candidate.closest('.banner-swiper-main-wrapper-four')) {
+                    console.log(`HardemEditor: Usando elemento de carrossel identificado`, candidate);
+                    return candidate;
+                }
+            } else {
+                // Para elementos normais, evitar carrossel e usar classes conhecidas
+                if (candidate.classList.contains('bg_image') || 
+                    candidate.classList.contains('bg-2') ||
+                    candidate.classList.contains('single-right-content') ||
+                    candidate.classList.contains('our-working-process-area-4')) {
+                    console.log(`HardemEditor: Usando elemento com classe conhecida de background`, candidate);
+                    return candidate;
+                }
+            }
+        }
+        
+        // REMOVIDO: A lógica perigosa de pegar qualquer elemento único
+        // Não tentar "adivinhar" - é melhor falhar do que aplicar no lugar errado
+        
+        console.log(`HardemEditor: Nenhum elemento compatível encontrado para ${dataKey} - aplicação cancelada por segurança`);
+        return null;
+    }
+
+    /**
+     * Detectar e reatribuir data-keys perdidos (executado na inicialização)
+     */
+    detectAndRepairLostDataKeys() {
+        console.log("HardemEditor: Detectando elementos que perderam data-keys...");
+        
+        let repairedCount = 0;
+        
+        // Para cada item salvo no contentMap
+        Object.entries(this.contentMap).forEach(([dataKey, content]) => {
+            // Pular se não for background OU se nunca teve upload real
+            if (!content || typeof content !== 'object' || 
+                !content.backgroundImage || 
+                content.backgroundImage === null ||
+                (!content.isUploaded && !content.backgroundImage)) {
+                return;
+            }
+            
+            if (document.querySelector(`[data-key="${dataKey}"]`)) {
+                return; // Elemento já existe com data-key correto
+            }
+            
+            // Procurar elemento que deveria ter esse data-key
+            const potentialElement = this.findSimilarBackgroundElement(content, dataKey);
+            
+            if (potentialElement) {
+                console.log(`HardemEditor: Reparando data-key perdido: ${dataKey}`);
+                potentialElement.setAttribute('data-key', dataKey);
+                
+                // Aplicar o background se necessário
+                const computedStyle = window.getComputedStyle(potentialElement);
+                if (!computedStyle.backgroundImage.includes('data:image')) {
+                    this.ensureBackgroundApplied(potentialElement, content.backgroundImage);
+                }
+                
+                repairedCount++;
+            }
+        });
+        
+        if (repairedCount > 0) {
+            console.log(`✅ ${repairedCount} data-keys reparados automaticamente`);
         }
     }
 
@@ -2366,62 +2507,221 @@ class HardemEditor {
     }
 
     /**
-     * Aplicar conteúdo carregado
+     * Aplicar conteúdo carregado - VERSÃO CORRIGIDA E ROBUSTA
      */
     applyLoadedContent() {
-        console.log("HardemEditor: Executando applyLoadedContent");
+    console.log("HardemEditor: Executando applyLoadedContent ROBUSTO");
+    
+    const currentPage = window.location.pathname; // ADICIONAR ESTA LINHA
+    const orphanedKeys = [];
+    
+    Object.entries(this.contentMap).forEach(([dataKey, content]) => {
+        // ADICIONAR ESTA VERIFICAÇÃO:
+        if (typeof content === 'object' && content !== null && content.pageUrl) {
+            if (content.pageUrl !== currentPage) {
+                console.log(`HardemEditor: Ignorando conteúdo de outra página: ${dataKey} (página: ${content.pageUrl})`);
+                return; // Pular conteúdo de outras páginas
+            }
+        }
         
-        Object.entries(this.contentMap).forEach(([dataKey, content]) => {
-            let element = document.querySelector(`[data-key="${dataKey}"]`);
-            
-            // Se não encontrar pelo data-key, tentar encontrar por outros meios
-            if (!element && typeof content === 'object' && content.backgroundImage) {
-                console.log(`HardemEditor: Tentando encontrar elemento para ${dataKey} por outros meios`);
-                
-                // Procurar em todos os elementos que podem ter background
-                document.querySelectorAll('*').forEach(el => {
-                    // Ignorar elementos do editor
-                    if (this.isEditorElement(el)) return;
-                    
-                    if (!el.hasAttribute('data-key')) {
-                        const computedStyle = window.getComputedStyle(el);
-                        // Se o elemento tem background e não tem data-key, pode ser nosso alvo
-                        if (computedStyle.backgroundImage && computedStyle.backgroundImage !== 'none') {
-                            el.setAttribute('data-key', dataKey);
-                            element = el;
-                            console.log(`HardemEditor: Elemento encontrado e marcado com data-key ${dataKey}`);
-                        }
-                    }
-                });
-            }
-
-            // Verificar se o elemento encontrado não é parte do editor
-            if (element && this.isEditorElement(element)) {
-                console.log(`HardemEditor: Ignorando elemento do editor para ${dataKey}`);
-                return;
-            }
-
+        let element = document.querySelector(`[data-key="${dataKey}"]`);
+        // ... resto do código continua igual
             if (!element) {
                 console.warn(`HardemEditor: Elemento não encontrado para dataKey: ${dataKey}`);
-                return;
+                
+                // ESTRATÉGIA 1: Tentar encontrar por informações detalhadas (se disponíveis)
+                if (typeof content === 'object' && content !== null && content.elementInfo) {
+                    element = this.findElementByDetailedInfo(content.elementInfo, dataKey);
+                    
+                    if (element) {
+                        console.log(`HardemEditor: Elemento encontrado por informações detalhadas para ${dataKey}`);
+                        element.setAttribute('data-key', dataKey);
+                    }
+                }
+                
+                // ESTRATÉGIA 2: Se é um background, tentar encontrar elemento similar por características
+                if (!element && typeof content === 'object' && content !== null && content.backgroundImage) {
+                    element = this.findSimilarBackgroundElement(content, dataKey);
+                    
+                    if (element) {
+                        console.log(`HardemEditor: Elemento similar encontrado para background ${dataKey}`);
+                        element.setAttribute('data-key', dataKey);
+                    }
+                }
+                
+                // ESTRATÉGIA 3: Se ainda não encontrou e é conteúdo órfão, marcar para remoção
+                if (!element) {
+                    console.warn(`HardemEditor: Marcando ${dataKey} como órfão para remoção`);
+                    orphanedKeys.push(dataKey);
+                    return; // Pular aplicação
+                }
             }
 
+            // Aplicar o conteúdo se encontrou o elemento
             try {
-                if (element.tagName.toLowerCase() === 'img') {
-                    if (typeof content === 'object' && content !== null) {
-                        if (content.src) element.src = content.src;
-                        if (content.alt) element.alt = content.alt;
-                    }
-                } else if (typeof content === 'object' && content !== null && content.backgroundImage) {
-                    console.log(`HardemEditor: Aplicando background para ${dataKey}`);
-                    this.ensureBackgroundApplied(element, content.backgroundImage);
-                } else if (typeof content === 'string' && content.trim()) {
-                    element.textContent = content;
+                const wasApplied = this.applyContentToElement(element, content, dataKey);
+                if (wasApplied) {
+                    console.log(`✅ Conteúdo aplicado com sucesso para ${dataKey}`);
                 }
             } catch (error) {
                 console.warn(`Erro ao aplicar conteúdo para ${dataKey}:`, error);
+                orphanedKeys.push(dataKey); // Marcar como órfão se houve erro na aplicação
             }
         });
+        
+        // Limpar dados órfãos do contentMap
+        this.cleanOrphanedContent(orphanedKeys);
+    }
+
+    /**
+     * Aplicar conteúdo específico a um elemento
+     */
+    applyContentToElement(element, content, dataKey) {
+        if (element.tagName.toLowerCase() === 'img') {
+            if (typeof content === 'object' && content !== null) {
+                if (content.src && content.src !== element.src) {
+                    element.src = content.src;
+                }
+                if (content.alt !== undefined) {
+                    element.alt = content.alt;
+                }
+                return true;
+            }
+        } else if (typeof content === 'object' && content !== null && content.type === 'text' && content.content) {
+            // Novo formato de texto com informações da página
+            if (element.textContent !== content.content) {
+                element.textContent = content.content;
+                return true;
+            }
+        } else if (typeof content === 'object' && content !== null && content.backgroundImage) {
+                    // Aplicar backgrounds (incluindo os com pageUrl)
+                    console.log(`HardemEditor: Aplicando background para ${dataKey} no elemento correto`);
+                    this.ensureBackgroundApplied(element, content.backgroundImage);
+                    return true;
+                } else if (typeof content === 'string' && content.trim()) {
+            // Só aplicar texto se for diferente e não vazio
+            if (element.textContent !== content) {
+                element.textContent = content;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Limpar conteúdo órfão do contentMap
+     */
+    cleanOrphanedContent(orphanedKeys) {
+        // Adicionar também registros sem upload real aos órfãos
+        const additionalOrphans = [];
+        
+        Object.entries(this.contentMap).forEach(([dataKey, content]) => {
+            // Identificar registros criados sem upload real
+            if (content && typeof content === 'object' && 
+                content.type === 'background' && 
+                content.backgroundImage === null && 
+                content.isRegistered === true &&
+                !content.isUploaded) {
+                additionalOrphans.push(dataKey);
+            }
+        });
+        
+        const allOrphanedKeys = [...new Set([...orphanedKeys, ...additionalOrphans])];
+        
+        if (allOrphanedKeys.length === 0) return;
+        
+        console.log(`HardemEditor: Limpando ${allOrphanedKeys.length} itens órfãos:`, allOrphanedKeys);
+        
+        allOrphanedKeys.forEach(key => {
+            delete this.contentMap[key];
+        });
+        
+        // Salvar o contentMap limpo
+        try {
+            localStorage.setItem('siteContent', JSON.stringify(this.contentMap));
+            console.log(`✅ ContentMap limpo e salvo. ${allOrphanedKeys.length} itens órfãos removidos.`);
+        } catch (error) {
+            console.error('Erro ao salvar contentMap limpo:', error);
+        }
+    }
+
+    /**
+     * Encontrar elemento pelas informações detalhadas coletadas
+     */
+    findElementByDetailedInfo(elementInfo, dataKey) {
+        console.log(`HardemEditor: Procurando elemento por informações detalhadas para ${dataKey}`);
+        
+        // Tentar encontrar pelo caminho primeiro
+        if (elementInfo.pathFromBody) {
+            try {
+                const pathElements = document.querySelectorAll(elementInfo.pathFromBody);
+                if (pathElements.length === 1) {
+                    return pathElements[0];
+                }
+            } catch (e) {
+                console.warn('Erro ao usar pathFromBody:', e);
+            }
+        }
+        
+        // Tentar encontrar por combinação de características únicas
+        const candidates = document.querySelectorAll(elementInfo.tagName);
+        
+        for (let candidate of candidates) {
+            // Verificar se não é elemento do editor
+            if (this.isEditorElement(candidate)) continue;
+            
+            // Verificar se já tem data-key (evitar conflitos)
+            if (candidate.hasAttribute('data-key')) continue;
+            
+            let score = 0;
+            let maxScore = 0;
+            
+            // Pontuação por classe
+            maxScore += 2;
+            if (elementInfo.className && candidate.className === elementInfo.className) {
+                score += 2;
+            } else if (elementInfo.className && candidate.className.includes(elementInfo.className.split(' ')[0])) {
+                score += 1;
+            }
+            
+            // Pontuação por ID
+            maxScore += 3;
+            if (elementInfo.id && candidate.id === elementInfo.id) {
+                score += 3;
+            }
+            
+            // Pontuação por conteúdo de texto (se houver)
+            maxScore += 1;
+            if (elementInfo.textContent && 
+                candidate.textContent.trim().substring(0, 50) === elementInfo.textContent) {
+                score += 1;
+            }
+            
+            // Pontuação por classes do pai
+            maxScore += 1;
+            if (elementInfo.parentClasses && 
+                candidate.parentElement && 
+                candidate.parentElement.className === elementInfo.parentClasses) {
+                score += 1;
+            }
+            
+            // Pontuação por posição (tolerância de 50px)
+            maxScore += 2;
+            const rect = candidate.getBoundingClientRect();
+            if (Math.abs(rect.width - elementInfo.position.width) < 50 &&
+                Math.abs(rect.height - elementInfo.position.height) < 50) {
+                score += 2;
+            }
+            
+            // Se o score for alto o suficiente, consideramos uma correspondência
+            if (score >= maxScore * 0.7) { // 70% de similaridade
+                console.log(`HardemEditor: Elemento correspondente encontrado com score ${score}/${maxScore}`);
+                return candidate;
+            }
+        }
+        
+        console.warn(`HardemEditor: Nenhum elemento correspondente encontrado para ${dataKey}`);
+        return null;
     }
 
     /**
@@ -2498,10 +2798,8 @@ class HardemEditor {
      * Gerar data-key único
      */
     generateDataKey(element) {
-        const tagName = element.tagName.toLowerCase();
-        const timestamp = Date.now();
-        const random = Math.random().toString(36).substr(2, 5);
-        return `${tagName}_${timestamp}_${random}`;
+        // Usar a nova função mais específica
+        return this.generateUniqueDataKey(element);
     }
 
     /**
@@ -2512,10 +2810,6 @@ class HardemEditor {
             this.mutationObserver.disconnect();
         }
         
-        // Resetar modo estático se ativo
-        if (this.staticMode) {
-            this.toggleStaticMode();
-        }
         
         this.disableEditing();
         
@@ -2606,120 +2900,8 @@ class HardemEditor {
         return clone.textContent.trim() || element.textContent.trim();
     }
 
-    /**
-     * Controla o estado de pausa/resumo das bibliotecas de animação JS.
-     * @param {boolean} shouldPause True para pausar, false para resumir.
-     */
-    _updateAnimationLibrariesState(shouldPause) {
-        if (shouldPause) {
-            console.log("HARDEM Editor: Pausando bibliotecas de animação JS...");
-            // Pausar Swiper carousels
-            if (window.Swiper) {
-                document.querySelectorAll('.swiper').forEach(swiperEl => {
-                    if (swiperEl.swiper) {
-                        if (swiperEl.swiper.autoplay && swiperEl.swiper.autoplay.running) {
-                            swiperEl.swiper.autoplay.stop();
-                        }
-                        swiperEl.swiper.disable(); // Desabilita interação do usuário também
-                    }
-                });
-            }
-            
-            // Pausar animações do AOS (tentativa de parar e manter estado)
-            if (window.AOS) {
-                document.querySelectorAll('[data-aos]').forEach(el => {
-                    el.classList.add('aos-animate'); // Manter estado visual se já animado
-                    el.style.setProperty('animation', 'none', 'important');
-                    el.style.setProperty('transition', 'none', 'important');
-                    // Guardar um sinalizador de que foi pausado por nós
-                    el.dataset.hardemAosPaused = 'true';
-                });
-            }
-            
-            // Pausar Owl Carousels e outros carrosséis genéricos
-            if (typeof jQuery !== 'undefined' && jQuery.fn.owlCarousel) {
-                document.querySelectorAll('.owl-carousel').forEach(el => {
-                    const $el = jQuery(el);
-                    if ($el.data('owl.carousel')) {
-                        try {
-                            $el.trigger('stop.owl.autoplay');
-                        } catch (e) { console.warn('Erro ao pausar Owl Carousel via jQuery:', e); }
-                    }
-                });
-            }
-        } else {
-            // Só resumir se o modo estático não estiver ativo (evitar conflito)
-            if (this.staticMode) {
-                console.log("HARDEM Editor: Modo estático ainda ativo, não resumindo bibliotecas JS.");
-                return;
-            }
-            console.log("HARDEM Editor: Resumindo bibliotecas de animação JS...");
-            // Reativar Swiper carousels
-            if (window.Swiper) {
-                document.querySelectorAll('.swiper').forEach(swiperEl => {
-                    if (swiperEl.swiper) {
-                        swiperEl.swiper.enable();
-                        if (swiperEl.swiper.autoplay) {
-                            if(swiperEl.swiper.params.autoplay && swiperEl.swiper.params.autoplay.delay) {
-                                swiperEl.swiper.autoplay.start();
-                            }
-                        }
-                    }
-                });
-            }
-            
-            // Reativar AOS animations
-            if (window.AOS) {
-                document.querySelectorAll('[data-aos][data-hardem-aos-paused]').forEach(el => {
-                    el.style.removeProperty('animation');
-                    el.style.removeProperty('transition');
-                    delete el.dataset.hardemAosPaused;
-                });
-                // Delay refreshHard para garantir que a remoção de estilos foi processada
-                setTimeout(() => {
-                    window.AOS.refreshHard();
-                    console.log("HARDEM Editor: AOS.refreshHard() chamado após resumir.");
-                }, 0);
-            }
-            
-            // Reativar Owl Carousels e outros
-            if (typeof jQuery !== 'undefined' && jQuery.fn.owlCarousel) {
-                document.querySelectorAll('.owl-carousel').forEach(el => {
-                    const $el = jQuery(el);
-                    if ($el.data('owl.carousel')) {
-                        try {
-                            $el.trigger('play.owl.autoplay');
-                        } catch (e) { console.warn('Erro ao reativar Owl Carousel via jQuery:', e); }
-                    }
-                });
-            }
-        }
-    }
-
-    /**
-     * Toggle modo estático (pausar animações e carrosséis)
-     */
-    toggleStaticMode() {
-        this.staticMode = !this.staticMode;
-        const toggleBtn = document.getElementById('hardem-toggle-static');
-        
-        if (this.staticMode) {
-            // Ativar modo estático
-            toggleBtn.innerHTML = '▶️ Ativar Animações'; 
-            toggleBtn.classList.add('active');
-            document.body.classList.add('hardem-static-mode');
-            this._updateAnimationLibrariesState(true); // PAUSAR
-            this.showAlert('Animações e interações pausadas! Modo de edição focado.', 'success');
-        } else {
-            // Desativar modo estático
-            toggleBtn.innerHTML = '⏸️ Pausar Animações'; 
-            toggleBtn.classList.remove('active');
-            document.body.classList.remove('hardem-static-mode');
-            this._updateAnimationLibrariesState(false); // RESUMIR
-            this.showAlert('Animações e interações reativadas!', 'success');
-        }
-    }
-
+  
+    
     /**
      * Neutralizar efeitos problemáticos em elementos editáveis
      */
@@ -3735,24 +3917,145 @@ makeTextElementEditable(element) {
     }
 
     /**
-     * Corrigir a função de salvar backgrounds múltiplos
+     * Corrigir a função de salvar backgrounds múltiplos com informações mais detalhadas
      */
     saveBackgroundImage(element, backgroundImage, additionalData = {}) {
-        const dataKey = element.getAttribute('data-key') || this.generateDataKey(element);
+        const dataKey = element.getAttribute('data-key') || this.generateUniqueDataKey(element);
         element.setAttribute('data-key', dataKey);
         
-        // Estrutura correta para backgrounds
+        // Coletar informações detalhadas do elemento AGORA (no momento do upload)
+        const elementInfo = this.collectElementInfo(element);
+        
+        // Estrutura correta para backgrounds com informações detalhadas
         this.contentMap[dataKey] = {
             type: 'background',
-            backgroundImage: backgroundImage,
+            backgroundImage: backgroundImage, // Agora com a imagem real
             element: element.tagName.toLowerCase(),
             className: element.className,
+            elementInfo: elementInfo, // Informações detalhadas para identificação precisa
+            pageUrl: window.location.pathname, // NOVO: URL da página onde foi editado
             ...additionalData,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            isUploaded: true // Flag indicando que foi um upload real
         };
         
-        console.log(`💾 Background salvo para ${dataKey}:`, this.contentMap[dataKey]);
+        console.log(`💾 Background salvo para ${dataKey} na página ${window.location.pathname}:`, this.contentMap[dataKey]);
         return dataKey;
+    }
+
+    /**
+     * Coletar informações detalhadas do elemento para identificação precisa
+     */
+    collectElementInfo(element) {
+        const rect = element.getBoundingClientRect();
+        
+        return {
+            tagName: element.tagName.toLowerCase(),
+            className: element.className,
+            id: element.id || null,
+            innerHTML: element.innerHTML.substring(0, 100), // Primeiros 100 chars do HTML interno
+            textContent: element.textContent.trim().substring(0, 50), // Primeiros 50 chars do texto
+            position: {
+                top: Math.round(rect.top),
+                left: Math.round(rect.left),
+                width: Math.round(rect.width),
+                height: Math.round(rect.height)
+            },
+            parentClasses: element.parentElement ? element.parentElement.className : '',
+            pathFromBody: this.getElementPath(element),
+            dataAttributes: this.getDataAttributes(element)
+        };
+    }
+
+    /**
+     * Obter caminho do elemento a partir do body
+     */
+    getElementPath(element) {
+        const path = [];
+        let current = element;
+        
+        while (current && current !== document.body && path.length < 10) {
+            let selector = current.tagName.toLowerCase();
+            
+            if (current.id) {
+                selector += `#${current.id}`;
+            } else if (current.className) {
+                const classes = current.className.trim().split(/\s+/);
+                if (classes.length > 0 && classes[0]) {
+                    selector += `.${classes[0]}`;
+                }
+            }
+            
+            path.unshift(selector);
+            current = current.parentElement;
+        }
+        
+        return path.join(' > ');
+    }
+
+    /**
+     * Obter atributos data-* do elemento
+     */
+    getDataAttributes(element) {
+        const dataAttrs = {};
+        for (let attr of element.attributes) {
+            if (attr.name.startsWith('data-')) {
+                dataAttrs[attr.name] = attr.value;
+            }
+        }
+        return dataAttrs;
+    }
+
+    /**
+     * Gerar data-key único e mais específico
+     */
+    generateUniqueDataKey(element) {
+        const tagName = element.tagName.toLowerCase();
+        const timestamp = Date.now();
+        const random = Math.random().toString(36).substr(2, 5);
+        
+        // Incluir informações do contexto para tornar mais específico
+        let context = '';
+        
+        // Verificar contexto de carrossel PRIMEIRO (mais específico)
+        if (element.closest('.banner-swiper-main-wrapper-four')) {
+            context = 'banner_carousel_';
+        } else if (element.closest('.mySwiper-banner-four')) {
+            context = 'main_carousel_';
+        } else if (element.closest('.mySwiper-thumbnail')) {
+            context = 'thumb_carousel_';
+        } else if (element.closest('.swiper')) {
+            context = 'carousel_';
+        } else if (element.closest('header')) {
+            context = 'header_';
+        } else if (element.closest('footer')) {
+            context = 'footer_';
+        } else if (element.closest('.about')) {
+            context = 'about_';
+        } else if (element.closest('.service')) {
+            context = 'service_';
+        } else if (element.closest('.our-working-process-area-4')) {
+            context = 'our-workin_'; // Prefixo específico para essa seção
+        } else if (element.closest('.single-right-content')) {
+            context = 'single-rig_'; // Prefixo específico para essa seção
+        } else if (element.closest('.banner')) {
+            context = 'banner_';
+        }
+        
+        // Incluir classe principal se existir
+        if (element.className) {
+            const mainClass = element.className.trim().split(/\s+/)[0];
+            if (mainClass && mainClass.length > 0) {
+                context += mainClass.substring(0, 10).replace(/[^a-zA-Z0-9]/g, '') + '_';
+            }
+        }
+        
+        // Se tem ID, incluir parte dele
+        if (element.id) {
+            context += element.id.substring(0, 8) + '_';
+        }
+        
+        return `${context}${tagName}_${timestamp}_${random}`;
     }
 
     /**
@@ -4062,7 +4365,12 @@ makeTextElementEditable(element) {
         this.currentElement.textContent = newText;
         const dataKey = this.currentElement.getAttribute('data-key');
         if (dataKey) {
-            this.contentMap[dataKey] = newText;
+            this.contentMap[dataKey] = {
+                type: 'text',
+                content: newText,
+                pageUrl: window.location.pathname,
+                timestamp: new Date().toISOString()
+            };
             this.saveContent();
             this.showAlert('✅ Texto atualizado com sucesso!', 'success');
         }
@@ -4154,3 +4462,4 @@ if (document.readyState === 'loading') {
 
 // Exportar para uso global
 window.HardemEditor = HardemEditor;
+
