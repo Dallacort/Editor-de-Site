@@ -1478,6 +1478,11 @@ class HardemEditor {
      * Selecionar elemento para edição no painel (modo WordPress)
      */
     selectElement(element) {
+        // Verificar se é parte de um carrossel primeiro
+        if (this.handleCarouselElement(element)) {
+            return;
+        }
+        
         this.currentElement = element;
         
         // Abrir painel automaticamente (modo WordPress)
@@ -1524,34 +1529,37 @@ class HardemEditor {
         const backgroundImage = computedStyle.backgroundImage;
         const hasBackgroundImage = backgroundImage && backgroundImage !== 'none' && !backgroundImage.includes('gradient');
 
+        // Cabeçalho melhorado com informações mais claras
         let panelHTML = `
-            <div class="hardem-editor-info">
-                <strong>Data-key:</strong> ${dataKey}<br>
-                <strong>Elemento:</strong> &lt;${tagName}&gt;${element.className ? '.' + element.className.split(' ').join('.') : ''}
+            <div class="hardem-editor-info" style="background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%); color: white; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <h3 style="margin: 0 0 8px 0; font-size: 16px;">✏️ Editor de Elemento</h3>
+                <div style="opacity: 0.9; font-size: 13px;">
+                    <strong>Tipo:</strong> ${this.getElementTypeDescription(element)}<br>
+                    <strong>Identificador:</strong> ${dataKey}<br>
+                    <strong>Localização:</strong> ${this.getElementLocation(element)}
+                </div>
             </div>
         `;
-        
-        // Removidas as verificações de isInServiceCard e os alertas relacionados
         
         if (tagName === 'img') {
             // Seção de edição de imagem normal
             panelHTML += `
                 <div class="hardem-editor-section hardem-editor-type-image">
                     <div class="hardem-editor-section-header">
-                        <span>Imagem</span>
+                        <span>🖼️ Edição de Imagem</span>
                         <span class="toggle-icon">▼</span>
                     </div>
                     <div class="hardem-editor-section-content">
                         <div class="hardem-editor-field">
-                            <label>Preview:</label>
-                            <img src="${element.src}" class="hardem-editor-image-preview" alt="Preview">
+                            <label>Preview atual:</label>
+                            <img src="${element.src}" class="hardem-editor-image-preview" alt="Preview" style="max-width: 100%; border-radius: 4px; border: 1px solid #ddd;">
                         </div>
                         <div class="hardem-editor-field">
                             <label>Texto Alternativo:</label>
-                            <input type="text" id="hardem-alt-text" value="${element.alt}" placeholder="Descrição da imagem">
+                            <input type="text" id="hardem-alt-text" value="${element.alt}" placeholder="Descrição da imagem" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                         </div>
-                        <button class="hardem-editor-btn-secondary" onclick="window.hardemEditor.uploadImageFromPanel()">
-                            Trocar Imagem
+                        <button class="hardem-editor-btn-secondary" onclick="window.hardemEditor.uploadImageFromPanel()" style="width: 100%; margin-top: 10px;">
+                            📸 Trocar Imagem
                         </button>
                     </div>
                 </div>
@@ -1564,41 +1572,45 @@ class HardemEditor {
             panelHTML += `
                 <div class="hardem-editor-section hardem-editor-type-background">
                     <div class="hardem-editor-section-header">
-                        <span>Background</span>
+                        <span>🎨 Edição de Background</span>
                         <span class="toggle-icon">▼</span>
                     </div>
                     <div class="hardem-editor-section-content">
                         <div class="hardem-editor-field">
-                            <label>Preview:</label>
-                            ${imageSrc ? `<img src="${imageSrc}" class="hardem-editor-image-preview" alt="Background Preview">` : '<p style="color: #999;">Preview não disponível</p>'}
+                            <label>Preview atual:</label>
+                            ${imageSrc ? `<img src="${imageSrc}" class="hardem-editor-image-preview" alt="Background Preview" style="max-width: 100%; border-radius: 4px; border: 1px solid #ddd;">` : '<p style="color: #999; margin: 5px 0;">Preview não disponível</p>'}
                         </div>
-                        <button class="hardem-editor-btn-secondary" onclick="window.hardemEditor.uploadBackgroundFromPanel()">
-                            Trocar Background
+                        <button class="hardem-editor-btn-secondary" onclick="window.hardemEditor.uploadBackgroundFromPanel()" style="width: 100%; margin-top: 10px;">
+                            🖼️ Trocar Background
                         </button>
                     </div>
                 </div>
             `;
-        } else {
-            // Seção de edição de texto
+        }
+
+        // Seção de texto se aplicável
+        if (this.isTextElement(element)) {
             const textContent = this.getDirectTextContent(element);
-            
             panelHTML += `
                 <div class="hardem-editor-section hardem-editor-type-text">
                     <div class="hardem-editor-section-header">
-                        <span>Conteúdo de Texto</span>
+                        <span>📝 Edição de Texto</span>
                         <span class="toggle-icon">▼</span>
                     </div>
                     <div class="hardem-editor-section-content">
                         <div class="hardem-editor-field">
-                            <label>Texto atual:</label>
-                            <div style="background: #f8f9fa; padding: 6px 8px; border-radius: 4px; font-size: 12px; color: #666; margin-bottom: 6px; border: 1px solid #e9ecef;">
+                            <label>Conteúdo atual:</label>
+                            <div style="background: #f8f9fa; padding: 8px; border-radius: 4px; border: 1px solid #ddd; margin-bottom: 8px; font-size: 13px; color: #666;">
                                 "${textContent || 'Sem texto'}"
                             </div>
                         </div>
                         <div class="hardem-editor-field">
                             <label>Novo conteúdo:</label>
-                            <textarea id="hardem-text-content" rows="3" placeholder="Digite o novo conteúdo...">${textContent}</textarea>
+                            <textarea id="hardem-text-content" rows="3" placeholder="Digite o novo texto..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">${textContent}</textarea>
                         </div>
+                        <button class="hardem-editor-btn-secondary" onclick="window.hardemEditor.applyTextChange()" style="width: 100%; margin-top: 10px;">
+                            ✅ Aplicar Texto
+                        </button>
                     </div>
                 </div>
             `;
@@ -1608,23 +1620,21 @@ class HardemEditor {
         panelHTML += `
             <div class="hardem-editor-section">
                 <div class="hardem-editor-section-header">
-                    <span>Ações</span>
+                    <span>⚡ Ações</span>
                     <span class="toggle-icon">▼</span>
                 </div>
                 <div class="hardem-editor-section-content">
-                    <button class="hardem-editor-btn-primary" onclick="window.hardemEditor.applyPanelChanges()">
-                        Aplicar Alterações
+                    <button class="hardem-editor-btn-outline" onclick="window.hardemEditor.highlightElement()" style="width: 100%; margin-bottom: 8px;">
+                        📍 Destacar no Site
                     </button>
-                    <button class="hardem-editor-btn-outline" onclick="window.hardemEditor.highlightElement()">
-                        Destacar Elemento
+                    <button class="hardem-editor-btn-primary" onclick="window.hardemEditor.applyPanelChanges()" style="width: 100%; margin-bottom: 8px;">
+                        💾 Salvar Alterações
                     </button>
                 </div>
             </div>
         `;
 
         content.innerHTML = panelHTML;
-        
-        // Adicionar funcionalidade de accordion
         this.setupAccordion();
     }
 
@@ -2015,96 +2025,31 @@ class HardemEditor {
             const file = e.target.files[0];
             if (!file) return;
 
+            this.showProcessingMessage('Processando imagem...');
+
             const reader = new FileReader();
             reader.onload = (e) => {
                 const newSrc = e.target.result;
                 
-                if (confirm('Deseja substituir o background atual?')) {
-                    // Extrair as dimensões do background atual
-                    // Para backgrounds, precisamos criar temporariamente uma imagem
-                    // para obter as dimensões atuais
-                    const tempImg = new Image();
-                    tempImg.onload = () => {
-                        // Agora temos as dimensões da imagem de background atual
-                        const originalWidth = tempImg.width;
-                        const originalHeight = tempImg.height;
-                        
-                        // Configurar o elemento para simular uma imagem
-                        const pseudoImg = {
-                            naturalWidth: originalWidth,
-                            naturalHeight: originalHeight,
-                            closest: (selector) => element.closest(selector)
-                        };
-                        
-                        // Mostrar feedback de processamento
-                        const removeProcessingMessage = this.showProcessingMessage('Processando imagem...');
-                        
-                        // Redimensionar
-                        this.resizeImageToFit(pseudoImg, newSrc, (resizedImage) => {
-                            // Remover mensagem de processamento
-                            removeProcessingMessage();
-                            
-                            // Aplicar o background redimensionado
-                            element.style.backgroundImage = `url("${resizedImage}")`;
-                            
-                            const dataKey = element.getAttribute('data-key');
-                            if (dataKey) {
-                                this.contentMap[dataKey] = {
-                                    backgroundImage: resizedImage
-                                };
-                            }
-                            
-                            this.showAlert('Background atualizado com sucesso!', 'success');
-                        });
-                    };
-                    
-                    // Obter a URL atual do background para carregar na imagem temporária
-                    const currentBg = window.getComputedStyle(element).backgroundImage;
-
-                    if (currentBg && currentBg !== 'none') {
-                        // Extrair a URL da string 'url("...")'
-                        const urlMatch = currentBg.match(/url\(['"]?([^'"]+)['"]?\)/i);
-                        if (urlMatch && urlMatch[1]) {
-                            tempImg.src = urlMatch[1];
-                        } else {
-                            // Se não conseguir extrair, usar dimensões padrão
-                            this.resizeImageToFit({
-                                naturalWidth: 800,
-                                naturalHeight: 600,
-                                closest: (selector) => element.closest(selector)
-                            }, newSrc, (resizedImage) => {
-                                element.style.backgroundImage = `url("${resizedImage}")`;
-                                
-                                const dataKey = element.getAttribute('data-key');
-                                if (dataKey) {
-                                    this.contentMap[dataKey] = {
-                                        backgroundImage: resizedImage
-                                    };
-                                }
-                                
-                                this.showAlert('Background atualizado!', 'success');
-                            });
-                        }
-                    } else {
-                        // Se não houver background atual, usar dimensões padrão
-                        this.resizeImageToFit({
-                            naturalWidth: 800,
-                            naturalHeight: 600,
-                            closest: (selector) => element.closest(selector)
-                        }, newSrc, (resizedImage) => {
-                            element.style.backgroundImage = `url("${resizedImage}")`;
-                            
-                            const dataKey = element.getAttribute('data-key');
-                            if (dataKey) {
-                                this.contentMap[dataKey] = {
-                                    backgroundImage: resizedImage
-                                };
-                            }
-                            
-                            this.showAlert('Background atualizado!', 'success');
-                        });
-                    }
-                }
+                // Aplicar o background imediatamente
+                element.style.backgroundImage = `url("${newSrc}")`;
+                element.style.backgroundSize = 'cover';
+                element.style.backgroundPosition = 'center';
+                element.style.backgroundRepeat = 'no-repeat';
+                
+                // Usar a nova função para salvar corretamente
+                const dataKey = this.saveBackgroundImage(element, newSrc, {
+                    originalFile: file.name,
+                    uploadTime: new Date().toISOString()
+                });
+                
+                this.showAlert(`Background atualizado! (${dataKey})`, 'success');
+                console.log(`✅ Background salvo com chave única: ${dataKey}`);
+                
+                // Salvar automaticamente
+                this.saveContent();
+                
+                document.querySelector('.hardem-processing')?.remove();
             };
             reader.readAsDataURL(file);
         };
@@ -3548,6 +3493,620 @@ makeTextElementEditable(element) {
         
         // Iniciar o processo carregando a imagem
         img.src = newImageSrc;
+    }
+
+    /**
+     * Verificar se o elemento é parte de um carrossel e mostrar painel específico
+     */
+    handleCarouselElement(element) {
+        const carousel = element.closest('.banner-swiper-main-wrapper-four, .swiper');
+        if (carousel && carousel.querySelector('.mySwiper-banner-four, .mySwiper-thumbnail')) {
+            this.showCarouselManagementPanel(carousel);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Mostrar painel de gerenciamento completo do carrossel
+     */
+    showCarouselManagementPanel(carouselContainer) {
+        this.currentElement = carouselContainer;
+        this.openSidePanel();
+        
+        const content = document.getElementById('hardem-panel-content');
+        
+        // Encontrar todas as slides principais e thumbnails
+        const mainSlides = carouselContainer.querySelectorAll('.mySwiper-banner-four .swiper-slide');
+        const thumbnailSlides = carouselContainer.querySelectorAll('.mySwiper-thumbnail .swiper-slide');
+        
+        let panelHTML = `
+            <div class="hardem-editor-info" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <h3 style="margin: 0 0 8px 0; font-size: 16px;">🎠 Gerenciador de Carrossel</h3>
+                <p style="margin: 0; opacity: 0.9; font-size: 13px;">Visualize e edite todas as imagens do carrossel de forma organizada</p>
+            </div>
+            
+            <div class="hardem-editor-section">
+                <div class="hardem-editor-section-header">
+                    <span>🖼️ Slides Principais (${mainSlides.length})</span>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="hardem-editor-section-content">
+        `;
+        
+        // Processar slides principais
+        mainSlides.forEach((slide, index) => {
+            const slideDataKey = slide.getAttribute('data-key') || `slide_main_${index + 1}`;
+            slide.setAttribute('data-key', slideDataKey);
+            
+            // Extrair background das classes CSS
+            let backgroundClass = '';
+            let backgroundPreview = '';
+            if (slide.querySelector('.bg-banner-four')) {
+                const bgElement = slide.querySelector('.bg-banner-four');
+                if (bgElement.classList.contains('two')) {
+                    backgroundClass = 'bg-banner-four two';
+                    backgroundPreview = 'assets/images/banner/banner-bg-2.jpg';
+                } else if (bgElement.classList.contains('three')) {
+                    backgroundClass = 'bg-banner-four three';
+                    backgroundPreview = 'assets/images/banner/banner-bg-3.jpg';
+                } else if (bgElement.classList.contains('five')) {
+                    backgroundClass = 'bg-banner-four five';
+                    backgroundPreview = 'assets/images/banner/banner-bg-5.jpg';
+                } else {
+                    backgroundClass = 'bg-banner-four';
+                    backgroundPreview = 'assets/images/banner/banner-bg-1.jpg';
+                }
+            }
+            
+            const titleElement = slide.querySelector('.title');
+            const discElement = slide.querySelector('.disc');
+            const currentTitle = titleElement ? titleElement.textContent : 'Sem título';
+            const currentDesc = discElement ? discElement.textContent : 'Sem descrição';
+            
+            panelHTML += `
+                <div class="carousel-slide-item" style="border: 2px solid #667eea; border-radius: 8px; padding: 12px; margin-bottom: 12px; background: #f8f9ff;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <div style="background: #667eea; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; margin-right: 10px;">
+                            ${index + 1}
+                        </div>
+                        <span style="font-weight: 600; color: #667eea;">Slide Principal ${index + 1}</span>
+                    </div>
+                    
+                    ${backgroundPreview ? `
+                        <div style="margin-bottom: 10px;">
+                            <label style="font-weight: 500; color: #444; display: block; margin-bottom: 4px;">Background atual:</label>
+                            <img src="${backgroundPreview}" style="width: 100%; max-height: 120px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc;" alt="Background Preview">
+                        </div>
+                    ` : ''}
+                    
+                    <div style="margin-bottom: 10px;">
+                        <label style="font-weight: 500; color: #444; display: block; margin-bottom: 4px;">Título:</label>
+                        <textarea id="slide-title-${index}" rows="2" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">${currentTitle}</textarea>
+                    </div>
+                    
+                    <div style="margin-bottom: 12px;">
+                        <label style="font-weight: 500; color: #444; display: block; margin-bottom: 4px;">Descrição:</label>
+                        <textarea id="slide-desc-${index}" rows="3" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">${currentDesc}</textarea>
+                    </div>
+                    
+                    <button class="hardem-editor-btn-secondary" onclick="window.hardemEditor.uploadCarouselSlideBackground(${index})" style="background: #667eea; width: 100%; margin-bottom: 6px;">
+                        🖼️ Trocar Background
+                    </button>
+                    
+                    <button class="hardem-editor-btn-outline" onclick="window.hardemEditor.highlightCarouselSlide(${index})" style="width: 100%; font-size: 12px;">
+                        📍 Localizar no Site
+                    </button>
+                </div>
+            `;
+        });
+        
+        panelHTML += `
+                </div>
+            </div>
+            
+            <div class="hardem-editor-section">
+                <div class="hardem-editor-section-header">
+                    <span>🖼️ Thumbnails (${thumbnailSlides.length})</span>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="hardem-editor-section-content">
+        `;
+        
+        // Processar thumbnails
+        thumbnailSlides.forEach((thumb, index) => {
+            const thumbDataKey = thumb.getAttribute('data-key') || `slide_thumb_${index + 1}`;
+            thumb.setAttribute('data-key', thumbDataKey);
+            
+            const imgElement = thumb.querySelector('img');
+            const currentSrc = imgElement ? imgElement.src : '';
+            
+            panelHTML += `
+                <div class="carousel-thumb-item" style="border: 2px solid #28a745; border-radius: 8px; padding: 12px; margin-bottom: 12px; background: #f8fff9;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <div style="background: #28a745; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; margin-right: 10px;">
+                            ${index + 1}
+                        </div>
+                        <span style="font-weight: 600; color: #28a745;">Thumbnail ${index + 1}</span>
+                    </div>
+                    
+                    ${currentSrc ? `
+                        <div style="margin-bottom: 10px;">
+                            <img src="${currentSrc}" style="width: 100%; max-height: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc;" alt="Thumbnail Preview">
+                        </div>
+                    ` : ''}
+                    
+                    <button class="hardem-editor-btn-secondary" onclick="window.hardemEditor.uploadCarouselThumbnail(${index})" style="background: #28a745; width: 100%; margin-bottom: 6px;">
+                        🖼️ Trocar Thumbnail
+                    </button>
+                    
+                    <button class="hardem-editor-btn-outline" onclick="window.hardemEditor.highlightCarouselThumbnail(${index})" style="width: 100%; font-size: 12px;">
+                        📍 Localizar no Site
+                    </button>
+                </div>
+            `;
+        });
+        
+        panelHTML += `
+                </div>
+            </div>
+            
+            <div class="hardem-editor-section">
+                <div class="hardem-editor-section-header">
+                    <span>⚡ Ações Rápidas</span>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="hardem-editor-section-content">
+                    <button class="hardem-editor-btn-primary" onclick="window.hardemEditor.applyAllCarouselChanges()" style="width: 100%; margin-bottom: 8px;">
+                        ✅ Aplicar Todas as Alterações
+                    </button>
+                    <button class="hardem-editor-btn-outline" onclick="window.hardemEditor.previewCarousel()" style="width: 100%; margin-bottom: 8px;">
+                        👁️ Pré-visualizar Carrossel
+                    </button>
+                    <button class="hardem-editor-btn-warning" onclick="window.hardemEditor.resetCarouselToDefaults()" style="width: 100%;">
+                        🔄 Restaurar Padrões
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        content.innerHTML = panelHTML;
+        this.setupAccordion();
+        
+        console.log('🎠 Painel de carrossel carregado com sucesso!');
+    }
+
+    /**
+     * Upload de background para slide específico do carrossel
+     */
+    uploadCarouselSlideBackground(slideIndex) {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            this.showProcessingMessage('Processando imagem do slide...');
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const dataUrl = e.target.result;
+                
+                // Encontrar o slide específico
+                const carouselContainer = this.currentElement;
+                const slides = carouselContainer.querySelectorAll('.mySwiper-banner-four .swiper-slide');
+                const targetSlide = slides[slideIndex];
+                
+                if (targetSlide) {
+                    const bgElement = targetSlide.querySelector('.bg-banner-four');
+                    if (bgElement) {
+                        // Criar data-key único para esse background
+                        const dataKey = `carousel_slide_bg_${slideIndex}`;
+                        bgElement.setAttribute('data-key', dataKey);
+                        
+                        // Aplicar background
+                        bgElement.style.backgroundImage = `url(${dataUrl})`;
+                        bgElement.style.backgroundSize = 'cover';
+                        bgElement.style.backgroundPosition = 'center';
+                        bgElement.style.backgroundRepeat = 'no-repeat';
+                        
+                        // Salvar no contentMap com estrutura correta
+                        this.contentMap[dataKey] = {
+                            type: 'background',
+                            backgroundImage: dataUrl,
+                            slideIndex: slideIndex,
+                            timestamp: new Date().toISOString()
+                        };
+                        
+                        this.showAlert(`Background do slide ${slideIndex + 1} atualizado!`, 'success');
+                        console.log(`🖼️ Background do slide ${slideIndex + 1} salvo:`, dataKey);
+                    }
+                }
+                
+                document.querySelector('.hardem-processing')?.remove();
+            };
+            
+            reader.readAsDataURL(file);
+        };
+        
+        input.click();
+    }
+
+    /**
+     * Corrigir a função de salvar backgrounds múltiplos
+     */
+    saveBackgroundImage(element, backgroundImage, additionalData = {}) {
+        const dataKey = element.getAttribute('data-key') || this.generateDataKey(element);
+        element.setAttribute('data-key', dataKey);
+        
+        // Estrutura correta para backgrounds
+        this.contentMap[dataKey] = {
+            type: 'background',
+            backgroundImage: backgroundImage,
+            element: element.tagName.toLowerCase(),
+            className: element.className,
+            ...additionalData,
+            timestamp: new Date().toISOString()
+        };
+        
+        console.log(`💾 Background salvo para ${dataKey}:`, this.contentMap[dataKey]);
+        return dataKey;
+    }
+
+    /**
+     * Upload de thumbnail do carrossel
+     */
+    uploadCarouselThumbnail(thumbIndex) {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            this.showProcessingMessage('Processando thumbnail...');
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const dataUrl = e.target.result;
+                
+                const carouselContainer = this.currentElement;
+                const thumbs = carouselContainer.querySelectorAll('.mySwiper-thumbnail .swiper-slide');
+                const targetThumb = thumbs[thumbIndex];
+                
+                if (targetThumb) {
+                    const imgElement = targetThumb.querySelector('img');
+                    if (imgElement) {
+                        const dataKey = `carousel_thumb_${thumbIndex}`;
+                        imgElement.setAttribute('data-key', dataKey);
+                        imgElement.src = dataUrl;
+                        
+                        this.contentMap[dataKey] = {
+                            type: 'image',
+                            src: dataUrl,
+                            alt: imgElement.alt,
+                            thumbIndex: thumbIndex,
+                            timestamp: new Date().toISOString()
+                        };
+                        
+                        this.showAlert(`Thumbnail ${thumbIndex + 1} atualizado!`, 'success');
+                    }
+                }
+                
+                document.querySelector('.hardem-processing')?.remove();
+            };
+            
+            reader.readAsDataURL(file);
+        };
+        
+        input.click();
+    }
+
+    /**
+     * Aplicar todas as alterações do carrossel
+     */
+    applyAllCarouselChanges() {
+        const carouselContainer = this.currentElement;
+        const mainSlides = carouselContainer.querySelectorAll('.mySwiper-banner-four .swiper-slide');
+        
+        let changesApplied = 0;
+        
+        // Aplicar mudanças nos slides principais
+        mainSlides.forEach((slide, index) => {
+            const titleInput = document.getElementById(`slide-title-${index}`);
+            const descInput = document.getElementById(`slide-desc-${index}`);
+            
+            if (titleInput && titleInput.value.trim()) {
+                const titleElement = slide.querySelector('.title');
+                if (titleElement) {
+                    titleElement.textContent = titleInput.value.trim();
+                    const titleDataKey = titleElement.getAttribute('data-key') || `slide_title_${index}`;
+                    titleElement.setAttribute('data-key', titleDataKey);
+                    this.contentMap[titleDataKey] = titleInput.value.trim();
+                    changesApplied++;
+                }
+            }
+            
+            if (descInput && descInput.value.trim()) {
+                const descElement = slide.querySelector('.disc');
+                if (descElement) {
+                    descElement.textContent = descInput.value.trim();
+                    const descDataKey = descElement.getAttribute('data-key') || `slide_desc_${index}`;
+                    descElement.setAttribute('data-key', descDataKey);
+                    this.contentMap[descDataKey] = descInput.value.trim();
+                    changesApplied++;
+                }
+            }
+        });
+        
+        if (changesApplied > 0) {
+            this.showAlert(`✅ ${changesApplied} alterações aplicadas no carrossel!`, 'success');
+            this.saveContent();
+        } else {
+            this.showAlert('ℹ️ Nenhuma alteração encontrada para aplicar.', 'info');
+        }
+    }
+
+    /**
+     * Destacar slide específico
+     */
+    highlightCarouselSlide(slideIndex) {
+        const carouselContainer = this.currentElement;
+        const slides = carouselContainer.querySelectorAll('.mySwiper-banner-four .swiper-slide');
+        const targetSlide = slides[slideIndex];
+        
+        if (targetSlide) {
+            // Remove highlight de outros elementos
+            document.querySelectorAll('.hardem-highlight-element').forEach(el => {
+                el.classList.remove('hardem-highlight-element');
+            });
+            
+            // Adiciona highlight ao slide
+            targetSlide.classList.add('hardem-highlight-element');
+            
+            // Scroll para o elemento
+            targetSlide.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            });
+            
+            // Remover highlight após 3 segundos
+            setTimeout(() => {
+                targetSlide.classList.remove('hardem-highlight-element');
+            }, 3000);
+            
+            this.showAlert(`📍 Slide ${slideIndex + 1} destacado!`, 'info');
+        }
+    }
+
+    /**
+     * Destacar thumbnail específico
+     */
+    highlightCarouselThumbnail(thumbIndex) {
+        const carouselContainer = this.currentElement;
+        const thumbs = carouselContainer.querySelectorAll('.mySwiper-thumbnail .swiper-slide');
+        const targetThumb = thumbs[thumbIndex];
+        
+        if (targetThumb) {
+            document.querySelectorAll('.hardem-highlight-element').forEach(el => {
+                el.classList.remove('hardem-highlight-element');
+            });
+            
+            targetThumb.classList.add('hardem-highlight-element');
+            targetThumb.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            });
+            
+            setTimeout(() => {
+                targetThumb.classList.remove('hardem-highlight-element');
+            }, 3000);
+            
+            this.showAlert(`📍 Thumbnail ${thumbIndex + 1} destacado!`, 'info');
+        }
+    }
+
+    /**
+     * Pré-visualizar carrossel (simular clique nos slides)
+     */
+    previewCarousel() {
+        const carouselContainer = this.currentElement;
+        const slides = carouselContainer.querySelectorAll('.mySwiper-banner-four .swiper-slide');
+        
+        if (slides.length === 0) {
+            this.showAlert('❌ Nenhum slide encontrado para pré-visualizar!', 'error');
+            return;
+        }
+        
+        this.showAlert('🎬 Iniciando pré-visualização do carrossel...', 'info');
+        
+        let currentSlideIndex = 0;
+        const highlightNextSlide = () => {
+            // Remove highlight anterior
+            document.querySelectorAll('.hardem-highlight-element').forEach(el => {
+                el.classList.remove('hardem-highlight-element');
+            });
+            
+            // Destaca slide atual
+            const currentSlide = slides[currentSlideIndex];
+            currentSlide.classList.add('hardem-highlight-element');
+            currentSlide.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            });
+            
+            currentSlideIndex = (currentSlideIndex + 1) % slides.length;
+            
+            if (currentSlideIndex === 0) {
+                // Fim da pré-visualização
+                setTimeout(() => {
+                    document.querySelectorAll('.hardem-highlight-element').forEach(el => {
+                        el.classList.remove('hardem-highlight-element');
+                    });
+                    this.showAlert('✅ Pré-visualização concluída!', 'success');
+                }, 1500);
+            } else {
+                // Continua para o próximo slide
+                setTimeout(highlightNextSlide, 1500);
+            }
+        };
+        
+        highlightNextSlide();
+    }
+
+    /**
+     * Restaurar carrossel para configurações padrão
+     */
+    resetCarouselToDefaults() {
+        if (!confirm('🔄 Tem certeza que deseja restaurar o carrossel para as configurações padrão? Esta ação não pode ser desfeita.')) {
+            return;
+        }
+        
+        const carouselContainer = this.currentElement;
+        const slides = carouselContainer.querySelectorAll('.mySwiper-banner-four .swiper-slide');
+        const thumbs = carouselContainer.querySelectorAll('.mySwiper-thumbnail .swiper-slide');
+        
+        // Textos padrão para os slides
+        const defaultTexts = [
+            {
+                title: "Let's Build Future Home Together",
+                description: "We are dedicated to building structures that last and relationships that endure. With a focus on quality, precision, and innovation."
+            },
+            {
+                title: "Excellence in Construction",
+                description: "From residential to commercial projects, we deliver exceptional results with attention to detail and professional craftsmanship."
+            },
+            {
+                title: "Your Dream, Our Expertise",
+                description: "Transform your vision into reality with our experienced team of construction professionals and innovative building solutions."
+            },
+            {
+                title: "Quality Construction Services",
+                description: "Providing comprehensive construction services with commitment to quality, safety, and customer satisfaction."
+            }
+        ];
+        
+        // Restaurar textos dos slides
+        slides.forEach((slide, index) => {
+            const titleElement = slide.querySelector('.title');
+            const descElement = slide.querySelector('.disc');
+            
+            if (titleElement && defaultTexts[index]) {
+                titleElement.textContent = defaultTexts[index].title;
+                const titleDataKey = titleElement.getAttribute('data-key') || `slide_title_${index}`;
+                this.contentMap[titleDataKey] = defaultTexts[index].title;
+            }
+            
+            if (descElement && defaultTexts[index]) {
+                descElement.textContent = defaultTexts[index].description;
+                const descDataKey = descElement.getAttribute('data-key') || `slide_desc_${index}`;
+                this.contentMap[descDataKey] = defaultTexts[index].description;
+            }
+            
+            // Remover backgrounds customizados
+            const bgElement = slide.querySelector('.bg-banner-four');
+            if (bgElement) {
+                bgElement.style.removeProperty('background-image');
+                const bgDataKey = bgElement.getAttribute('data-key');
+                if (bgDataKey && this.contentMap[bgDataKey]) {
+                    delete this.contentMap[bgDataKey];
+                }
+            }
+        });
+        
+        // Restaurar thumbnails padrão
+        const defaultThumbs = [
+            'assets/images/banner/09.webp',
+            'assets/images/banner/10.webp',
+            'assets/images/banner/09.webp',
+            'assets/images/banner/10.webp',
+            'assets/images/banner/09.webp'
+        ];
+        
+        thumbs.forEach((thumb, index) => {
+            const imgElement = thumb.querySelector('img');
+            if (imgElement && defaultThumbs[index]) {
+                imgElement.src = defaultThumbs[index];
+                const thumbDataKey = imgElement.getAttribute('data-key');
+                if (thumbDataKey && this.contentMap[thumbDataKey]) {
+                    delete this.contentMap[thumbDataKey];
+                }
+            }
+        });
+        
+        // Salvar alterações
+        this.saveContent();
+        
+        // Recarregar o painel do carrossel
+        this.showCarouselManagementPanel(carouselContainer);
+        
+        this.showAlert('🔄 Carrossel restaurado para configurações padrão!', 'success');
+    }
+
+    /**
+     * Aplicar mudança de texto do painel
+     */
+    applyTextChange() {
+        const textArea = document.getElementById('hardem-text-content');
+        if (!textArea || !this.currentElement) return;
+        
+        const newText = textArea.value.trim();
+        if (!newText) {
+            this.showAlert('⚠️ O texto não pode ficar vazio!', 'error');
+            return;
+        }
+        
+        this.currentElement.textContent = newText;
+        const dataKey = this.currentElement.getAttribute('data-key');
+        if (dataKey) {
+            this.contentMap[dataKey] = newText;
+            this.saveContent();
+            this.showAlert('✅ Texto atualizado com sucesso!', 'success');
+        }
+    }
+
+    /**
+     * Obter descrição do tipo de elemento
+     */
+    getElementTypeDescription(element) {
+        const tag = element.tagName.toLowerCase();
+        const computedStyle = window.getComputedStyle(element);
+        const hasBackground = computedStyle.backgroundImage && computedStyle.backgroundImage !== 'none';
+        
+        if (tag === 'img') return 'Imagem';
+        if (hasBackground) return `Elemento com Background (${tag})`;
+        if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tag)) return 'Título';
+        if (tag === 'p') return 'Parágrafo';
+        if (tag === 'a') return 'Link';
+        if (tag === 'button') return 'Botão';
+        return `Elemento ${tag}`;
+    }
+
+    /**
+     * Obter localização do elemento na página
+     */
+    getElementLocation(element) {
+        if (element.closest('.swiper')) return 'Carrossel';
+        if (element.closest('header')) return 'Cabeçalho';
+        if (element.closest('footer')) return 'Rodapé';
+        if (element.closest('.banner')) return 'Banner';
+        if (element.closest('.about')) return 'Seção Sobre';
+        if (element.closest('.service')) return 'Seção Serviços';
+        if (element.closest('.contact')) return 'Seção Contato';
+        return 'Conteúdo Principal';
+    }
+
+    /**
+     * Verificar se é elemento de texto
+     */
+    isTextElement(element) {
+        const tag = element.tagName.toLowerCase();
+        return ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'a', 'button', 'div'].includes(tag) && 
+               !element.querySelector('img') &&
+               element.textContent.trim().length > 0;
     }
 }
 
