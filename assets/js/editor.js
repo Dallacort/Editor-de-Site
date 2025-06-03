@@ -1271,6 +1271,38 @@ class HardemEditor {
             return;
         }
         
+        // NOVO: Verificar explicitamente se é um container de serviço
+        if (this.isServiceMenuContainer(element)) {
+            console.log('Ignorando container de serviço:', element);
+            return; // Não tornar editável
+        }
+        
+        // Verificar se está no header, para aplicar regras específicas
+        const isInHeader = element.closest('header') !== null;
+        
+        if (isInHeader) {
+            // Verificar elementos de navegação que não devem ser editáveis
+            if (element.classList.contains('header-bottom') ||
+                element.classList.contains('nav-area') || 
+                element.classList.contains('main-nav') || 
+                element.classList.contains('submenu') ||
+                element.classList.contains('rts-mega-menu')) {
+                return; // Não tornar editável
+            }
+            
+            // Para links no header, verificar se são links de navegação complexos (com dropdown)
+            if (element.tagName === 'A' && (
+                element.classList.contains('has-dropdown') || 
+                element.querySelector('.rts-mega-menu') || 
+                element.querySelector('.submenu'))) {
+                
+                // Verificar se é um container de dropdown (não deve ser editável)
+                if (element.querySelector('.rts-mega-menu') || element.querySelector('.submenu')) {
+                    return; // Não tornar editável
+                }
+            }
+        }
+        
         element.classList.add('hardem-editable-element');
         
         const dataKey = element.getAttribute('data-key') || this.generateDataKey(element);
@@ -2028,6 +2060,7 @@ class HardemEditor {
                     
                     // Obter a URL atual do background para carregar na imagem temporária
                     const currentBg = window.getComputedStyle(element).backgroundImage;
+
                     if (currentBg && currentBg !== 'none') {
                         // Extrair a URL da string 'url("...")'
                         const urlMatch = currentBg.match(/url\(['"]?([^'"]+)['"]?\)/i);
@@ -2896,16 +2929,125 @@ class HardemEditor {
                );
     }
 
-    /**
- * Identificar elementos sobrepostos no ponto de clique
+/**
+ * Identificar elementos sobrepostos no ponto de clique com tratamento especial para menus de serviço
  * @param {Event} event - O evento de clique
- * @returns {Array} - Array de elementos sobrepostos
+ * @returns {Array} - Array de elementos sobrepostos filtrados
  */
 getOverlappingElements(event) {
     const elements = [];
     const elementsFromPoint = document.elementsFromPoint(event.clientX, event.clientY);
     
-    // Primeiro, coletar todos os elementos potencialmente editáveis
+    // Verificar se estamos em um dropdown de serviço
+    const isInServiceMenu = elementsFromPoint.some(el => 
+        el.closest('.rts-mega-menu.service-mega-menu-style') !== null);
+    
+    // Se estamos em um menu de serviço, comportamento especial
+    if (isInServiceMenu) {
+        // Identificar o elemento específico de serviço que foi clicado
+        // (ícone, título ou descrição)
+        const clickedElement = event.target;
+        
+        // NOVO: Ignorar cliques em elementos de fundo no dropdown de serviços
+        // Verificar se clicou diretamente na div do serviço ou em um elemento de fundo/container
+        if (clickedElement.classList.contains('single-service-menu') || 
+            clickedElement.classList.contains('service-mega-menu-style') ||
+            clickedElement.classList.contains('rts-mega-menu') ||
+            clickedElement.classList.contains('row') ||
+            clickedElement.classList.contains('col-lg-12') ||
+            clickedElement.classList.contains('container') ||
+            (clickedElement.classList.contains('icon') && !clickedElement.querySelector('img')) || // Container de ícone sem imagem
+            clickedElement.closest('.service-mega-menu-style') && 
+                !clickedElement.classList.contains('title') && 
+                !clickedElement.classList.contains('details') && 
+                clickedElement.tagName !== 'IMG') {
+            
+            console.log('Clique ignorado em elemento não editável do menu de serviços');
+            return []; // Retorna array vazio para não selecionar nada
+        }
+        
+        // Verificar se o elemento clicado é um componente específico de item de serviço
+        if (clickedElement.tagName === 'IMG' && clickedElement.closest('.icon')) {
+            // Clicou no ícone do serviço - devolver apenas o ícone
+            elements.push(clickedElement);
+            return elements;
+        }
+        
+        if (clickedElement.classList.contains('title') ||
+            clickedElement.tagName === 'H5' && clickedElement.classList.contains('title')) {
+            // Clicou no título do serviço - devolver apenas o título
+            elements.push(clickedElement);
+            return elements;
+        }
+        
+        if (clickedElement.classList.contains('details') ||
+            clickedElement.tagName === 'P' && clickedElement.classList.contains('details')) {
+            // Clicou na descrição do serviço - devolver apenas a descrição
+            elements.push(clickedElement);
+            return elements;
+        }
+        
+        // Se clicou no container da single-service-menu, NÃO selecionar o container
+        // Apenas ver se conseguimos encontrar um elemento específico próximo
+        if (clickedElement.classList.contains('single-service-menu') ||
+            clickedElement.closest('.single-service-menu')) {
+            const serviceMenu = clickedElement.classList.contains('single-service-menu') ? 
+                clickedElement : clickedElement.closest('.single-service-menu');
+            
+            // Determinar qual sub-elemento está mais próximo do ponto de clique
+            const iconEl = serviceMenu.querySelector('.icon img');
+            const titleEl = serviceMenu.querySelector('.title');
+            const detailsEl = serviceMenu.querySelector('.details');
+            
+            // Calcular distâncias para decidir qual elemento foi o alvo pretendido
+            const distances = [];
+            
+            // Função para calcular distância entre dois pontos
+            const calculateDistance = (el) => {
+                if (!el) return Infinity;
+                const rect = el.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                return Math.sqrt(
+                    Math.pow(centerX - event.clientX, 2) + 
+                    Math.pow(centerY - event.clientY, 2)
+                );
+            };
+            
+            if (iconEl) distances.push({el: iconEl, dist: calculateDistance(iconEl)});
+            if (titleEl) distances.push({el: titleEl, dist: calculateDistance(titleEl)});
+            if (detailsEl) distances.push({el: detailsEl, dist: calculateDistance(detailsEl)});
+            
+            // Ordenar por distância e pegar o mais próximo
+            distances.sort((a, b) => a.dist - b.dist);
+            
+            if (distances.length > 0) {
+                // Verificar se está perto o suficiente (limite de proximidade)
+                const closestDistance = distances[0].dist;
+                if (closestDistance < 50) { // Apenas selecionar se estiver próximo
+                    elements.push(distances[0].el);
+                    return elements;
+                } else {
+                    // Se não estiver próximo de nenhum elemento editável específico
+                    console.log('Clique muito distante de elementos editáveis específicos');
+                    return []; // Não selecionar nada
+                }
+            }
+        }
+        
+        // Comportamento de fallback - se não conseguir identificar precisamente,
+        // verificar explicitamente se é um elemento editável antes de retornar
+        if (this.isElementEditable(clickedElement) &&
+           !this.isServiceMenuContainer(clickedElement)) { // Nova verificação de container
+            elements.push(clickedElement);
+            return elements;
+        } else {
+            // Se não for um elemento explicitamente editável, não retornar nada
+            return [];
+        }
+    }
+    
+    // Comportamento normal para o resto da página (código original)
     for (const el of elementsFromPoint) {
         // Ignorar elementos do editor
         if (this.isEditorElement(el)) continue;
@@ -2918,7 +3060,6 @@ getOverlappingElements(event) {
              !window.getComputedStyle(el).backgroundImage.includes('gradient'))) {
             
             // Verificação específica para evitar problema no header
-            // Não adicionar links que sejam apenas containers da navegação
             if (el.tagName === 'A' && el.closest('header') && 
                 (el.classList.contains('main-nav') || 
                  el.parentElement.classList.contains('main-nav') || 
@@ -2937,6 +3078,11 @@ getOverlappingElements(event) {
     
     // Filtrar elementos do header que podem causar problemas
     const filteredElements = elements.filter(el => {
+        // Nova verificação: Excluir especificamente containers de serviços
+        if (this.isServiceMenuContainer(el)) {
+            return false;
+        }
+        
         // Verificar se está no header
         const isInHeader = el.closest('header') !== null;
         
@@ -2983,49 +3129,10 @@ getOverlappingElements(event) {
             if (el.tagName === 'IMG') {
                 return true;
             }
-        } else {
-            // Manter a lógica anterior para elementos fora do header
-            // Filtrar elementos que causam problemas específicos na seção de serviços
-            
-            // Não permitir edição do container inteiro single-service-style-4
-            if (el.classList.contains('single-service-style-4')) {
-                return false;
-            }
-            
-            // Se for o link principal do serviço, ignorar
-            if (el.tagName === 'A' && el.classList.contains('single-service-style-4')) {
-                return false;
-            }
-            
-            // Se for span dentro do hidden-content (botão "View Details"), permitir - é seguro
-            if (el.closest('.hidden-content') && el.tagName === 'SPAN') {
-                return true;
-            }
-            
-            // Se for div.hidden-content, ignorar - editar apenas elementos dentro dela
-            if (el.classList.contains('hidden-content')) {
-                return false;
-            }
-            
-            // Se for div.top dentro dos serviços, permitir - é seguro para edição de conteúdo
-            if (el.classList.contains('top') && el.closest('.single-service-style-4')) {
-                return true;
-            }
-            
-            // Permitir elementos específicos dentro dos serviços (textos e imagens)
-            if (el.closest('.single-service-style-4')) {
-                return el.tagName === 'H5' || 
-                       el.tagName === 'P' || 
-                       el.tagName === 'IMG' || 
-                       el.tagName === 'SPAN';
-            }
-            
-            // Por padrão, permitir outros elementos fora do header
-            return true;
         }
         
-        // Se chegou aqui, provavelmente é um elemento no header que não se encaixa nas regras específicas
-        return false;
+        // Manter a lógica existente para elementos fora do header
+        return true;
     });
     
     // Limitar a 5 elementos mais externos para evitar elementos muito pequenos/internos
@@ -3033,7 +3140,23 @@ getOverlappingElements(event) {
 }
 
 /**
- * Tornar elemento de texto editável
+ * Verifica se um elemento é um container de menu de serviço que não deve ser editável
+ * @param {HTMLElement} element - Elemento para verificar
+ * @returns {boolean} - True se for um container de serviço
+ */
+isServiceMenuContainer(element) {
+    // Verificar se é um container de serviço não editável
+    return (element.classList.contains('single-service-menu') ||
+           element.classList.contains('service-mega-menu-style') ||
+           element.classList.contains('row') && element.closest('.service-mega-menu-style') ||
+           element.classList.contains('col-lg-12') && element.closest('.service-mega-menu-style') ||
+           element.classList.contains('container') && element.closest('.service-mega-menu-style') ||
+           element.classList.contains('icon') && !element.querySelector('img') && element.closest('.service-mega-menu-style'));
+}
+
+/**
+ * Modificação necessária também no método makeTextElementEditable para impedir explicitamente
+ * que containers de serviços se tornem editáveis
  */
 makeTextElementEditable(element) {
     // Evitar elementos do próprio editor
@@ -3041,6 +3164,12 @@ makeTextElementEditable(element) {
         element.closest('.hardem-editor-sidepanel') ||
         element.classList.contains('hardem-editable-element')) {
         return;
+    }
+    
+    // NOVO: Verificar explicitamente se é um container de serviço
+    if (this.isServiceMenuContainer(element)) {
+        console.log('Ignorando container de serviço:', element);
+        return; // Não tornar editável
     }
     
     // Verificar se está no header, para aplicar regras específicas
@@ -3069,7 +3198,6 @@ makeTextElementEditable(element) {
         }
     }
     
-    // Se passou pelas verificações, continua com o processo normal
     element.classList.add('hardem-editable-element');
     
     const dataKey = element.getAttribute('data-key') || this.generateDataKey(element);
