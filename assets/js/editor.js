@@ -2897,32 +2897,95 @@ class HardemEditor {
     }
 
     /**
-     * Identificar elementos sobrepostos no ponto de clique
-     * @param {Event} event - O evento de clique
-     * @returns {Array} - Array de elementos sobrepostos
-     */
-    getOverlappingElements(event) {
-        const elements = [];
-        const elementsFromPoint = document.elementsFromPoint(event.clientX, event.clientY);
+ * Identificar elementos sobrepostos no ponto de clique
+ * @param {Event} event - O evento de clique
+ * @returns {Array} - Array de elementos sobrepostos
+ */
+getOverlappingElements(event) {
+    const elements = [];
+    const elementsFromPoint = document.elementsFromPoint(event.clientX, event.clientY);
+    
+    // Primeiro, coletar todos os elementos potencialmente editáveis
+    for (const el of elementsFromPoint) {
+        // Ignorar elementos do editor
+        if (this.isEditorElement(el)) continue;
         
-        // Primeiro, coletar todos os elementos potencialmente editáveis
-        for (const el of elementsFromPoint) {
-            // Ignorar elementos do editor
-            if (this.isEditorElement(el)) continue;
+        // Verificar se é um elemento potencialmente editável
+        if (el.hasAttribute('data-key') || 
+            this.editableSelectors.some(selector => el.matches(selector)) ||
+            el.tagName === 'IMG' ||
+            (window.getComputedStyle(el).backgroundImage !== 'none' && 
+             !window.getComputedStyle(el).backgroundImage.includes('gradient'))) {
             
-            // Verificar se é um elemento potencialmente editável
-            if (el.hasAttribute('data-key') || 
-                this.editableSelectors.some(selector => el.matches(selector)) ||
-                el.tagName === 'IMG' ||
-                (window.getComputedStyle(el).backgroundImage !== 'none' && 
-                 !window.getComputedStyle(el).backgroundImage.includes('gradient'))) {
-                elements.push(el);
+            // Verificação específica para evitar problema no header
+            // Não adicionar links que sejam apenas containers da navegação
+            if (el.tagName === 'A' && el.closest('header') && 
+                (el.classList.contains('main-nav') || 
+                 el.parentElement.classList.contains('main-nav') || 
+                 el.parentElement.classList.contains('submenu'))) {
+                
+                // Verificar se é um link de navegação com filhos (dropdown)
+                if (el.querySelector('.rts-mega-menu') || el.querySelector('.submenu')) {
+                    // Ignorar links que servem como containers de dropdown
+                    continue;
+                }
             }
+            
+            elements.push(el);
         }
+    }
+    
+    // Filtrar elementos do header que podem causar problemas
+    const filteredElements = elements.filter(el => {
+        // Verificar se está no header
+        const isInHeader = el.closest('header') !== null;
         
-        // Agora, filtrar elementos problemáticos
-        const filteredElements = elements.filter(el => {
-            // Filtrar elementos que causam problemas específicos
+        if (isInHeader) {
+            // Não permitir edição de elementos de navegação complexos
+            if (el.classList.contains('rts-mega-menu') || 
+                el.classList.contains('submenu') || 
+                el.classList.contains('wrapper') ||
+                el.classList.contains('header-bottom') ||
+                el.classList.contains('nav-area')) {
+                return false;
+            }
+            
+            // Verificar se é um link com dropdown
+            if (el.tagName === 'A' && (
+                el.classList.contains('has-dropdown') || 
+                el.parentElement.classList.contains('has-dropdown'))) {
+                // Verificar se há cliques explícitos neste elemento e não em seus filhos
+                const rect = el.getBoundingClientRect();
+                const isDirectClick = 
+                    event.clientX >= rect.left && 
+                    event.clientX <= rect.right && 
+                    event.clientY >= rect.top && 
+                    event.clientY <= rect.bottom;
+                
+                // Só permitir se o clique foi diretamente neste elemento
+                return isDirectClick;
+            }
+            
+            // Para links simples do header, verificar se tem texto próprio
+            if (el.tagName === 'A' && el.textContent.trim()) {
+                return true;
+            }
+            
+            // Para elementos de texto no header (spans, h5, etc)
+            if (['SPAN', 'H5', 'H4', 'H3', 'H2', 'H1', 'P'].includes(el.tagName) && 
+                el.textContent.trim() && 
+                !el.querySelector('a') && // Não deve conter links aninhados
+                !el.parentElement.classList.contains('rts-mega-menu')) { // Não deve estar em mega-menu
+                return true;
+            }
+            
+            // Para imagens no header
+            if (el.tagName === 'IMG') {
+                return true;
+            }
+        } else {
+            // Manter a lógica anterior para elementos fora do header
+            // Filtrar elementos que causam problemas específicos na seção de serviços
             
             // Não permitir edição do container inteiro single-service-style-4
             if (el.classList.contains('single-service-style-4')) {
@@ -2957,13 +3020,86 @@ class HardemEditor {
                        el.tagName === 'SPAN';
             }
             
-            // Por padrão, permitir outros elementos
+            // Por padrão, permitir outros elementos fora do header
             return true;
-        });
+        }
         
-        // Limitar a 5 elementos mais externos para evitar elementos muito pequenos/internos
-        return filteredElements.slice(0, 5);
+        // Se chegou aqui, provavelmente é um elemento no header que não se encaixa nas regras específicas
+        return false;
+    });
+    
+    // Limitar a 5 elementos mais externos para evitar elementos muito pequenos/internos
+    return filteredElements.slice(0, 5);
+}
+
+/**
+ * Tornar elemento de texto editável
+ */
+makeTextElementEditable(element) {
+    // Evitar elementos do próprio editor
+    if (element.closest('.hardem-editor-toolbar') || 
+        element.closest('.hardem-editor-sidepanel') ||
+        element.classList.contains('hardem-editable-element')) {
+        return;
     }
+    
+    // Verificar se está no header, para aplicar regras específicas
+    const isInHeader = element.closest('header') !== null;
+    
+    if (isInHeader) {
+        // Verificar elementos de navegação que não devem ser editáveis
+        if (element.classList.contains('header-bottom') ||
+            element.classList.contains('nav-area') || 
+            element.classList.contains('main-nav') || 
+            element.classList.contains('submenu') ||
+            element.classList.contains('rts-mega-menu')) {
+            return; // Não tornar editável
+        }
+        
+        // Para links no header, verificar se são links de navegação complexos (com dropdown)
+        if (element.tagName === 'A' && (
+            element.classList.contains('has-dropdown') || 
+            element.querySelector('.rts-mega-menu') || 
+            element.querySelector('.submenu'))) {
+            
+            // Verificar se é um container de dropdown (não deve ser editável)
+            if (element.querySelector('.rts-mega-menu') || element.querySelector('.submenu')) {
+                return; // Não tornar editável
+            }
+        }
+    }
+    
+    // Se passou pelas verificações, continua com o processo normal
+    element.classList.add('hardem-editable-element');
+    
+    const dataKey = element.getAttribute('data-key') || this.generateDataKey(element);
+    element.setAttribute('data-key', dataKey);
+    
+    // Tooltip
+    element.title = `Editar: ${dataKey}`;
+
+    // Eventos de edição inline - usar arrow functions para manter contexto
+    const handleDoubleClick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.startInlineEditing(element);
+    };
+
+    // Substituir o evento de clique pelo nosso novo manipulador
+    const handleClick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.handleElementClick(e);
+    };
+
+    element.addEventListener('dblclick', handleDoubleClick);
+    element.addEventListener('click', handleClick);
+    
+    // Neutralizar efeitos problemáticos
+    this.neutralizeElementEffects(element);
+    
+    console.log(`✅ Elemento editável: ${dataKey}`);
+}
 
     /**
      * Verificar se um elemento é seguro para edição direta sem quebrar o layout
