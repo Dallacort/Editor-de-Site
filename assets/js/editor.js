@@ -1446,9 +1446,6 @@ class HardemEditor {
      * Selecionar elemento para edição no painel (modo WordPress)
      */
     selectElement(element) {
-        // Limpar classes temporárias que podem causar problemas
-        this.cleanupTemporaryEditingClasses(element);
-        
         this.currentElement = element;
         
         // Abrir painel automaticamente (modo WordPress)
@@ -2900,74 +2897,9 @@ class HardemEditor {
     }
 
     /**
-     * Verificar se um elemento é do header ou dropdown
-     * @param {HTMLElement} element - Elemento para verificar
-     * @returns {boolean} - Se o elemento pertence ao header ou dropdown
-     */
-    isHeaderOrDropdownElement(element) {
-        // Verificar se é parte do header
-        return (
-            // Itens do menu principal
-            (element.classList.contains('main-nav') || element.parentElement?.classList.contains('main-nav')) ||
-            // Elementos dentro dos dropdowns
-            element.closest('.mega-menu') !== null ||
-            element.closest('.submenu') !== null
-        );
-    }
-
-    /**
-     * Identificar se um elemento deve ser ignorado para edição
-     * @param {HTMLElement} element - Elemento para verificar
-     * @returns {boolean} - true se o elemento deve ser ignorado
-     */
-    shouldIgnoreElement(element) {
-        // 1. Ignorar contêineres do header que não são os links/textos específicos
-        if (this.isHeaderOrDropdownElement(element)) {
-            // Se for um LI do menu principal - ignorar o contêiner, editar apenas o A dentro dele
-            if (element.tagName === 'LI' && element.classList.contains('main-nav')) {
-                return true;
-            }
-            
-            // Se for um elemento de navegação sem texto próprio
-            if (element.classList.contains('nav-area') || 
-                element.classList.contains('mega-menu') || 
-                element.classList.contains('submenu') ||
-                element.classList.contains('wrapper')) {
-                return true;
-            }
-
-            // Para contêineres sem conteúdo textual direto (apenas filhos com texto)
-            if (element.childElementCount > 0 && element.textContent.trim() !== "" && element.children[0].textContent.trim() === element.textContent.trim()) {
-                return true;
-            }
-        }
-        
-        // 2. Ignorar áreas de serviço que não são os elementos específicos
-        if (element.closest('.single-service-style-4')) {
-            // Ignorar o container <a> para editar apenas elementos internos
-            if (element.tagName === 'A' && element.classList.contains('single-service-style-4')) {
-                return true;
-            }
-            
-            // Ignorar divs que apenas contêm outros elementos, como a div "top"
-            if (element.tagName === 'DIV' && !element.dataset.key && element.childElementCount > 0) {
-                // Apenas ignorar se não tiver texto próprio (texto direto no elemento, não em filhos)
-                const textNodes = Array.from(element.childNodes)
-                    .filter(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== '');
-            
-                if (textNodes.length === 0) {
-                    return true;
-                }
-            }
-        }
-    
-        return false;
-    }
-
-    /**
-     * Identificar elementos sobrepostos no ponto de clique com melhor filtragem
+     * Identificar elementos sobrepostos no ponto de clique
      * @param {Event} event - O evento de clique
-     * @returns {Array} - Array de elementos sobrepostos filtrados
+     * @returns {Array} - Array de elementos sobrepostos
      */
     getOverlappingElements(event) {
         const elements = [];
@@ -2979,56 +2911,78 @@ class HardemEditor {
             if (this.isEditorElement(el)) continue;
             
             // Verificar se é um elemento potencialmente editável
-            if ((el.hasAttribute('data-key') || 
+            if (el.hasAttribute('data-key') || 
                 this.editableSelectors.some(selector => el.matches(selector)) ||
                 el.tagName === 'IMG' ||
                 (window.getComputedStyle(el).backgroundImage !== 'none' && 
-                 !window.getComputedStyle(el).backgroundImage.includes('gradient'))) &&
-                !this.shouldIgnoreElement(el)) {  // Verificar nossa nova função
-                
-                // Adicionar elementos significativos
+                 !window.getComputedStyle(el).backgroundImage.includes('gradient'))) {
                 elements.push(el);
             }
         }
         
-        // Filtrar elementos duplicados ou redundantes
-        const filteredElements = elements.filter((el, index, self) => {
-            // Remover duplicados baseado no data-key
-            const dataKey = el.getAttribute('data-key');
-            if (dataKey) {
-                return index === self.findIndex(e => e.getAttribute('data-key') === dataKey);
-            }
+        // Agora, filtrar elementos problemáticos
+        const filteredElements = elements.filter(el => {
+            // Filtrar elementos que causam problemas específicos
             
-            // Preferir elementos com conteúdo textual real
-            if (el.textContent.trim() === '' && !el.tagName === 'IMG') {
+            // Não permitir edição do container inteiro single-service-style-4
+            if (el.classList.contains('single-service-style-4')) {
                 return false;
             }
             
+            // Se for o link principal do serviço, ignorar
+            if (el.tagName === 'A' && el.classList.contains('single-service-style-4')) {
+                return false;
+            }
+            
+            // Se for span dentro do hidden-content (botão "View Details"), permitir - é seguro
+            if (el.closest('.hidden-content') && el.tagName === 'SPAN') {
+                return true;
+            }
+            
+            // Se for div.hidden-content, ignorar - editar apenas elementos dentro dela
+            if (el.classList.contains('hidden-content')) {
+                return false;
+            }
+            
+            // Se for div.top dentro dos serviços, permitir - é seguro para edição de conteúdo
+            if (el.classList.contains('top') && el.closest('.single-service-style-4')) {
+                return true;
+            }
+            
+            // Permitir elementos específicos dentro dos serviços (textos e imagens)
+            if (el.closest('.single-service-style-4')) {
+                return el.tagName === 'H5' || 
+                       el.tagName === 'P' || 
+                       el.tagName === 'IMG' || 
+                       el.tagName === 'SPAN';
+            }
+            
+            // Por padrão, permitir outros elementos
             return true;
         });
         
-        // Dar prioridade para elementos mais específicos
-        filteredElements.sort((a, b) => {
-            // Priorizar elementos com data-key
-            const aHasKey = a.hasAttribute('data-key');
-            const bHasKey = b.hasAttribute('data-key');
-            
-            if (aHasKey && !bHasKey) return -1;
-            if (!aHasKey && bHasKey) return 1;
-            
-            // Priorizar elementos com conteúdo textual real
-            const aHasText = a.textContent.trim() !== '';
-            const bHasText = b.textContent.trim() !== '';
-            
-            if (aHasText && !bHasText) return -1;
-            if (!aHasText && bHasText) return 1;
-            
-            // Priorizar elementos mais específicos (menores/mais internos)
-            return a.outerHTML.length - b.outerHTML.length;
-        });
-        
-        // Limitar a 5 elementos mais específicos
+        // Limitar a 5 elementos mais externos para evitar elementos muito pequenos/internos
         return filteredElements.slice(0, 5);
+    }
+
+    /**
+     * Verificar se um elemento é seguro para edição direta sem quebrar o layout
+     * @param {HTMLElement} element - Elemento para verificar
+     * @returns {boolean} - true se for seguro para edição
+     */
+    isSafeForDirectEdit(element) {
+        // Se for o container do serviço inteiro, não é seguro editar diretamente
+        if (element.classList.contains('single-service-style-4')) {
+            return false;
+        }
+        
+        // Se for o link principal do serviço, não é seguro
+        if (element.tagName === 'A' && element.classList.contains('single-service-style-4')) {
+            return false;
+        }
+        
+        // Por padrão, outros elementos são considerados seguros
+        return true;
     }
 
     /**
@@ -3040,83 +2994,52 @@ class HardemEditor {
         event.preventDefault();
         event.stopPropagation();
         
-        // Verificar se o clique foi em uma área do header ou dropdown
-        const isHeaderArea = event.target.closest('header') !== null;
-        const isDropdownArea = event.target.closest('.mega-menu') !== null || event.target.closest('.submenu') !== null;
-        const clickedElement = event.target;
-        
-        // Tratamento especial para header e dropdown
-        if (isHeaderArea || isDropdownArea) {
-            // Para links de navegação, selecionar apenas o link específico
-            if (clickedElement.tagName === 'A' && 
-                (clickedElement.closest('.main-nav') || clickedElement.closest('.mega-menu') || clickedElement.closest('.submenu'))) {
-                this.selectElement(clickedElement);
-                return;
-            }
-            
-            // Para elementos de texto no header, selecionar apenas o texto específico
-            if (['SPAN', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'P'].includes(clickedElement.tagName) && 
-                clickedElement.textContent.trim() !== '') {
-                this.selectElement(clickedElement);
-                return;
-            }
-        }
-        
-        // Caso especial para área de serviço
-        if (clickedElement.closest('.single-service-style-4')) {
-            // Se clicar diretamente no título, descrição ou ícone, editar diretamente
-            if ((clickedElement.tagName === 'H5' && clickedElement.classList.contains('title')) || 
-                (clickedElement.tagName === 'P' && clickedElement.classList.contains('disc')) ||
-                (clickedElement.tagName === 'IMG')) {
-                this.selectElement(clickedElement);
-                return;
-            }
-            
-            // Se clicar no contêiner, mostrar elementos editáveis internos
-            const serviceCard = clickedElement.closest('.single-service-style-4');
-            if (serviceCard) {
-                const safeElements = [];
-                
-                // Adicionar título
-                const title = serviceCard.querySelector('h5.title');
-                if (title) safeElements.push(title);
-                
-                // Adicionar descrição
-                const desc = serviceCard.querySelector('p.disc');
-                if (desc) safeElements.push(desc);
-                
-                // Adicionar imagem de ícone
-                const icon = serviceCard.querySelector('.icon img');
-                if (icon) safeElements.push(icon);
-                
-                // Adicionar imagem principal
-                const img = serviceCard.querySelector('.thumbnail img');
-                if (img) safeElements.push(img);
-                
-                // Adicionar botão "View Details"
-                const viewBtn = serviceCard.querySelector('.hidden-content span');
-                if (viewBtn) safeElements.push(viewBtn);
-                
-                // Se encontramos elementos seguros, mostrar painel de elementos sobrepostos com eles
-                if (safeElements.length > 0) {
-                    this.showOverlappingElementsPanel(safeElements);
-                    return;
-                }
-            }
-        }
-        
-        // Para outros casos, usar o método normal com os elementos filtrados
+        // Obter elementos sobrepostos usando o método filtrado
         const overlappingElements = this.getOverlappingElements(event);
         
         // Caso especial para overlay de imagens (hidden-content)
         if (event.target.closest('.hidden-content') || event.target.classList.contains('hidden-content')) {
+            // Se clicar no overlay, sempre mostrar o painel de sobreposições
+            // incluindo tanto o texto do botão quanto a imagem de fundo
             if (overlappingElements.length > 0) {
                 this.showOverlappingElementsPanel(overlappingElements);
                 return;
             }
         }
         
-        // Forçar exibição de painel para elementos sobrepostos quando há mais de um
+        // Tratar situação específica de cards de serviço
+        const clickedElement = event.target;
+        if (clickedElement.classList.contains('single-service-style-4') || 
+            (clickedElement.tagName === 'A' && clickedElement.classList.contains('single-service-style-4'))) {
+            
+            // Encontrar elementos seguros dentro do serviço para edição
+            const safeElements = [];
+            
+            // Adicionar título
+            const title = clickedElement.querySelector('h5.title');
+            if (title) safeElements.push(title);
+            
+            // Adicionar descrição
+            const desc = clickedElement.querySelector('p.disc');
+            if (desc) safeElements.push(desc);
+            
+            // Adicionar imagem
+            const img = clickedElement.querySelector('img');
+            if (img) safeElements.push(img);
+            
+            // Adicionar botão "View Details"
+            const viewBtn = clickedElement.querySelector('.hidden-content span');
+            if (viewBtn) safeElements.push(viewBtn);
+            
+            // Se encontramos elementos seguros, mostrar painel de elementos sobrepostos com eles
+            if (safeElements.length > 0) {
+                this.showOverlappingElementsPanel(safeElements);
+                return;
+            }
+        }
+        
+        // Forçar exibição de panel para elementos sobrepostos quando há mais de um
+        // Isto é uma mudança importante - removemos a verificação isSafeForDirectEdit
         if (overlappingElements.length > 1) {
             this.showOverlappingElementsPanel(overlappingElements);
             return;
@@ -3135,27 +3058,232 @@ class HardemEditor {
     }
 
     /**
-     * Limpar classes de edição temporárias que podem causar problemas
-     * @param {HTMLElement} element - Elemento para limpar
+     * Mostrar painel com elementos sobrepostos
+     * @param {Array} elements - Elementos sobrepostos
      */
-    cleanupTemporaryEditingClasses(element) {
+    showOverlappingElementsPanel(elements) {
+        // Abrir painel lateral
+        this.openSidePanel();
+        
+        // Armazenar elementos para uso posterior
+        this.overlappingElements = elements;
+        
+        // Gerar conteúdo do painel
+        const content = document.getElementById('hardem-panel-content');
+        
+        let panelHTML = `
+            <div class="hardem-editor-info">
+                <strong>Elementos sobrepostos detectados!</strong><br>
+                Selecione qual elemento você deseja editar:
+            </div>
+            <div class="hardem-editor-section">
+                <div class="hardem-editor-section-header">
+                    <span>Camadas disponíveis (${elements.length})</span>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="hardem-editor-section-content">
+                    <div class="overlapping-elements-list">
+        `;
+        
+        // Adicionar cada elemento à lista
+        elements.forEach((element, index) => {
+            const elementType = element.tagName.toLowerCase();
+            const dataKey = element.getAttribute('data-key') || `elemento-${index + 1}`;
+            const hasImage = element.tagName === 'IMG' || element.querySelector('img');
+            const hasBackground = window.getComputedStyle(element).backgroundImage !== 'none';
+            
+            // Identificar o tipo de conteúdo para o ícone
+            let icon = '📄';
+            if (hasImage) icon = '🖼️';
+            else if (hasBackground) icon = '🎨';
+            
+            // Extrair texto representativo
+            let previewText = '';
+            if (element.textContent) {
+                previewText = element.textContent.trim().substring(0, 20) + (element.textContent.length > 20 ? '...' : '');
+            } else if (element.alt) {
+                previewText = `Imagem: ${element.alt}`;
+            } else if (hasBackground) {
+                previewText = 'Background image';
+            } else {
+                previewText = `${elementType}`;
+            }
+            
+            panelHTML += `
+                <div class="overlapping-element-item" data-index="${index}">
+                    <div class="element-icon">${icon}</div>
+                    <div class="element-info">
+                        <div class="element-type">&lt;${elementType}&gt;${element.className ? ' .' + element.className.split(' ')[0] : ''}</div>
+                        <div class="element-preview">${previewText}</div>
+                    </div>
+                    <div class="element-indicator">${index + 1}</div>
+                </div>
+            `;
+        });
+        
+        panelHTML += `
+                    </div>
+                    <button class="hardem-editor-btn-outline" style="margin-top: 10px;" 
+                            id="highlight-overlapping-elements">
+                        Destacar todas as camadas
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Adicionar o HTML ao painel
+        content.innerHTML = panelHTML;
+        
+        // Adicionar eventos aos itens da lista
+        document.querySelectorAll('.overlapping-element-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const index = parseInt(item.getAttribute('data-index'));
+                this.selectElementFromOverlap(index);
+            });
+        });
+        
+        // Adicionar evento ao botão de destaque
+        document.getElementById('highlight-overlapping-elements')?.addEventListener('click', () => {
+            this.highlightOverlappingElements();
+        });
+    }
+
+    /**
+     * Selecionar elemento a partir da lista de sobrepostos
+     * @param {number} index - Índice do elemento no array
+     */
+    selectElementFromOverlap(index) {
+        const element = this.overlappingElements[index];
         if (!element) return;
         
-        // Remover classes temporárias que podem causar problemas
-        element.classList.remove('hardem-disable-hover');
+        // Desativar animações de hover temporariamente para esse elemento
+        this.disableHoverEffects(element);
         
-        // Remover classes aplicadas para highlighting temporário
-        setTimeout(() => {
-            element.classList.remove('hardem-highlight-element');
-        }, 100);
+        // Selecionar o elemento
+        this.selectElement(element);
+    }
+
+    /**
+     * Destacar todos os elementos sobrepostos
+     */
+    highlightOverlappingElements() {
+        if (!this.overlappingElements || !this.overlappingElements.length) return;
         
-        // Também limpar classes nos elementos pai se necessário
-        if (element.parentElement) {
-            element.parentElement.classList.remove('hardem-disable-hover');
+        // Remover destaques existentes
+        document.querySelectorAll('.hardem-highlight-element').forEach(el => {
+            el.classList.remove('hardem-highlight-element');
+        });
+        
+        // Adicionar destaque a cada elemento com um atraso
+        this.overlappingElements.forEach((element, index) => {
             setTimeout(() => {
-                element.parentElement.classList.remove('hardem-highlight-element');
-            }, 100);
-        }
+                element.classList.add('hardem-highlight-element');
+                
+                // Remover o destaque após um tempo
+                setTimeout(() => {
+                    element.classList.remove('hardem-highlight-element');
+                }, 1000);
+            }, index * 500); // Destaque sequencial com 500ms de diferença
+        });
+    }
+
+    /**
+     * Desativar efeitos de hover em um elemento específico
+     * @param {Element} element - O elemento alvo
+     */
+    disableHoverEffects(element) {
+        // Adicionar uma classe especial para desativar hover
+        element.classList.add('hardem-disable-hover');
+        
+        // Voltar ao normal após a edição
+        setTimeout(() => {
+            element.classList.remove('hardem-disable-hover');
+        }, 5000); // 5 segundos é tempo suficiente para edição
+    }
+
+    /**
+     * Redimensiona uma imagem para manter as dimensões desejadas
+     * @param {HTMLImageElement} imageElement - Elemento de imagem a ser substituído
+     * @param {string} newImageSrc - Nova fonte da imagem (geralmente uma data URL)
+     * @param {Function} callback - Função de callback que recebe a imagem redimensionada
+     */
+    resizeImageToFit(imageElement, newImageSrc, callback) {
+        // Salvar as dimensões da imagem original
+        const originalWidth = imageElement.naturalWidth || imageElement.width;
+        const originalHeight = imageElement.naturalHeight || imageElement.height;
+        
+        // Verificar se está em uma área de serviços ou outro conjunto padronizado
+        const isServiceImage = imageElement.closest('.single-service-style-4') !== null;
+        const isPortfolioImage = imageElement.closest('.single-project-area-one') !== null;
+        
+        // Criar uma nova imagem para obter dimensões do novo arquivo
+        const img = new Image();
+        img.onload = () => {
+            let canvas = document.createElement('canvas');
+            let ctx = canvas.getContext('2d');
+            
+            // Configurar o canvas para as dimensões desejadas
+            if (isServiceImage || isPortfolioImage) {
+                // Manter as dimensões exatas da imagem original
+                canvas.width = originalWidth;
+                canvas.height = originalHeight;
+            } else {
+                // Para outras imagens, manter pelo menos a proporção
+                const aspectRatio = originalWidth / originalHeight;
+                const newAspectRatio = img.width / img.height;
+                
+                if (Math.abs(aspectRatio - newAspectRatio) > 0.1) {
+                    // Se a proporção for significativamente diferente
+                    canvas.width = originalWidth;
+                    canvas.height = originalHeight;
+                } else {
+                    // Se a proporção for semelhante, ajustar para não perder qualidade
+                    const maxDimension = Math.max(originalWidth, originalHeight);
+                    if (img.width > maxDimension || img.height > maxDimension) {
+                        // Redimensionar imagens grandes
+                        const scale = maxDimension / Math.max(img.width, img.height);
+                        canvas.width = img.width * scale;
+                        canvas.height = img.height * scale;
+                    } else {
+                        // Manter tamanho original se for menor
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                    }
+                }
+            }
+            
+            // Desenhar a imagem com as novas dimensões
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            // Convertê-la para data URL com qualidade adequada
+            let resizedImageData;
+            try {
+                // Tentar usar o formato original (normalmente JPEG para fotos, PNG para transparência)
+                const format = newImageSrc.includes('data:image/png') ? 'image/png' : 'image/jpeg';
+                resizedImageData = canvas.toDataURL(format, 0.9);  // 0.9 = 90% de qualidade para JPEGs
+            } catch (e) {
+                // Fallback para JPEG em caso de erro
+                resizedImageData = canvas.toDataURL('image/jpeg', 0.9);
+            }
+            
+            // Reportar dimensões para debug
+            console.log(`Imagem redimensionada: ${canvas.width}x${canvas.height}`);
+            
+            // Chamar o callback com a imagem redimensionada
+            callback(resizedImageData);
+        };
+        
+        // Se ocorrer erro no carregamento, usar a imagem original
+        img.onerror = () => {
+            console.error('Erro ao carregar imagem para redimensionamento');
+            callback(newImageSrc);
+        };
+        
+        // Iniciar o processo carregando a imagem
+        img.src = newImageSrc;
     }
 }
 
