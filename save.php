@@ -20,13 +20,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 // Função para retornar resposta JSON
 function sendResponse($status, $message, $data = null) {
     $response = [
+        'success' => ($status === 'success'),
         'status' => $status,
         'message' => $message,
         'timestamp' => date('Y-m-d H:i:s')
     ];
     
     if ($data !== null) {
-        $response['data'] = $data;
+        $response = array_merge($response, $data);
     }
     
     echo json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
@@ -159,19 +160,20 @@ try {
     
     // Sucesso!
     $responseData = [
+        'file_path' => realpath($filename),
         'filename' => $filename,
         'size' => $bytesWritten,
         'elements' => count($contentMap)
     ];
     
     if ($backupCreated && $backupPath) {
-        $responseData['backup'] = $backupPath;
+        $responseData['backup_path'] = realpath($backupPath);
         $responseData['backup_created'] = true;
     } else {
         $responseData['backup_created'] = false;
     }
     
-    sendResponse('success', 'Conteúdo salvo com sucesso.', $responseData);
+    sendResponse('success', 'Conteúdo salvo com sucesso na pasta de backups.', $responseData);
     
 } catch (Exception $e) {
     sendResponse('error', 'Erro interno do servidor: ' . $e->getMessage());
