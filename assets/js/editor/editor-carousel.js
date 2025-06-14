@@ -60,7 +60,7 @@ class HardemCarouselEditor {
         carousel.addEventListener('click', handleClick);
         carousel.addEventListener('dblclick', handleDoubleClick);
         
-        console.log(`✅ Carrossel editável: ${dataKey}`);
+        console.log(`Carrossel editável: ${dataKey}`);
     }
 
     /**
@@ -92,11 +92,11 @@ class HardemCarouselEditor {
             <div class="hardem-form-group">
                 <button onclick="window.hardemEditor.carouselEditor.previewCarousel('${dataKey}')" 
                         style="background: #3498db;">
-                    👁️ Visualizar Carrossel
+                    Visualizar Carrossel
                 </button>
                 <button onclick="window.hardemEditor.carouselEditor.resetCarouselToDefaults('${dataKey}')" 
                         style="background: #e74c3c;">
-                    🔄 Restaurar Padrão
+                    Restaurar Padrão
                 </button>
             </div>
             <hr>
@@ -117,15 +117,15 @@ class HardemCarouselEditor {
                     <br>
                     <button onclick="window.hardemEditor.carouselEditor.editSlide('${dataKey}', ${index})" 
                             style="margin: 2px; font-size: 10px; padding: 4px 8px;">
-                        ✏️ Editar
+                        Editar
                     </button>
                     <button onclick="window.hardemEditor.carouselEditor.uploadSlideImage(${index})" 
                             style="margin: 2px; font-size: 10px; padding: 4px 8px;">
-                        📷 Imagem
+                        Imagem
                     </button>
                     <button onclick="window.hardemEditor.carouselEditor.uploadSlideBackground(${index})" 
                             style="margin: 2px; font-size: 10px; padding: 4px 8px;">
-                        🖼️ Background
+                        Background
                     </button>
                 </div>
             `;
@@ -136,7 +136,7 @@ class HardemCarouselEditor {
             <div class="hardem-form-group">
                 <button onclick="window.hardemEditor.carouselEditor.applyAllCarouselChanges()" 
                         class="success" style="width: 100%;">
-                    ✅ Aplicar Todas as Mudanças
+                    Aplicar Todas as Mudanças
                 </button>
             </div>
         `;
@@ -519,7 +519,7 @@ class HardemCarouselEditor {
         html += `
             <div class="hardem-form-group">
                 <button onclick="window.hardemEditor.carouselEditor.applySlideChanges()" class="success">
-                    ✅ Aplicar Mudanças do Slide
+                                            Aplicar Mudanças do Slide
                 </button>
             </div>
         `;
@@ -752,7 +752,7 @@ class HardemCarouselEditor {
         const slides = this.currentCarousel.querySelectorAll('.mySwiper-banner-four .swiper-slide');
         
         if (slides.length === 0) {
-            this.core.ui.showAlert('❌ Nenhum slide encontrado para pré-visualizar!', 'error');
+            this.core.ui.showAlert('Nenhum slide encontrado para pré-visualizar!', 'error');
             return;
         }
         
@@ -781,7 +781,7 @@ class HardemCarouselEditor {
                     document.querySelectorAll('.hardem-highlight-element').forEach(el => {
                         el.classList.remove('hardem-highlight-element');
                     });
-                    this.core.ui.showAlert('✅ Pré-visualização concluída!', 'success');
+                    this.core.ui.showAlert('Pré-visualização concluída!', 'success');
                 }, 1500);
             } else {
                 // Continua para o próximo slide
@@ -796,7 +796,7 @@ class HardemCarouselEditor {
      * Restaurar carrossel para configurações padrão
      */
     resetCarouselToDefaults() {
-        if (!confirm('🔄 Tem certeza que deseja restaurar o carrossel para as configurações padrão? Esta ação não pode ser desfeita.')) {
+        if (!confirm('Tem certeza que deseja restaurar o carrossel para as configurações padrão? Esta ação não pode ser desfeita.')) {
             return;
         }
         
@@ -879,7 +879,7 @@ class HardemCarouselEditor {
         // Recarregar o painel do carrossel
         this.showCarouselManagementPanel(this.currentCarousel);
         
-        this.core.ui.showAlert('🔄 Carrossel restaurado para configurações padrão!', 'success');
+        this.core.ui.showAlert('Carrossel restaurado para configurações padrão!', 'success');
     }
 
     /**
@@ -921,7 +921,7 @@ class HardemCarouselEditor {
         });
         
         if (changesApplied > 0) {
-            this.core.ui.showAlert(`✅ ${changesApplied} alterações aplicadas no carrossel!`, 'success');
+            this.core.ui.showAlert(`${changesApplied} alterações aplicadas no carrossel!`, 'success');
             this.core.storage.saveContent();
         } else {
             this.core.ui.showAlert('ℹ️ Nenhuma alteração encontrada para aplicar.', 'info');

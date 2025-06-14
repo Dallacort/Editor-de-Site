@@ -79,7 +79,7 @@ class HardemEditorCore {
         this.setupMutationObserver();
         this.bindEvents();
         
-        console.log('🎯 HARDEM Editor iniciado com sucesso!');
+        console.log('HARDEM Editor iniciado com sucesso!');
         
         // Aguardar DOM estar completamente carregado antes de carregar conteúdo
         this.waitForDOMAndLoadContent();
@@ -153,7 +153,7 @@ class HardemEditorCore {
      * Reset de emergência - limpar tudo
      */
     emergencyReset() {
-        if (confirm('🚨 RESET DE EMERGÊNCIA: Isso vai limpar todos os dados salvos desta página e recarregar. Continuar?')) {
+        if (confirm('RESET DE EMERGÊNCIA: Isso vai limpar todos os dados salvos desta página e recarregar. Continuar?')) {
             // Limpar overlays presos
             document.querySelectorAll('.hardem-processing-overlay').forEach(el => el.remove());
             
@@ -165,7 +165,7 @@ class HardemEditorCore {
             
             sessionStorage.clear();
             this.contentMap = {};
-            console.log(`🚨 Reset de emergência executado para: ${pageKey}`);
+            console.log(`Reset de emergência executado para: ${pageKey}`);
             location.reload();
         }
     }
@@ -178,7 +178,7 @@ class HardemEditorCore {
         overlays.forEach(overlay => overlay.remove());
         
         if (overlays.length > 0) {
-            console.log(`🧹 ${overlays.length} overlay(s) de processamento removido(s)`);
+            console.log(`${overlays.length} overlay(s) de processamento removido(s)`);
             this.ui.showAlert('Overlays de processamento limpos!', 'success');
         }
     }
@@ -275,22 +275,18 @@ class HardemEditorCore {
         
         if (this.editMode) {
             toggleBtn.classList.add('active');
-            toggleBtn.innerHTML = '🔧 Desabilitar Edição';
-            statusEl.textContent = 'Modo Edição: ATIVO';
-            
-            // Mostrar toolbar
-            this.toolbar.classList.add('visible');
+            toggleBtn.innerHTML = '🔒';
+            toggleBtn.title = 'Desativar';
+            statusEl.textContent = 'ON';
             
             this.textEditor.setupEditableElements();
             this.imageEditor.setupImageEditing();
             this.carouselEditor.setupCarouselEditing();
         } else {
             toggleBtn.classList.remove('active');
-            toggleBtn.innerHTML = '✏️ Habilitar Edição';
-            statusEl.textContent = 'Modo Edição: INATIVO';
-            
-            // Esconder toolbar
-            this.toolbar.classList.remove('visible');
+            toggleBtn.innerHTML = '✏';
+            toggleBtn.title = 'Editar';
+            statusEl.textContent = 'OFF';
             
             this.ui.disableEditing();
         }
