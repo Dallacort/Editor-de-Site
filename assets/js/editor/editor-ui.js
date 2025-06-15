@@ -298,6 +298,121 @@ class HardemEditorUI {
                     background: linear-gradient(135deg, #fd7e14 0%, #f39c12 100%);
                 }
 
+                /* ===== ALERTAS MELHORADOS ===== */
+                .editor-alert {
+                    position: fixed;
+                    top: 80px;
+                    right: 20px;
+                    padding: 12px 20px;
+                    border-radius: 8px;
+                    z-index: 10000;
+                    max-width: 400px;
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    font-size: 14px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    animation: slideIn 0.3s ease-out;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    transition: opacity 0.3s ease;
+                }
+                
+                .editor-alert .alert-icon {
+                    font-size: 16px;
+                    flex-shrink: 0;
+                }
+                
+                .editor-alert .alert-message {
+                    flex: 1;
+                }
+                
+                .editor-alert .alert-close {
+                    background: none;
+                    border: none;
+                    font-size: 16px;
+                    cursor: pointer;
+                    padding: 0;
+                    margin-left: 8px;
+                    opacity: 0.7;
+                    flex-shrink: 0;
+                }
+                
+                .editor-alert .alert-close:hover {
+                    opacity: 1;
+                }
+                
+                .editor-alert.alert-success {
+                    background: #d4edda;
+                    color: #155724;
+                    border: 1px solid #c3e6cb;
+                }
+                
+                .editor-alert.alert-error {
+                    background: #f8d7da;
+                    color: #721c24;
+                    border: 1px solid #f5c6cb;
+                }
+                
+                .editor-alert.alert-warning {
+                    background: #fff3cd;
+                    color: #856404;
+                    border: 1px solid #ffeaa7;
+                }
+                
+                .editor-alert.alert-info {
+                    background: #d1ecf1;
+                    color: #0c5460;
+                    border: 1px solid #bee5eb;
+                }
+                
+                .editor-alert.detailed-alert {
+                    max-width: 500px;
+                    flex-direction: column;
+                    align-items: stretch;
+                }
+                
+                .editor-alert .alert-header {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    margin-bottom: 8px;
+                }
+                
+                .editor-alert .alert-title {
+                    font-weight: bold;
+                    flex: 1;
+                }
+                
+                .editor-alert .alert-details {
+                    font-size: 13px;
+                    opacity: 0.9;
+                    margin-bottom: 8px;
+                }
+                
+                .editor-alert .alert-suggestions {
+                    font-size: 12px;
+                    opacity: 0.8;
+                }
+                
+                .editor-alert .alert-suggestions ul {
+                    margin: 4px 0 0 16px;
+                    padding: 0;
+                }
+                
+                .editor-alert .alert-suggestions li {
+                    margin: 2px 0;
+                }
+                
+                .editor-alert .alert-spinner {
+                    width: 16px;
+                    height: 16px;
+                    border: 2px solid transparent;
+                    border-top: 2px solid currentColor;
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                    flex-shrink: 0;
+                }
+
                 @keyframes slideIn {
                     from {
                         transform: translateX(100%);
@@ -423,14 +538,23 @@ class HardemEditorUI {
                 <button class="hardem-editor-btn" id="hardem-clear-overlays" onclick="window.hardemEditor.clearStuckOverlays()" title="Limpar">
                     🧹
                 </button>
+                <button class="hardem-editor-btn" id="hardem-reset-images" onclick="window.hardemEditor.resetImageProcessing()" title="Reset Imagens">
+                    🖼️
+                </button>
                 <button class="hardem-editor-btn" id="hardem-test-server" onclick="window.hardemEditor.storage.testServerConnection().then(success => alert(success ? 'Servidor conectado!' : 'Servidor indisponível'))" title="Testar Servidor">
                     🔗
+                </button>
+                <button class="hardem-editor-btn" id="hardem-test-php" onclick="window.hardemEditor.testPHPEnvironment()" title="Testar PHP">
+                    🔧
                 </button>
                 <button class="hardem-editor-btn warning" id="hardem-emergency-reset" title="Reset">
                     ⚠
                 </button>
                 <button class="hardem-editor-btn warning" id="hardem-clear-all" onclick="window.hardemEditor.storage.clearAllPagesData()" title="Excluir Tudo">
                     🗑
+                </button>
+                <button class="hardem-editor-btn info" id="hardem-save-parts" onclick="window.hardemEditor.ui.startSaveInParts()" title="Salvar por Partes" style="display: none;">
+                    📦
                 </button>
                 <div class="hardem-editor-status" title="Status">
                     OFF
@@ -440,6 +564,26 @@ class HardemEditorUI {
         
         document.body.appendChild(this.core.toolbar);
         document.body.classList.add('hardem-editor-active');
+
+        // Botão de salvamento por partes (aparece quando necessário)
+        const savePartsBtn = document.createElement('button');
+        savePartsBtn.className = 'hardem-toolbar-btn hardem-save-parts-btn';
+        savePartsBtn.innerHTML = '📦';
+        savePartsBtn.title = 'Salvar por Partes (para dados grandes)';
+        savePartsBtn.style.display = 'none'; // Inicialmente oculto
+        savePartsBtn.onclick = () => {
+            if (this.core.storage) {
+                this.showAlert('📦 Iniciando salvamento por partes...', 'info');
+                this.core.storage.saveContentInParts(this.core.storage.exportData || {}).then(result => {
+                    if (result) {
+                        this.showAlert('✅ Salvamento por partes concluído!', 'success');
+                    }
+                }).catch(error => {
+                    console.error('Erro no salvamento por partes:', error);
+                    this.showAlert('❌ Erro no salvamento por partes', 'error');
+                });
+            }
+        };
     }
 
     /**
@@ -579,7 +723,7 @@ class HardemEditorUI {
             </div>
             <div class="hardem-form-group">
                 <label for="hardem-image-input">Nova Imagem:</label>
-                <input type="file" id="hardem-image-input" accept="image/*">
+                <input type="file" id="hardem-image-input" accept="image/*,image/svg+xml">
                 <button onclick="window.hardemEditor.imageEditor.uploadImageFromPanel()">
                     📤 Upload Imagem
                 </button>
@@ -608,7 +752,7 @@ class HardemEditorUI {
             </div>
             <div class="hardem-form-group">
                 <label for="hardem-slide-image-input">Nova Imagem:</label>
-                <input type="file" id="hardem-slide-image-input" accept="image/*">
+                <input type="file" id="hardem-slide-image-input" accept="image/*,image/svg+xml">
                 <button onclick="window.hardemEditor.ui.uploadSlideImageFromPanel()">
                     📤 Alterar Imagem do Slide
                 </button>
@@ -640,7 +784,7 @@ class HardemEditorUI {
             </div>
             <div class="hardem-form-group">
                 <label for="hardem-bg-input">Novo Background:</label>
-                <input type="file" id="hardem-bg-input" accept="image/*">
+                <input type="file" id="hardem-bg-input" accept="image/*,image/svg+xml">
                 <button onclick="window.hardemEditor.imageEditor.uploadBackgroundFromPanel()">
                     📤 Upload Background
                 </button>
@@ -834,16 +978,126 @@ class HardemEditorUI {
     /**
      * Mostrar alerta
      */
-    showAlert(message, type = 'success') {
+    showAlert(message, type = 'info', duration = 4000) {
+        console.log(`📢 ${type.toUpperCase()}: ${message}`);
+        
+        // Remover alertas anteriores
+        const existingAlerts = document.querySelectorAll('.editor-alert');
+        existingAlerts.forEach(alert => alert.remove());
+        
         const alert = document.createElement('div');
-        alert.className = `hardem-alert ${type}`;
-        alert.textContent = message;
+        alert.className = `editor-alert alert-${type}`;
+        
+        // Mapear ícones por tipo
+        const icons = {
+            success: '✅',
+            error: '❌',
+            warning: '⚠️',
+            info: 'ℹ️'
+        };
+        
+        alert.innerHTML = `
+            <span class="alert-icon">${icons[type] || 'ℹ️'}</span>
+            <span class="alert-message">${message}</span>
+            <button class="alert-close" onclick="this.parentElement.remove()">✕</button>
+        `;
         
         document.body.appendChild(alert);
         
+        // Auto remover após duração especificada
+        if (duration > 0) {
         setTimeout(() => {
-            alert.remove();
+                if (alert && alert.parentNode) {
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.remove(), 300);
+                }
+            }, duration);
+        }
+        
+        return alert;
+    }
+
+    /**
+     * Mostrar alerta de erro com detalhes técnicos
+     */
+    showDetailedErrorAlert(title, details, suggestions = []) {
+        const alert = document.createElement('div');
+        alert.className = 'editor-alert alert-error detailed-alert';
+        
+        let suggestionsHtml = '';
+        if (suggestions.length > 0) {
+            suggestionsHtml = `
+                <div class="alert-suggestions">
+                    <strong>Sugestões:</strong>
+                    <ul>
+                        ${suggestions.map(s => `<li>${s}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+        
+        alert.innerHTML = `
+            <div class="alert-header">
+                <span class="alert-icon">❌</span>
+                <span class="alert-title">${title}</span>
+                <button class="alert-close" onclick="this.parentElement.parentElement.remove()">✕</button>
+            </div>
+            <div class="alert-details">${details}</div>
+            ${suggestionsHtml}
+        `;
+        
+        document.body.appendChild(alert);
+        
+        // Auto remover após 8 segundos para alertas detalhados
+        setTimeout(() => {
+            if (alert && alert.parentNode) {
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 300);
+            }
+        }, 8000);
+        
+        return alert;
+    }
+
+    /**
+     * Mostrar alerta de progresso de salvamento
+     */
+    showSaveProgressAlert(stage, details = '') {
+        const alert = document.querySelector('.save-progress-alert') || document.createElement('div');
+        alert.className = 'editor-alert alert-info save-progress-alert';
+        
+        const stages = {
+            'validating': { icon: '🔍', text: 'Validando dados' },
+            'optimizing': { icon: '🗜️', text: 'Otimizando conteúdo' },
+            'local-save': { icon: '💾', text: 'Salvando localmente' },
+            'server-save': { icon: '📤', text: 'Enviando para servidor' },
+            'complete': { icon: '✅', text: 'Salvamento concluído' },
+            'error': { icon: '❌', text: 'Erro no salvamento' }
+        };
+        
+        const stageInfo = stages[stage] || { icon: 'ℹ️', text: stage };
+        
+        alert.innerHTML = `
+            <span class="alert-icon">${stageInfo.icon}</span>
+            <span class="alert-message">${stageInfo.text}${details ? ` - ${details}` : ''}</span>
+            ${stage !== 'complete' && stage !== 'error' ? '<div class="alert-spinner"></div>' : ''}
+        `;
+        
+        if (!alert.parentNode) {
+            document.body.appendChild(alert);
+        }
+        
+        // Remover apenas se for estágio final
+        if (stage === 'complete' || stage === 'error') {
+            setTimeout(() => {
+                if (alert && alert.parentNode) {
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.remove(), 300);
+                }
         }, 3000);
+        }
+        
+        return alert;
     }
 
     /**
@@ -878,6 +1132,44 @@ class HardemEditorUI {
                 }
             }
         };
+    }
+
+    /**
+     * Mostrar/ocultar botão de salvamento por partes
+     */
+    toggleSavePartsButton(show = false, reason = '') {
+        const savePartsBtn = document.getElementById('hardem-save-parts');
+        if (savePartsBtn) {
+            if (show) {
+                savePartsBtn.style.display = 'inline-block';
+                savePartsBtn.title = `Salvar por Partes - ${reason}`;
+                console.log(`📦 Botão de salvamento por partes ativado: ${reason}`);
+            } else {
+                savePartsBtn.style.display = 'none';
+            }
+        }
+    }
+
+    /**
+     * Iniciar salvamento por partes via botão
+     */
+    async startSaveInParts() {
+        if (this.core.storage) {
+            try {
+                this.showAlert('📦 Iniciando salvamento por partes...', 'info');
+                
+                // Usar wrapper que prepara os dados automaticamente
+                const result = await this.core.storage.saveContentInPartsWrapper();
+                if (result) {
+                    this.showAlert('✅ Salvamento por partes concluído!', 'success');
+                    // Ocultar botão após sucesso
+                    this.toggleSavePartsButton(false);
+                }
+            } catch (error) {
+                console.error('Erro no salvamento por partes:', error);
+                this.showAlert('❌ Erro no salvamento por partes', 'error');
+            }
+        }
     }
 }
 

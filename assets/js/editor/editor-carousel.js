@@ -206,7 +206,7 @@ class HardemCarouselEditor {
         
         const input = document.createElement('input');
         input.type = 'file';
-        input.accept = 'image/*';
+        input.accept = 'image/*,image/svg+xml';
         input.style.display = 'none';
         
         input.onchange = (e) => {
@@ -231,7 +231,7 @@ class HardemCarouselEditor {
         
         const input = document.createElement('input');
         input.type = 'file';
-        input.accept = 'image/*';
+        input.accept = 'image/*,image/svg+xml';
         input.style.display = 'none';
         
         input.onchange = (e) => {
@@ -509,7 +509,7 @@ class HardemCarouselEditor {
         html += `
             <div class="hardem-form-group">
                 <label for="hardem-slide-bg">Imagem de Fundo do Slide:</label>
-                <input type="file" id="hardem-slide-bg" accept="image/*">
+                <input type="file" id="hardem-slide-bg" accept="image/*,image/svg+xml">
                 <button onclick="window.hardemEditor.carouselEditor.uploadSlideBackgroundFromPanel()">
                     📤 Upload Background
                 </button>
@@ -611,7 +611,7 @@ class HardemCarouselEditor {
         
         const input = document.createElement('input');
         input.type = 'file';
-        input.accept = 'image/*';
+        input.accept = 'image/*,image/svg+xml';
         input.style.display = 'none';
         
         input.onchange = (e) => {

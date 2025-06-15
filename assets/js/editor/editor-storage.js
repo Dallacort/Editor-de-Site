@@ -12,7 +12,7 @@ class HardemEditorStorage {
     /**
      * Salvar conteúdo
      */
-    saveContent() {
+    async saveContent() {
         try {
             // Verificar se há conteúdo para salvar
             if (!this.core.contentMap || Object.keys(this.core.contentMap).length === 0) {
@@ -29,11 +29,18 @@ class HardemEditorStorage {
                     // Limpar dados corrompidos
                     const cleanValue = {};
                     if (value.text && typeof value.text === 'string') cleanValue.text = value.text;
-                    if (value.src && typeof value.src === 'string') cleanValue.src = value.src;
-                    if (value.backgroundImage && typeof value.backgroundImage === 'string') cleanValue.backgroundImage = value.backgroundImage;
+                    if (value.src && typeof value.src === 'string') {
+                        // Otimizar SVG se for muito grande
+                        cleanValue.src = this.optimizeImageData(value.src);
+                    }
+                    if (value.backgroundImage && typeof value.backgroundImage === 'string') {
+                        // Otimizar background se for muito grande
+                        cleanValue.backgroundImage = this.optimizeImageData(value.backgroundImage);
+                    }
                     if (value.title && typeof value.title === 'string') cleanValue.title = value.title;
                     if (value.description && typeof value.description === 'string') cleanValue.description = value.description;
                     if (value.type) cleanValue.type = value.type;
+                    if (value.format) cleanValue.format = value.format;
                     if (value.slideIndex !== undefined) cleanValue.slideIndex = value.slideIndex;
                     if (value.elementInfo) cleanValue.elementInfo = value.elementInfo;
                     
@@ -60,18 +67,120 @@ class HardemEditorStorage {
                 return null;
             }
 
+            // Verificar tamanho dos dados ANTES de enviar para servidor
+            const preliminaryData = {
+                contentMap: filteredContent,
+                url: exportData.url,
+                timestamp: exportData.timestamp,
+                metadata: exportData.metadata
+            };
+            
+            const preliminarySize = JSON.stringify(preliminaryData).length;
+            const phpPostLimit = 8 * 1024 * 1024; // 8MB (limite padrão do PHP)
+            
+            console.log(`📊 Tamanho dos dados: ${this.formatBytes(preliminarySize)}`);
+            
+            if (preliminarySize > phpPostLimit * 0.7) { // 70% do limite para mais margem de segurança
+                console.warn(`⚠️ Dados muito grandes para PHP (${this.formatBytes(preliminarySize)}). Otimizando...`);
+                this.core.ui.showSaveProgressAlert('optimizing', `${this.formatBytes(preliminarySize)} → otimizando`);
+                
+                // Mostrar botão de salvamento por partes
+                this.core.ui.toggleSavePartsButton(true, `Dados grandes detectados (${this.formatBytes(preliminarySize)})`);
+                
+                // Tentar otimização agressiva
+                const optimizedContent = this.aggressiveOptimization(filteredContent);
+                const optimizedSize = JSON.stringify({
+                    contentMap: optimizedContent,
+                    url: exportData.url,
+                    timestamp: exportData.timestamp,
+                    metadata: exportData.metadata
+                }).length;
+                
+                console.log(`🗜️ Após otimização: ${this.formatBytes(optimizedSize)}`);
+                
+                if (optimizedSize > phpPostLimit * 0.7) {
+                    // Ainda muito grande - tentar salvamento por partes
+                    console.log('🔄 Dados ainda muito grandes após otimização. Tentando salvamento por partes...');
+                    
+                    this.core.ui.showAlert('📦 Dados grandes detectados. Salvando por partes...', 'info');
+                    
+                    // Tentar salvamento individual por imagem
+                    const partResult = await this.saveContentInParts(exportData);
+                    if (partResult) {
+                        return partResult;
+                    }
+                    
+                    // Se salvamento por partes falhar, salvar localmente
+                    this.core.ui.showDetailedErrorAlert(
+                        'Dados Muito Grandes - Salvamento Local',
+                        `Tamanho: ${this.formatBytes(preliminarySize)}. Limite PHP: ${this.formatBytes(phpPostLimit)}`,
+                        [
+                            'Tentativa de salvamento por partes falhou',
+                            'Use imagens menores (redimensione antes de carregar)',
+                            'Configure PHP: post_max_size = 50M no php.ini',
+                            'Os dados foram salvos localmente como backup'
+                        ]
+                    );
+                    
+                    // Salvar apenas localmente
+                    const pageKey = this.getPageKey();
+                    const localData = this.extractEssentialData(filteredContent);
+                    localStorage.setItem(pageKey, JSON.stringify(localData));
+                    
+                    this.core.ui.showAlert('💾 Dados salvos localmente (backup de segurança)', 'warning');
+                    return exportData;
+                }
+                
+                // Usar dados otimizados
+                exportData.contentMap = optimizedContent;
+                exportData.content = optimizedContent;
+            }
+
+            // Mostrar progresso de validação
+            this.core.ui.showSaveProgressAlert('validating', `${Object.keys(filteredContent).length} elementos`);
+            
+            // Verificar tamanho total dos dados
+            const dataSize = JSON.stringify(filteredContent).length;
+            const maxLocalStorageSize = 5 * 1024 * 1024; // 5MB para localStorage
+            
+            if (dataSize > maxLocalStorageSize) {
+                console.warn(`Dados muito grandes (${this.formatBytes(dataSize)}). Tentando otimização...`);
+                this.core.ui.showSaveProgressAlert('optimizing', this.formatBytes(dataSize));
+                
+                // Tentar compactar dados ou salvar apenas no servidor
+                try {
+                    // Salvar no localStorage apenas os dados essenciais
+                    const essentialData = this.extractEssentialData(filteredContent);
+                    const pageKey = this.getPageKey();
+                    
+                    this.core.ui.showSaveProgressAlert('local-save', 'dados essenciais');
+                    localStorage.setItem(pageKey, JSON.stringify(essentialData));
+                    console.log(`💾 Dados essenciais salvos localmente: ${pageKey}`);
+                } catch (localError) {
+                    console.warn('Impossível salvar localmente, apenas no servidor');
+                    this.core.ui.showDetailedErrorAlert(
+                        'Storage Local Cheio',
+                        `Não foi possível salvar localmente. Tamanho dos dados: ${this.formatBytes(dataSize)}`,
+                        [
+                            'Os dados serão salvos apenas no servidor',
+                            'Considere usar imagens menores',
+                            'Limpe dados antigos se necessário'
+                        ]
+                    );
+                }
+            } else {
             // Salvar no localStorage com chave específica da página
+                this.core.ui.showSaveProgressAlert('local-save', this.formatBytes(dataSize));
             const pageKey = this.getPageKey();
             localStorage.setItem(pageKey, JSON.stringify(filteredContent));
-            console.log(`💾 Conteúdo salvo para página: ${pageKey}`);
+                console.log(`💾 Conteúdo salvo para página: ${pageKey} (${this.formatBytes(dataSize)})`);
+            }
             
             // Tentar enviar para servidor
+            this.core.ui.showSaveProgressAlert('server-save');
             this.exportToServer(exportData);
             
-            this.core.ui.showAlert(
-                `Conteúdo salvo! ${Object.keys(filteredContent).length} elementos.`, 
-                'success'
-            );
+            this.core.ui.showSaveProgressAlert('complete', `${Object.keys(filteredContent).length} elementos`);
             
             console.log('💾 Conteúdo salvo:', exportData);
             
@@ -81,9 +190,153 @@ class HardemEditorStorage {
             return exportData;
         } catch (error) {
             console.error('Erro ao salvar:', error);
+            
+            // Se o erro for de quota do localStorage, tentar salvar apenas no servidor
+            if (error.name === 'QuotaExceededError') {
+                this.core.ui.showAlert('Storage local cheio. Salvando apenas no servidor...', 'warning');
+                // Tentar salvar apenas no servidor sem localStorage
+                try {
+                    const filteredContent = this.getBasicFilteredContent();
+                    const exportData = {
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href,
+                        contentMap: filteredContent,
+                        content: filteredContent,
+                        metadata: {
+                            userAgent: navigator.userAgent,
+                            totalElements: Object.keys(filteredContent).length,
+                            editMode: this.core.editMode,
+                            largeFile: true
+                        }
+                    };
+                    this.exportToServer(exportData);
+                    return exportData;
+                } catch (serverError) {
+                    this.core.ui.showAlert(`Erro crítico ao salvar: ${serverError.message}`, 'error');
+                }
+            } else {
             this.core.ui.showAlert(`Erro ao salvar conteúdo: ${error.message}`, 'error');
+            }
             return null;
         }
+    }
+
+    /**
+     * Otimizar dados de imagem para economizar espaço
+     */
+    optimizeImageData(imageData) {
+        if (!imageData || !imageData.startsWith('data:')) {
+            return imageData;
+        }
+        
+        // Se for SVG, tentar compactar removendo espaços desnecessários
+        if (imageData.includes('data:image/svg+xml')) {
+            try {
+                const base64Data = imageData.split(',')[1];
+                const svgContent = atob(base64Data);
+                
+                // Compactar SVG removendo espaços e quebras de linha desnecessárias
+                const compactedSvg = svgContent
+                    .replace(/>\s+</g, '><')  // Remover espaços entre tags
+                    .replace(/\s+/g, ' ')     // Compactar múltiplos espaços
+                    .trim();
+                
+                const optimizedData = 'data:image/svg+xml;base64,' + btoa(compactedSvg);
+                
+                // Se a otimização reduziu significativamente, usar a versão otimizada
+                if (optimizedData.length < imageData.length * 0.8) {
+                    console.log(`🗜️ SVG otimizado: ${this.formatBytes(imageData.length)} → ${this.formatBytes(optimizedData.length)}`);
+                    return optimizedData;
+                }
+            } catch (error) {
+                console.warn('Erro ao otimizar SVG:', error);
+            }
+        }
+        
+        return imageData;
+    }
+
+    /**
+     * Extrair dados essenciais para localStorage quando há limitação de tamanho
+     */
+    extractEssentialData(content) {
+        const essential = {};
+        
+        Object.entries(content).forEach(([key, value]) => {
+            const essentialValue = {};
+            
+            // Manter apenas dados essenciais
+            if (value.text) essentialValue.text = value.text;
+            if (value.title) essentialValue.title = value.title;
+            if (value.description) essentialValue.description = value.description;
+            if (value.type) essentialValue.type = value.type;
+            if (value.slideIndex !== undefined) essentialValue.slideIndex = value.slideIndex;
+            
+            // Para imagens, salvar apenas referência ou versão muito compactada
+            if (value.src) {
+                if (value.src.startsWith('data:')) {
+                    essentialValue.src = '[LARGE_IMAGE_DATA]'; // Placeholder
+                    essentialValue.hasLargeData = true;
+                } else {
+                    essentialValue.src = value.src;
+                }
+            }
+            
+            if (value.backgroundImage) {
+                if (value.backgroundImage.startsWith('data:')) {
+                    essentialValue.backgroundImage = '[LARGE_BG_DATA]'; // Placeholder
+                    essentialValue.hasLargeData = true;
+                } else {
+                    essentialValue.backgroundImage = value.backgroundImage;
+                }
+            }
+            
+            essential[key] = essentialValue;
+        });
+        
+        return essential;
+    }
+
+    /**
+     * Obter conteúdo filtrado básico
+     */
+    getBasicFilteredContent() {
+        const filteredContent = {};
+        
+        Object.entries(this.core.contentMap).forEach(([key, value]) => {
+            if (value && typeof value === 'object' && 
+                (value.text || value.src || value.backgroundImage || value.title || value.description)) {
+                const cleanValue = {};
+                if (value.text && typeof value.text === 'string') cleanValue.text = value.text;
+                if (value.src && typeof value.src === 'string') cleanValue.src = value.src;
+                if (value.backgroundImage && typeof value.backgroundImage === 'string') cleanValue.backgroundImage = value.backgroundImage;
+                if (value.title && typeof value.title === 'string') cleanValue.title = value.title;
+                if (value.description && typeof value.description === 'string') cleanValue.description = value.description;
+                if (value.type) cleanValue.type = value.type;
+                if (value.format) cleanValue.format = value.format;
+                if (value.slideIndex !== undefined) cleanValue.slideIndex = value.slideIndex;
+                if (value.elementInfo) cleanValue.elementInfo = value.elementInfo;
+                
+                filteredContent[key] = cleanValue;
+            }
+        });
+        
+        return filteredContent;
+    }
+
+    /**
+     * Formatar bytes em string legível
+     */
+    formatBytes(bytes, decimals = 2) {
+        if (bytes === 0) return '0 Bytes';
+        
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
     }
 
     /**
@@ -742,6 +995,16 @@ class HardemEditorStorage {
      */
     exportToServer(exportData) {
         try {
+            // Verificar se estamos em ambiente local (file://) - apenas file:// força download
+            const isLocalFile = window.location.protocol === 'file:';
+            
+            if (isLocalFile) {
+                console.log('🏠 Ambiente local detectado (file://). Gerando download...');
+                this.core.ui.showAlert('Ambiente local detectado. Gerando arquivo para download...', 'info');
+                this.generateJSONDownload(exportData);
+                return exportData;
+            }
+
             // Preparar dados para envio (enviar JSON diretamente, não FormData)
             const requestData = {
                 contentMap: exportData.contentMap,
@@ -750,47 +1013,212 @@ class HardemEditorStorage {
                 metadata: exportData.metadata
             };
 
-            // Mostrar que está tentando salvar no servidor
-            this.core.ui.showAlert('Tentando salvar no servidor...', 'info');
+            // Mostrar progresso
+            this.core.ui.showSaveProgressAlert('server-save', 'Enviando para save.php...');
 
             // Enviar para save.php
+            const formData = new FormData();
+            formData.append('data', JSON.stringify(requestData));
+            
             fetch('save.php', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(requestData)
+                body: formData
             })
             .then(response => {
+                console.log('📡 Resposta do servidor:', response.status, response.statusText);
+                
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
+                
+                // Verificar se o content-type é JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    console.warn('⚠️ Servidor não retornou JSON. Content-Type:', contentType);
+                    
+                    // Tentar ler como texto para debug
+                    return response.text().then(text => {
+                        console.error('📄 Resposta não-JSON do servidor:', text.substring(0, 500));
+                        
+                        // Análise específica do erro POST Content-Length
+                        if (text.includes('POST Content-Length') && text.includes('exceeds the limit')) {
+                            const match = text.match(/(\d+) bytes exceeds the limit of (\d+) bytes/);
+                            if (match) {
+                                const sentBytes = parseInt(match[1]);
+                                const limitBytes = parseInt(match[2]);
+                                
+                                this.core.ui.showDetailedErrorAlert(
+                                    '🚫 Limite POST do PHP Excedido',
+                                    `Dados enviados: ${this.formatBytes(sentBytes)}\nLimite do servidor: ${this.formatBytes(limitBytes)}`,
+                                    [
+                                        '🔧 Configure PHP: post_max_size = 50M no php.ini',
+                                        '📏 Reduza o tamanho das imagens antes de carregar',
+                                        '🖼️ Use JPEG com qualidade 70-80% ao invés de PNG',
+                                        '✂️ Corte imagens desnecessárias antes de salvar', 
+                                        '📁 Salve em partes (remova algumas imagens temporariamente)',
+                                        '🔄 Reinicie o servidor web após alterar php.ini',
+                                        '🧪 Use o botão "🔧 Testar PHP" para diagnóstico'
+                                    ]
+                                );
+                                
+                                // Salvar localmente
+                                this.saveToLocalStorage(exportData);
+                                throw new Error('POST size limit exceeded');
+                            }
+                        }
+                        
+                        if (text.includes('Warning') && text.includes('PHP Request Startup')) {
+                            this.core.ui.showDetailedErrorAlert(
+                                '⚠️ Erro de Inicialização PHP', 
+                                'O PHP rejeitou a requisição antes de processar',
+                                [
+                                    '🔧 Aumente post_max_size no php.ini (atual muito baixo)',
+                                    '📝 Exemplo: post_max_size = 50M', 
+                                    '💾 Aumente memory_limit = 512M também',
+                                    '🔄 Reinicie Apache/Nginx após as alterações',
+                                    '🧪 Use o botão "🔧 Testar PHP" para verificar'
+                                ]
+                            );
+                            
+                            this.saveToLocalStorage(exportData);
+                            throw new Error('PHP Request Startup error');
+                        }
+                        
+                        throw new Error('Servidor retornou resposta não-JSON. Verifique logs do PHP.');
+                    });
+                }
+                
                 return response.json();
             })
             .then(data => {
+                console.log('📥 Resposta processada:', data);
+                
                 if (data.success) {
-                    this.core.ui.showAlert('✅ Conteúdo salvo no servidor com sucesso!', 'success');
-                    console.log('📁 Arquivo salvo em:', data.file_path || 'pasta de backups');
+                    this.core.ui.showSaveProgressAlert('complete', 'Salvo no servidor!');
+                    console.log('📁 Arquivo salvo em:', data.file_path || data.filename || 'servidor');
+                    
+                    // Mostrar detalhes do salvamento
+                    const details = [];
+                    if (data.filename) details.push(`Arquivo: ${data.filename}`);
+                    if (data.size_formatted) details.push(`Tamanho: ${data.size_formatted}`);
+                    if (data.elements) details.push(`${data.elements} elementos`);
+                    if (data.compression_ratio) details.push(`Compressão: ${data.compression_ratio}%`);
+                    
+                    setTimeout(() => {
+                        this.core.ui.showAlert(`✅ Salvo com sucesso! ${details.join(' | ')}`, 'success');
+                    }, 1000);
                 } else {
-                    this.core.ui.showAlert('❌ Erro ao salvar no servidor: ' + data.message, 'error');
-                    // Fallback para download apenas se houver erro do servidor
-                    this.generateJSONDownload(exportData);
+                    this.core.ui.showSaveProgressAlert('error', data.message);
+                    console.error('❌ Erro do servidor:', data.message);
+                    
+                    // Análise específica do erro
+                    if (data.message.includes('POST Content-Length') && data.message.includes('exceeds the limit')) {
+                        // Erro específico de limite POST do PHP
+                        const match = data.message.match(/(\d+) bytes exceeds the limit of (\d+) bytes/);
+                        if (match) {
+                            const sentBytes = parseInt(match[1]);
+                            const limitBytes = parseInt(match[2]);
+                            
+                            this.core.ui.showDetailedErrorAlert(
+                                '🚫 Limite POST do PHP Excedido',
+                                `Dados enviados: ${this.formatBytes(sentBytes)}\nLimite do servidor: ${this.formatBytes(limitBytes)}`,
+                                [
+                                    '🔧 Configure PHP: post_max_size = 50M no php.ini',
+                                    '📏 Reduza o tamanho das imagens antes de carregar',
+                                    '🖼️ Use JPEG com qualidade 70-80% ao invés de PNG',
+                                    '✂️ Corte imagens desnecessárias antes de salvar',
+                                    '📁 Salve em partes (remova algumas imagens temporariamente)',
+                                    '🔄 Reinicie o servidor web após alterar php.ini'
+                                ]
+                            );
+                            
+                            // Tentar salvar localmente pelo menos
+                            this.saveToLocalStorage(exportData);
+                            return null;
+                        }
+                    }
+                    
+                    if (data.message.includes('Warning') && data.message.includes('PHP Request Startup')) {
+                        // Erro de inicialização do PHP
+                        this.core.ui.showDetailedErrorAlert(
+                            '⚠️ Erro de Inicialização PHP',
+                            'O PHP rejeitou a requisição antes de processar',
+                            [
+                                '🔧 Aumente post_max_size no php.ini (atual muito baixo)',
+                                '📝 Exemplo: post_max_size = 50M',
+                                '💾 Aumente memory_limit = 512M também',
+                                '🔄 Reinicie Apache/Nginx após as alterações',
+                                '🧪 Use o botão "🔧 Testar PHP" para verificar'
+                            ]
+                        );
+                        
+                        // Salvar localmente
+                        this.saveToLocalStorage(exportData);
+                        return null;
+                    }
                 }
             })
             .catch(error => {
-                console.warn('Save.php não encontrado ou erro na conexão:', error);
-                this.core.ui.showAlert('⚠️ Servidor indisponível. Gerando download como backup...', 'warning');
-                // Fallback para download apenas se servidor não estiver disponível
+                console.warn('❌ Erro na comunicação com save.php:', error);
+                this.core.ui.showSaveProgressAlert('error', 'Servidor indisponível');
+                
+                // Verificar tipo de erro
+                const isNetworkError = error.message.includes('Failed to fetch') || 
+                                     error.message.includes('NetworkError') ||
+                                     error.message.includes('404');
+                
+                const isJSONError = error.message.includes('Unexpected token') ||
+                                  error.message.includes('JSON');
+                
+                const isPHPError = error.message.includes('resposta não-JSON') ||
+                                error.message.includes('PHP');
+                
+                if (isPHPError || isJSONError) {
+                    setTimeout(() => {
+                        this.core.ui.showDetailedErrorAlert(
+                            'Erro do PHP/Servidor',
+                            `O servidor retornou HTML ao invés de JSON. Erro: ${error.message}`,
+                            [
+                                'Verifique o arquivo hardem-editor.log na pasta do projeto',
+                                'Pode haver erro de sintaxe PHP ou problema de memória',
+                                'Teste com dados menores (menos imagens)',
+                                'Verifique se o PHP está funcionando corretamente',
+                                'Arquivo será baixado como backup'
+                            ]
+                        );
                 this.generateJSONDownload(exportData);
+                    }, 1000);
+                } else if (isNetworkError) {
+                    setTimeout(() => {
+                        this.core.ui.showDetailedErrorAlert(
+                            'Servidor Indisponível',
+                            `Não foi possível conectar com save.php. Erro: ${error.message}`,
+                            [
+                                'Verifique se está executando em um servidor web (Apache/Nginx)',
+                                'Arquivo será baixado como backup',
+                                'Para salvar diretamente: execute via http://localhost/ ao invés de file://'
+                            ]
+                        );
+                        this.generateJSONDownload(exportData);
+                    }, 1000);
+                } else {
+                    setTimeout(() => {
+                        this.core.ui.showAlert('⚠️ Erro de conexão. Gerando download como backup...', 'warning');
+                        this.generateJSONDownload(exportData);
+                    }, 1000);
+                }
             });
 
-            console.log('📤 Dados preparados para exportação:', exportData);
+            console.log('📤 Dados preparados para exportação:', requestData);
             return exportData;
         } catch (error) {
-            console.error('Erro ao exportar:', error);
-            this.core.ui.showAlert('Erro ao preparar dados para exportação!', 'error');
-            // Fallback para download em caso de erro crítico
+            console.error('❌ Erro crítico ao exportar:', error);
+            this.core.ui.showSaveProgressAlert('error', 'Erro crítico');
+            
+            setTimeout(() => {
+                this.core.ui.showAlert('Erro ao preparar dados. Gerando download como backup...', 'error');
             this.generateJSONDownload(exportData);
+            }, 1000);
         }
     }
 
@@ -913,6 +1341,414 @@ class HardemEditorStorage {
         }
         
         return backups.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    }
+
+    /**
+     * Otimização agressiva para reduzir tamanho dos dados
+     */
+    aggressiveOptimization(content) {
+        const optimized = {};
+        
+        Object.entries(content).forEach(([key, value]) => {
+            const optimizedValue = {};
+            
+            // Preservar dados essenciais
+            if (value.text) optimizedValue.text = value.text;
+            if (value.title) optimizedValue.title = value.title;
+            if (value.description) optimizedValue.description = value.description;
+            if (value.type) optimizedValue.type = value.type;
+            if (value.slideIndex !== undefined) optimizedValue.slideIndex = value.slideIndex;
+            
+            // Otimizar imagens agressivamente
+            if (value.src && typeof value.src === 'string') {
+                if (value.src.startsWith('data:')) {
+                    const optimizedSrc = this.aggressiveImageOptimization(value.src);
+                    optimizedValue.src = optimizedSrc;
+                } else {
+                    optimizedValue.src = value.src;
+                }
+            }
+            
+            if (value.backgroundImage && typeof value.backgroundImage === 'string') {
+                if (value.backgroundImage.startsWith('data:')) {
+                    const optimizedBg = this.aggressiveImageOptimization(value.backgroundImage);
+                    optimizedValue.backgroundImage = optimizedBg;
+                } else {
+                    optimizedValue.backgroundImage = value.backgroundImage;
+                }
+            }
+            
+            // Preservar informações mínimas do elemento (versão compacta)
+            if (value.elementInfo) {
+                optimizedValue.elementInfo = {
+                    tagName: value.elementInfo.tagName,
+                    className: value.elementInfo.className
+                };
+            }
+            
+            optimized[key] = optimizedValue;
+        });
+        
+        return optimized;
+    }
+
+    /**
+     * Otimização agressiva de imagem
+     */
+    aggressiveImageOptimization(imageData) {
+        if (!imageData || !imageData.startsWith('data:')) {
+            return imageData;
+        }
+        
+        try {
+            // Para SVG, aplicar compressão máxima
+            if (imageData.includes('data:image/svg+xml')) {
+                const base64Data = imageData.split(',')[1];
+                const svgContent = atob(base64Data);
+                
+                // Compressão agressiva de SVG
+                const compressedSvg = svgContent
+                    .replace(/>\s+</g, '><')           // Remover espaços entre tags
+                    .replace(/\s+/g, ' ')              // Compactar espaços
+                    .replace(/\n|\r/g, '')             // Remover quebras de linha
+                    .replace(/<!--.*?-->/g, '')        // Remover comentários
+                    .replace(/\s*=\s*/g, '=')          // Remover espaços em atributos
+                    .replace(/;\s*/g, ';')             // Compactar CSS
+                    .trim();
+                
+                const compressedData = 'data:image/svg+xml;base64,' + btoa(compressedSvg);
+                
+                if (compressedData.length < imageData.length) {
+                    return compressedData;
+                }
+            }
+            
+            // Para outras imagens, tentar reduzir qualidade se for JPEG
+            if (imageData.includes('data:image/jpeg') || imageData.includes('data:image/jpg')) {
+                return this.reduceJPEGQuality(imageData);
+            }
+            
+        } catch (error) {
+            console.warn('Erro na otimização agressiva de imagem:', error);
+        }
+        
+        return imageData;
+    }
+
+    /**
+     * Reduzir qualidade JPEG para economizar espaço - Versão otimizada
+     */
+    reduceJPEGQuality(jpegData) {
+        try {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            
+            // Fazer sync para ser mais rápido
+            img.src = jpegData;
+            
+            if (img.complete) {
+                // Reduzir dimensões também para economizar mais espaço
+                const maxSize = 1200; // Limite máximo
+                let { width, height } = img;
+                
+                if (width > maxSize || height > maxSize) {
+                    const ratio = Math.min(maxSize / width, maxSize / height);
+                    width = Math.floor(width * ratio);
+                    height = Math.floor(height * ratio);
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'medium';
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Compressão muito agressiva
+                const qualities = [0.4, 0.3, 0.25, 0.2, 0.15];
+                let bestResult = jpegData;
+                
+                for (const quality of qualities) {
+                    try {
+                        const compressedData = canvas.toDataURL('image/jpeg', quality);
+                        
+                        // Aceitar se conseguir pelo menos 50% de redução
+                        if (compressedData.length < bestResult.length * 0.5) {
+                            bestResult = compressedData;
+                            console.log(`🗜️ JPEG super comprimido: ${this.formatBytes(jpegData.length)} → ${this.formatBytes(compressedData.length)} (${quality * 100}%)`);
+                            break;
+                        }
+                    } catch (error) {
+                        console.warn(`Erro ao comprimir com qualidade ${quality}:`, error);
+                    }
+                }
+                
+                return bestResult;
+            }
+        } catch (error) {
+            console.warn('Erro na compressão super agressiva:', error);
+        }
+        
+        return jpegData;
+    }
+
+    /**
+     * Salvar conteúdo localmente
+     */
+    saveToLocalStorage(exportData) {
+        const pageKey = this.getPageKey();
+        localStorage.setItem(pageKey, JSON.stringify(exportData.content));
+        console.log(`💾 Conteúdo salvo para página: ${pageKey} (${this.formatBytes(JSON.stringify(exportData.content).length)})`);
+    }
+
+    /**
+     * Salvamento individual por imagem - divide dados grandes em partes menores
+     */
+    async saveContentInParts(exportData) {
+        console.log('🔄 Iniciando salvamento por partes...');
+        this.core.ui.showSaveProgressAlert('processing', 'Salvando por partes...');
+        
+        const content = exportData.contentMap || exportData.content;
+        const entries = Object.entries(content);
+        
+        // Separar por tipo de conteúdo
+        const images = entries.filter(([key, value]) => value.src && value.src.startsWith('data:'));
+        const backgrounds = entries.filter(([key, value]) => value.backgroundImage && value.backgroundImage.startsWith('data:'));
+        const texts = entries.filter(([key, value]) => value.text || value.title || value.description);
+        const others = entries.filter(([key, value]) => 
+            !value.src?.startsWith('data:') && 
+            !value.backgroundImage?.startsWith('data:') && 
+            !value.text && !value.title && !value.description
+        );
+        
+        console.log(`📊 Dividindo salvamento: ${images.length} imagens, ${backgrounds.length} backgrounds, ${texts.length} textos, ${others.length} outros`);
+        
+        const results = [];
+        let partNumber = 1;
+        
+        try {
+            // 1. Salvar textos e outros dados primeiro (mais leve)
+            if (texts.length > 0 || others.length > 0) {
+                const textData = Object.fromEntries([...texts, ...others]);
+                const textResult = await this.saveDataPart(textData, partNumber++, 'textos');
+                if (textResult) results.push(textResult);
+            }
+            
+            // 2. Salvar imagens individualmente
+            for (let i = 0; i < images.length; i++) {
+                const [key, value] = images[i];
+                const imageData = { [key]: value };
+                
+                this.core.ui.showSaveProgressAlert('processing', `Salvando imagem ${i + 1}/${images.length}`);
+                
+                const imageResult = await this.saveDataPart(imageData, partNumber++, `imagem-${i + 1}`);
+                if (imageResult) results.push(imageResult);
+                
+                // Pequena pausa para não sobrecarregar o servidor
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            // 3. Salvar backgrounds individualmente
+            for (let i = 0; i < backgrounds.length; i++) {
+                const [key, value] = backgrounds[i];
+                const bgData = { [key]: value };
+                
+                this.core.ui.showSaveProgressAlert('processing', `Salvando background ${i + 1}/${backgrounds.length}`);
+                
+                const bgResult = await this.saveDataPart(bgData, partNumber++, `background-${i + 1}`);
+                if (bgResult) results.push(bgResult);
+                
+                // Pequena pausa para não sobrecarregar o servidor
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            // 4. Salvar índice final com referências
+            const indexData = {
+                metadata: {
+                    ...exportData.metadata,
+                    savedInParts: true,
+                    totalParts: partNumber - 1,
+                    partFiles: results.map(r => r.filename),
+                    timestamp: new Date().toISOString()
+                },
+                summary: {
+                    totalImages: images.length,
+                    totalBackgrounds: backgrounds.length,
+                    totalTexts: texts.length,
+                    totalOthers: others.length
+                }
+            };
+            
+            const indexResult = await this.saveDataPart(indexData, 0, 'indice');
+            
+            if (indexResult) {
+                this.core.ui.showSaveProgressAlert('complete', `✅ Salvo em ${partNumber} partes!`);
+                
+                setTimeout(() => {
+                    this.core.ui.showAlert(
+                        `🎉 Salvamento concluído!\n📁 ${results.length + 1} arquivos criados\n🖼️ ${images.length} imagens salvas individualmente`, 
+                        'success'
+                    );
+                }, 1000);
+                
+                console.log('✅ Salvamento por partes concluído:', {
+                    totalParts: partNumber,
+                    files: [...results.map(r => r.filename), indexResult.filename]
+                });
+                
+                return exportData;
+            }
+            
+        } catch (error) {
+            console.error('❌ Erro no salvamento por partes:', error);
+            this.core.ui.showSaveProgressAlert('error', 'Erro no salvamento por partes');
+            
+            // Fallback para download
+            setTimeout(() => {
+                this.core.ui.showAlert('⚠️ Salvamento por partes falhou. Gerando download...', 'warning');
+                this.generateJSONDownload(exportData);
+            }, 1000);
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Salvar uma parte específica dos dados
+     */
+    async saveDataPart(partData, partNumber, description) {
+        const partSize = JSON.stringify(partData).length;
+        console.log(`📦 Salvando parte ${partNumber} (${description}): ${this.formatBytes(partSize)}`);
+        
+        const partExportData = {
+            contentMap: partData,
+            url: window.location.href,
+            timestamp: new Date().toISOString(),
+            metadata: {
+                partNumber: partNumber,
+                description: description,
+                size: partSize,
+                timestamp: new Date().toISOString()
+            }
+        };
+        
+        try {
+            const response = await fetch('save.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `data=${encodeURIComponent(JSON.stringify(partExportData))}`
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                console.log(`✅ Parte ${partNumber} salva: ${result.filename || result.file_info?.filename}`);
+                return {
+                    partNumber: partNumber,
+                    description: description,
+                    filename: result.filename || result.file_info?.filename,
+                    size: partSize
+                };
+            } else {
+                throw new Error(result.message || 'Erro desconhecido');
+            }
+            
+        } catch (error) {
+            console.error(`❌ Erro ao salvar parte ${partNumber}:`, error);
+            
+            // Se for erro de tamanho, tentar otimizar ainda mais
+            if (error.message.includes('POST Content-Length') || error.message.includes('too large')) {
+                console.log(`🗜️ Tentando otimizar parte ${partNumber}...`);
+                
+                const optimizedData = this.aggressiveOptimization(partData);
+                const optimizedSize = JSON.stringify(optimizedData).length;
+                
+                if (optimizedSize < partSize * 0.8) { // Se conseguiu reduzir pelo menos 20%
+                    console.log(`🗜️ Parte ${partNumber} otimizada: ${this.formatBytes(partSize)} → ${this.formatBytes(optimizedSize)}`);
+                    
+                    const optimizedExportData = {
+                        ...partExportData,
+                        contentMap: optimizedData
+                    };
+                    
+                    // Tentar novamente com dados otimizados
+                    return await this.saveDataPart(optimizedData, partNumber, `${description}-otimizado`);
+                }
+            }
+            
+            return null;
+        }
+    }
+
+    /**
+     * Preparar dados para exportação (usado tanto para salvamento normal quanto por partes)
+     */
+    async prepareExportData() {
+        try {
+            // Verificar se há conteúdo para salvar
+            const filteredContent = this.getBasicFilteredContent();
+            
+            if (Object.keys(filteredContent).length === 0) {
+                console.warn('Nenhum conteúdo válido para salvar');
+                this.core.ui.showAlert('Nenhum conteúdo válido para salvar.', 'warning');
+                return null;
+            }
+            
+            // Preparar dados de exportação
+            const exportData = {
+                contentMap: filteredContent,
+                content: filteredContent, // Compatibilidade
+                url: window.location.href,
+                timestamp: new Date().toISOString(),
+                metadata: {
+                    userAgent: navigator.userAgent,
+                    url: window.location.href,
+                    timestamp: new Date().toISOString(),
+                    totalElements: Object.keys(filteredContent).length,
+                    version: '2.2.0'
+                }
+            };
+            
+            // Armazenar para uso posterior
+            this.exportData = exportData;
+            
+            return exportData;
+            
+        } catch (error) {
+            console.error('❌ Erro ao preparar dados de exportação:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Wrapper para salvamento por partes (pode ser chamado sem parâmetros)
+     */
+    async saveContentInPartsWrapper() {
+        try {
+            // Preparar dados se não existirem
+            let exportData = this.exportData;
+            if (!exportData) {
+                exportData = await this.prepareExportData();
+                if (!exportData) {
+                    this.core.ui.showAlert('❌ Erro ao preparar dados para salvamento', 'error');
+                    return null;
+                }
+            }
+            
+            return await this.saveContentInParts(exportData);
+            
+        } catch (error) {
+            console.error('❌ Erro no wrapper de salvamento por partes:', error);
+            this.core.ui.showAlert('❌ Erro no salvamento por partes', 'error');
+            return null;
+        }
     }
 }
 

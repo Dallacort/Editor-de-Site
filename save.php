@@ -2,180 +2,203 @@
 /**
  * HARDEM Editor - Save.php
  * Recebe e salva as edições do editor.js
- * @version 1.0.0
+ * @version 2.2.0
  */
 
-// Configurar headers para CORS (permitir requisições locais)
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
-header('Content-Type: application/json; charset=utf-8');
+// Configurações de limite e memória otimizadas para muitas imagens
+ini_set('post_max_size', '200M');      // Aumentado para 200MB
+ini_set('upload_max_filesize', '200M'); // Aumentado para 200MB  
+ini_set('memory_limit', '1024M');       // Aumentado para 1GB
+ini_set('max_execution_time', 600);     // Aumentado para 10 minutos
+ini_set('max_input_time', 600);         // Aumentado para 10 minutos
+ini_set('max_input_vars', 10000);       // Aumentado limite de variáveis
 
-// Responder a requisições OPTIONS (preflight)
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit();
+// Controle total de output
+ob_start();
+ini_set('display_errors', 0);
+ini_set('display_startup_errors', 0);
+error_reporting(0);
+
+// Função para log seguro
+function safeLog($message) {
+    $logFile = __DIR__ . '/hardem-editor.log';
+    $timestamp = date('Y-m-d H:i:s');
+    file_put_contents($logFile, "[$timestamp] $message\n", FILE_APPEND | LOCK_EX);
 }
 
-// Função para retornar resposta JSON
-function sendResponse($status, $message, $data = null) {
-    $response = [
-        'success' => ($status === 'success'),
-        'status' => $status,
-        'message' => $message,
-        'timestamp' => date('Y-m-d H:i:s')
-    ];
+// Função para resposta JSON limpa
+function sendJsonResponse($data, $httpCode = 200) {
+    ob_clean(); // Limpar qualquer output
+    http_response_code($httpCode);
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-cache, must-revalidate');
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type');
     
-    if ($data !== null) {
-        $response = array_merge($response, $data);
-    }
-    
-    echo json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-    exit();
+    echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    exit;
 }
 
-// Função para criar pasta de backups
-function createBackupsDir() {
-    $backupsDir = 'backups';
-    
-    if (!is_dir($backupsDir)) {
-        if (!mkdir($backupsDir, 0755, true)) {
-            return false;
-        }
-        
-        // Criar arquivo .htaccess para proteger a pasta de backups
-        $htaccessContent = "# Proteger pasta de backups\n";
-        $htaccessContent .= "Order deny,allow\n";
-        $htaccessContent .= "Deny from all\n";
-        $htaccessContent .= "# Permitir apenas acesso local para desenvolvimento\n";
-        $htaccessContent .= "Allow from 127.0.0.1\n";
-        $htaccessContent .= "Allow from ::1\n";
-        $htaccessContent .= "Allow from localhost\n";
-        
-        file_put_contents($backupsDir . '/.htaccess', $htaccessContent);
-        
-        // Criar arquivo index.php para maior segurança
-        $indexContent = "<?php\n// Acesso negado\nheader('HTTP/1.0 403 Forbidden');\nexit('Acesso negado');";
-        file_put_contents($backupsDir . '/index.php', $indexContent);
-    }
-    
-    return $backupsDir;
+// Verificar limite POST ANTES de processar dados
+$postContentLength = $_SERVER['CONTENT_LENGTH'] ?? 0;
+$maxPostSize = ini_get('post_max_size');
+$maxPostBytes = (int)$maxPostSize * 1024 * 1024; // Converter para bytes
+
+if ($postContentLength > $maxPostBytes) {
+    safeLog("POST size limit exceeded: {$postContentLength} bytes > {$maxPostBytes} bytes");
+    sendJsonResponse([
+        'success' => false,
+        'status' => 'error',
+        'error_type' => 'post_size_limit',
+        'message' => 'Dados muito grandes para o servidor.',
+        'details' => [
+            'sent_size' => $postContentLength,
+            'max_size' => $maxPostBytes,
+            'sent_mb' => round($postContentLength / 1024 / 1024, 2),
+            'max_mb' => (int)$maxPostSize
+        ],
+        'solutions' => [
+            'Reduza o tamanho das imagens antes de carregar',
+            'Use imagens comprimidas (JPEG com qualidade 80%)',
+            'Configure PHP: post_max_size = 50M no php.ini',
+            'Salve em partes menores'
+        ],
+        'timestamp' => date('Y-m-d H:i:s'),
+        'php_version' => PHP_VERSION
+    ], 413);
 }
 
-// Verificar se é uma requisição POST
+// Verificar se é POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    sendResponse('error', 'Apenas requisições POST são aceitas.');
+    sendJsonResponse([
+        'success' => false,
+        'status' => 'error',
+        'message' => 'Apenas requisições POST são permitidas.',
+        'timestamp' => date('Y-m-d H:i:s')
+    ], 405);
+}
+
+// Verificar se há dados POST
+if (empty($_POST)) {
+    sendJsonResponse([
+        'success' => false,
+        'status' => 'error',
+        'error_type' => 'empty_post',
+        'message' => 'Nenhum dado recebido via POST.',
+        'details' => [
+            'content_length' => $postContentLength,
+            'post_max_size' => $maxPostSize,
+            'memory_limit' => ini_get('memory_limit')
+        ],
+        'timestamp' => date('Y-m-d H:i:s')
+    ], 400);
 }
 
 try {
-    // Ler dados da requisição
-    $input = file_get_contents('php://input');
+    safeLog("Iniciando processamento de salvamento - POST size: {$postContentLength} bytes");
     
-    if (empty($input)) {
-        sendResponse('error', 'Nenhum dado foi enviado.');
+    // Receber e validar dados JSON
+    $rawData = $_POST['data'] ?? '';
+    
+    if (empty($rawData)) {
+        throw new Exception('Parâmetro "data" não fornecido', 400);
     }
+    
+    // Verificar tamanho do JSON
+    $jsonSize = strlen($rawData);
+    $maxJsonSize = 100 * 1024 * 1024; // 100MB
+    
+    if ($jsonSize > $maxJsonSize) {
+        throw new Exception("JSON muito grande: {$jsonSize} bytes", 413);
+    }
+    
+    safeLog("JSON recebido: {$jsonSize} bytes");
     
     // Decodificar JSON
-    $data = json_decode($input, true);
+    $data = json_decode($rawData, true);
     
     if (json_last_error() !== JSON_ERROR_NONE) {
-        sendResponse('error', 'Dados JSON inválidos: ' . json_last_error_msg());
+        $error = json_last_error_msg();
+        safeLog("Erro JSON: {$error}");
+        throw new Exception("Erro ao decodificar JSON: {$error}", 400);
     }
     
-    // Verificar se contentMap existe
-    if (!isset($data['contentMap'])) {
-        sendResponse('error', 'Campo contentMap não encontrado nos dados enviados.');
+    if (!is_array($data)) {
+        throw new Exception('Dados devem ser um objeto JSON', 400);
     }
     
-    $contentMap = $data['contentMap'];
+    safeLog("JSON decodificado com sucesso - " . count($data) . " elementos");
     
-    // Preparar dados para salvar
-    $saveData = [
-        'contentMap' => $contentMap,
-        'metadata' => [
-            'lastUpdate' => date('Y-m-d H:i:s'),
-            'userAgent' => $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown',
-            'ip' => $_SERVER['REMOTE_ADDR'] ?? 'Unknown',
-            'url' => $data['url'] ?? 'Unknown',
-            'totalElements' => count($contentMap),
-            'version' => '1.0.0'
-        ]
-    ];
-    
-    // Nome do arquivo de destino
-    $filename = 'site-content.json';
-    $backupCreated = false;
-    $backupPath = null;
-    
-    // Fazer backup do arquivo anterior (se existir)
-    if (file_exists($filename)) {
-        $backupsDir = createBackupsDir();
-        
-        if ($backupsDir === false) {
-            sendResponse('error', 'Não foi possível criar a pasta de backups.');
-        }
-        
-        $backupName = 'site-content-backup-' . date('Y-m-d-H-i-s') . '.json';
-        $backupPath = $backupsDir . '/' . $backupName;
-        
-        if (copy($filename, $backupPath)) {
-            $backupCreated = true;
-            
-            // Limpar backups antigos (manter apenas os últimos 30)
-            $backupFiles = glob($backupsDir . '/site-content-backup-*.json');
-            if (count($backupFiles) > 30) {
-                // Ordenar por data de modificação (mais antigos primeiro)
-                usort($backupFiles, function($a, $b) {
-                    return filemtime($a) - filemtime($b);
-                });
-                
-                // Remover os mais antigos, mantendo apenas os últimos 30
-                $filesToRemove = array_slice($backupFiles, 0, count($backupFiles) - 30);
-                foreach ($filesToRemove as $fileToRemove) {
-                    unlink($fileToRemove);
-                }
-            }
-        } else {
-            sendResponse('error', 'Erro ao criar backup. Verifique as permissões da pasta backups.');
-        }
+    // Compressão automática se muito grande
+    if ($jsonSize > 20 * 1024 * 1024) { // 20MB
+        safeLog("Aplicando compressão JSON (tamanho > 20MB)");
+        $rawData = gzencode($rawData, 9);
+        $compressedSize = strlen($rawData);
+        safeLog("Compressão: {$jsonSize} → {$compressedSize} bytes");
     }
     
-    // Salvar dados no arquivo JSON
-    $jsonData = json_encode($saveData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    // Determinar nome do arquivo e salvar na pasta backups
+    $timestamp = date('Y-m-d_H-i-s');
+    $filename = "hardem-backup-{$timestamp}.json";
     
-    if ($jsonData === false) {
-        sendResponse('error', 'Erro ao codificar dados para JSON.');
+    // Criar pasta backups se não existir
+    $backupsDir = __DIR__ . '/backups';
+    if (!is_dir($backupsDir)) {
+        mkdir($backupsDir, 0755, true);
     }
     
-    $bytesWritten = file_put_contents($filename, $jsonData, LOCK_EX);
+    $filepath = $backupsDir . '/' . $filename;
+    
+    // Salvar arquivo
+    $bytesWritten = file_put_contents($filepath, $rawData, LOCK_EX);
     
     if ($bytesWritten === false) {
-        sendResponse('error', 'Erro ao salvar arquivo. Verifique as permissões de escrita.');
+        throw new Exception('Falha ao escrever arquivo no disco', 500);
     }
     
-    // Verificar se o arquivo foi salvo corretamente
-    if (!file_exists($filename)) {
-        sendResponse('error', 'Arquivo não foi criado. Verifique as permissões do diretório.');
-    }
+    safeLog("Arquivo salvo: {$filename} ({$bytesWritten} bytes)");
     
-    // Sucesso!
-    $responseData = [
-        'file_path' => realpath($filename),
-        'filename' => $filename,
-        'size' => $bytesWritten,
-        'elements' => count($contentMap)
-    ];
-    
-    if ($backupCreated && $backupPath) {
-        $responseData['backup_path'] = realpath($backupPath);
-        $responseData['backup_created'] = true;
-    } else {
-        $responseData['backup_created'] = false;
-    }
-    
-    sendResponse('success', 'Conteúdo salvo com sucesso na pasta de backups.', $responseData);
+    // Resposta de sucesso
+    sendJsonResponse([
+        'success' => true,
+        'status' => 'success',
+        'message' => 'Conteúdo salvo com sucesso na pasta backups.',
+        'file_info' => [
+            'filename' => $filename,
+            'filepath' => realpath($filepath),
+            'size_bytes' => $bytesWritten,
+            'size_mb' => round($bytesWritten / 1024 / 1024, 2)
+        ],
+        'timestamp' => date('Y-m-d H:i:s'),
+        'server_time' => time(),
+        'php_version' => PHP_VERSION,
+        'memory_usage' => memory_get_usage(true),
+        'memory_peak' => memory_get_peak_usage(true),
+        'post_max_size' => $maxPostSize,
+        'memory_limit' => ini_get('memory_limit')
+    ]);
     
 } catch (Exception $e) {
-    sendResponse('error', 'Erro interno do servidor: ' . $e->getMessage());
+    $errorCode = $e->getCode() ?: 500;
+    $errorMessage = $e->getMessage();
+    
+    safeLog("ERRO: {$errorMessage} (Código: {$errorCode})");
+    
+    sendJsonResponse([
+        'success' => false,
+        'status' => 'error',
+        'message' => $errorMessage,
+        'error_code' => $errorCode,
+        'timestamp' => date('Y-m-d H:i:s'),
+        'php_version' => PHP_VERSION,
+        'memory_usage' => memory_get_usage(true),
+        'server_info' => [
+            'post_max_size' => ini_get('post_max_size'),
+            'upload_max_filesize' => ini_get('upload_max_filesize'),
+            'memory_limit' => ini_get('memory_limit'),
+            'max_execution_time' => ini_get('max_execution_time')
+        ]
+    ], $errorCode);
 }
 ?> 

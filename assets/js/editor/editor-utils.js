@@ -83,20 +83,110 @@ class HardemEditorUtils {
      * Gerar data-key único para elemento
      */
     generateDataKey(element) {
+        // Coletar informações únicas do elemento
         const tagName = element.tagName.toLowerCase();
-        const textContent = this.getDirectTextContent(element).substring(0, 20);
+        const className = element.className ? element.className.replace(/\s+/g, '-') : '';
+        const id = element.id || '';
         const timestamp = Date.now();
-        const random = Math.random().toString(36).substring(2, 8);
+        const random = Math.random().toString(36).substr(2, 5);
         
-        let key = `${tagName}`;
+        // Tentar identificar contexto do elemento (slide, card, etc.)
+        const context = this.getElementContext(element);
         
-        if (textContent) {
-            key += `-${textContent.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()}`;
+        // Gerar base do key
+        let baseKey = '';
+        
+        if (id) {
+            baseKey = `${tagName}-${id}`;
+        } else if (className) {
+            baseKey = `${tagName}-${className}`;
+        } else {
+            baseKey = `${tagName}-${context}`;
         }
         
-        key += `-${timestamp}-${random}`;
+        // Adicionar timestamp e random para unicidade
+        const uniqueKey = `${baseKey}-${timestamp}-${random}`;
         
-        return key;
+        // Verificar se já existe e gerar alternativo se necessário
+        return this.ensureUniqueDataKey(uniqueKey, element);
+    }
+
+    /**
+     * Garantir que data-key seja único
+     */
+    ensureUniqueDataKey(proposedKey, element) {
+        const maxAttempts = 100;
+        let attempt = 0;
+        let finalKey = proposedKey;
+        
+        while (attempt < maxAttempts) {
+            // Verificar se key já existe em elemento diferente
+            const existingElement = document.querySelector(`[data-key="${finalKey}"]`);
+            
+            if (!existingElement || existingElement === element) {
+                // Key é único ou pertence ao mesmo elemento
+                break;
+            }
+            
+            // Gerar nova variação
+            attempt++;
+            const randomSuffix = Math.random().toString(36).substr(2, 3);
+            finalKey = `${proposedKey}-${attempt}-${randomSuffix}`;
+        }
+        
+        if (attempt >= maxAttempts) {
+            console.warn('Não foi possível gerar data-key único após 100 tentativas');
+            finalKey = `fallback-${Date.now()}-${Math.random().toString(36).substr(2, 8)}`;
+        }
+        
+        return finalKey;
+    }
+
+    /**
+     * Obter contexto do elemento (slide, card, section, etc.)
+     */
+    getElementContext(element) {
+        // Verificar se está em slide
+        if (element.closest('.swiper-slide, .carousel-item, .slide')) {
+            const slideElement = element.closest('.swiper-slide, .carousel-item, .slide');
+            const slideIndex = this.getSlideIndex(slideElement);
+            return `slide${slideIndex}`;
+        }
+        
+        // Verificar se está em card
+        if (element.closest('.card, .item, .box')) {
+            return 'card';
+        }
+        
+        // Verificar se está em section específica
+        const section = element.closest('section, article, div[class*="section"]');
+        if (section) {
+            const sectionClass = section.className ? section.className.split(' ')[0] : 'section';
+            return sectionClass;
+        }
+        
+        // Posição no DOM como último recurso
+        const siblings = Array.from(element.parentElement?.children || []);
+        const index = siblings.indexOf(element);
+        return `pos${index}`;
+    }
+
+    /**
+     * Obter índice do slide
+     */
+    getSlideIndex(slideElement) {
+        if (!slideElement) return 0;
+        
+        const parent = slideElement.parentElement;
+        const slides = Array.from(parent.children).filter(child => 
+            child.classList.contains('swiper-slide') ||
+            child.classList.contains('carousel-item') ||
+            child.classList.contains('slide') ||
+            child.classList.contains('owl-item') ||
+            child.classList.contains('item')
+        );
+        
+        return slides.indexOf(slideElement);
     }
 
     /**
@@ -455,7 +545,7 @@ class HardemEditorUtils {
     /**
      * Validar formato de arquivo
      */
-    validateFileType(file, allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']) {
+    validateFileType(file, allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml']) {
         return allowedTypes.includes(file.type);
     }
 
@@ -463,8 +553,19 @@ class HardemEditorUtils {
      * Validar tamanho de arquivo
      */
     validateFileSize(file, maxSizeMB = 5) {
+        // SVG pode ser maior que outros formatos de imagem
+        if (file.type === 'image/svg+xml') {
+            maxSizeMB = Math.max(maxSizeMB, 10); // Permitir até 10MB para SVG
+        }
+        
         const maxSizeBytes = maxSizeMB * 1024 * 1024;
-        return file.size <= maxSizeBytes;
+        const isValid = file.size <= maxSizeBytes;
+        
+        if (!isValid) {
+            console.warn(`Arquivo muito grande: ${this.formatBytes(file.size)}, máximo permitido: ${maxSizeMB}MB`);
+        }
+        
+        return isValid;
     }
 
     /**

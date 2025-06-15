@@ -171,15 +171,159 @@ class HardemEditorCore {
     }
 
     /**
-     * Limpar overlays de processamento presos
+     * Limpar elementos "presos" (função de emergência)
      */
     clearStuckOverlays() {
-        const overlays = document.querySelectorAll('.hardem-processing-overlay');
+        // Remover overlays de processamento presos
+        const overlays = document.querySelectorAll('.hardem-processing-overlay, .hardem-editor-overlay');
         overlays.forEach(overlay => overlay.remove());
         
-        if (overlays.length > 0) {
-            console.log(`${overlays.length} overlay(s) de processamento removido(s)`);
-            this.ui.showAlert('Overlays de processamento limpos!', 'success');
+        // Remover elementos selecionados
+        const selected = document.querySelectorAll('.hardem-selected');
+        selected.forEach(el => el.classList.remove('hardem-selected'));
+        
+        // Fechar painéis
+        this.ui.closeSidePanel();
+        
+        // Limpar fila de imagens se houver problema
+        if (this.imageEditor && typeof this.imageEditor.clearProcessingQueue === 'function') {
+            this.imageEditor.clearProcessingQueue();
+        }
+        
+        this.ui.showAlert('🧹 Elementos presos removidos!', 'success');
+        console.log('🧹 Limpeza de emergência executada');
+    }
+
+    /**
+     * Resetar sistema de imagens (função de emergência)
+     */
+    resetImageProcessing() {
+        if (this.imageEditor && typeof this.imageEditor.resetImageSystem === 'function') {
+            this.imageEditor.resetImageSystem();
+        } else {
+            this.ui.showAlert('⚠️ Sistema de imagens não disponível', 'warning');
+        }
+    }
+
+    /**
+     * Obter estatísticas do sistema
+     */
+    getSystemStats() {
+        const stats = {
+            contentMapSize: Object.keys(this.contentMap).length,
+            editMode: this.editMode,
+            hasImageEditor: !!this.imageEditor,
+            hasTextEditor: !!this.textEditor
+        };
+        
+        // Adicionar stats de imagens se disponível
+        if (this.imageEditor && typeof this.imageEditor.getSystemStats === 'function') {
+            stats.imageSystem = this.imageEditor.getSystemStats();
+        }
+        
+        console.log('📊 Estatísticas do sistema:', stats);
+        return stats;
+    }
+
+    /**
+     * Testar ambiente PHP e diagnosticar problemas
+     */
+    async testPHPEnvironment() {
+        try {
+            this.ui.showAlert('🔧 Testando ambiente PHP...', 'info', 0);
+            
+            const response = await fetch('test-save.php', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            
+            console.log('🔧 Resposta do teste PHP:', response.status, response.statusText);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            console.log('🔧 Resultado do teste PHP:', data);
+            
+            // Remover alerta de teste
+            const testAlerts = document.querySelectorAll('.editor-alert');
+            testAlerts.forEach(alert => {
+                if (alert.textContent.includes('Testando ambiente PHP')) {
+                    alert.remove();
+                }
+            });
+            
+            // Mostrar resultados
+            if (data.success) {
+                let message = `✅ PHP funcionando! Versão: ${data.php_info.php_version}`;
+                let alertType = 'success';
+                
+                if (data.recommendations && data.recommendations.length > 0) {
+                    alertType = 'warning';
+                    message = `⚠️ PHP funcionando mas com problemas detectados`;
+                    
+                    // Mostrar recomendações detalhadas
+                    setTimeout(() => {
+                        this.ui.showDetailedErrorAlert(
+                            'Problemas no Ambiente PHP',
+                            `PHP ${data.php_info.php_version} funcionando, mas há problemas de configuração:`,
+                            data.recommendations
+                        );
+                    }, 1000);
+                }
+                
+                this.ui.showAlert(message, alertType);
+                
+                // Log informações úteis
+                console.log('📋 Informações do PHP:', {
+                    version: data.php_info.php_version,
+                    memory_limit: data.php_info.memory_limit,
+                    writable: data.php_info.is_writable,
+                    save_php_exists: data.save_php.exists
+                });
+                
+            } else {
+                this.ui.showAlert('❌ Erro no teste PHP: ' + data.message, 'error');
+            }
+            
+        } catch (error) {
+            console.error('❌ Erro ao testar PHP:', error);
+            
+            // Remover alerta de teste
+            const testAlerts = document.querySelectorAll('.editor-alert');
+            testAlerts.forEach(alert => {
+                if (alert.textContent.includes('Testando ambiente PHP')) {
+                    alert.remove();
+                }
+            });
+            
+            // Análise do tipo de erro
+            if (error.message.includes('404')) {
+                this.ui.showDetailedErrorAlert(
+                    'Arquivo test-save.php Não Encontrado',
+                    'O arquivo de teste não foi encontrado no servidor.',
+                    [
+                        'Verifique se o arquivo test-save.php existe na pasta',
+                        'Certifique-se de estar executando via servidor web',
+                        'Não abra o HTML diretamente no navegador'
+                    ]
+                );
+            } else if (error.message.includes('Failed to fetch')) {
+                this.ui.showDetailedErrorAlert(
+                    'Servidor Web Não Disponível',
+                    'Não foi possível conectar com o servidor web.',
+                    [
+                        'Execute o projeto via servidor web (XAMPP, WAMP, Apache)',
+                        'Use: php -S localhost:8000 (servidor PHP embutido)',
+                        'Não abra o arquivo HTML diretamente'
+                    ]
+                );
+            } else {
+                this.ui.showAlert(`❌ Erro no teste PHP: ${error.message}`, 'error');
+            }
         }
     }
 

@@ -1,0 +1,504 @@
+[2025-06-15 00:40:01] HARDEM Editor: Recebendo requisição de salvamento - 2025-06-15 00:40:01
+[2025-06-15 00:40:01] HARDEM Editor: Tamanho dos dados recebidos: 2025 bytes (0 MB)
+[2025-06-15 00:40:01] HARDEM Editor: ContentMap com 23 elementos processado
+[2025-06-15 00:40:01] HARDEM Editor: Backup criado: backups/hardem-content-index-backup-2025-06-15-00-40-01.json
+[2025-06-15 00:40:01] HARDEM Editor: Arquivo salvo com sucesso: hardem-content-index.json (3339 bytes)
+[2025-06-15 00:42:13] HARDEM Editor: Recebendo requisição de salvamento - 2025-06-15 00:42:13
+[2025-06-15 00:42:13] HARDEM Editor: Tamanho dos dados recebidos: 8800414 bytes (8.39 MB)
+[2025-06-15 00:42:13] HARDEM Editor: ContentMap com 21 elementos processado
+[2025-06-15 00:42:13] HARDEM Editor: Backup criado: backups/hardem-content-index-backup-2025-06-15-00-42-13.json
+[2025-06-15 00:42:13] HARDEM Editor: Arquivo salvo com sucesso: hardem-content-index.json (8963286 bytes)
+[2025-06-15 00:58:33] Iniciando processamento de salvamento - POST size: 2851533 bytes
+[2025-06-15 00:58:33] JSON recebido: 2851398 bytes
+[2025-06-15 00:58:33] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 00:58:33] Arquivo salvo: hardem-backup-2025-06-15_00-58-33.json (2851398 bytes)
+[2025-06-15 00:58:34] Iniciando processamento de salvamento - POST size: 2851533 bytes
+[2025-06-15 00:58:34] JSON recebido: 2851398 bytes
+[2025-06-15 00:58:34] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 00:58:34] Arquivo salvo: hardem-backup-2025-06-15_00-58-34.json (2851398 bytes)
+[2025-06-15 00:58:34] Iniciando processamento de salvamento - POST size: 2851533 bytes
+[2025-06-15 00:58:34] JSON recebido: 2851398 bytes
+[2025-06-15 00:58:34] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 00:58:34] Arquivo salvo: hardem-backup-2025-06-15_00-58-34.json (2851398 bytes)
+[2025-06-15 00:58:34] Iniciando processamento de salvamento - POST size: 2854262 bytes
+[2025-06-15 00:58:34] JSON recebido: 2854127 bytes
+[2025-06-15 00:58:34] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 00:58:34] Arquivo salvo: hardem-backup-2025-06-15_00-58-34.json (2854127 bytes)
+[2025-06-15 00:58:34] Iniciando processamento de salvamento - POST size: 705 bytes
+[2025-06-15 00:58:34] JSON recebido: 570 bytes
+[2025-06-15 00:58:34] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 00:58:34] Arquivo salvo: hardem-backup-2025-06-15_00-58-34.json (570 bytes)
+[2025-06-15 00:58:37] POST size limit exceeded: 14988449 bytes > 8388608 bytes
+[2025-06-15 01:00:57] Iniciando processamento de salvamento - POST size: 2851533 bytes
+[2025-06-15 01:00:57] JSON recebido: 2851398 bytes
+[2025-06-15 01:00:57] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:00:57] Arquivo salvo: hardem-backup-2025-06-15_01-00-57.json (2851398 bytes)
+[2025-06-15 01:00:57] Iniciando processamento de salvamento - POST size: 2851533 bytes
+[2025-06-15 01:00:57] JSON recebido: 2851398 bytes
+[2025-06-15 01:00:57] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:00:57] Arquivo salvo: hardem-backup-2025-06-15_01-00-57.json (2851398 bytes)
+[2025-06-15 01:00:58] Iniciando processamento de salvamento - POST size: 2851533 bytes
+[2025-06-15 01:00:58] JSON recebido: 2851398 bytes
+[2025-06-15 01:00:58] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:00:58] Arquivo salvo: hardem-backup-2025-06-15_01-00-58.json (2851398 bytes)
+[2025-06-15 01:00:58] Iniciando processamento de salvamento - POST size: 2851493 bytes
+[2025-06-15 01:00:58] JSON recebido: 2851358 bytes
+[2025-06-15 01:00:58] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:00:58] Arquivo salvo: hardem-backup-2025-06-15_01-00-58.json (2851358 bytes)
+[2025-06-15 01:00:58] Iniciando processamento de salvamento - POST size: 1427472 bytes
+[2025-06-15 01:00:58] JSON recebido: 1427337 bytes
+[2025-06-15 01:00:58] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:00:58] Arquivo salvo: hardem-backup-2025-06-15_01-00-58.json (1427337 bytes)
+[2025-06-15 01:00:58] Iniciando processamento de salvamento - POST size: 732 bytes
+[2025-06-15 01:00:58] JSON recebido: 597 bytes
+[2025-06-15 01:00:58] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:00:58] Arquivo salvo: hardem-backup-2025-06-15_01-00-58.json (597 bytes)
+[2025-06-15 01:01:01] POST size limit exceeded: 17942492 bytes > 8388608 bytes
+[2025-06-15 01:29:10] Iniciando processamento de salvamento - POST size: 2851533 bytes
+[2025-06-15 01:29:10] JSON recebido: 2851398 bytes
+[2025-06-15 01:29:10] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:29:10] Arquivo salvo: hardem-backup-2025-06-15_01-29-10.json (2851398 bytes)
+[2025-06-15 01:29:10] Iniciando processamento de salvamento - POST size: 2851533 bytes
+[2025-06-15 01:29:10] JSON recebido: 2851398 bytes
+[2025-06-15 01:29:10] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:29:10] Arquivo salvo: hardem-backup-2025-06-15_01-29-10.json (2851398 bytes)
+[2025-06-15 01:29:11] Iniciando processamento de salvamento - POST size: 2851533 bytes
+[2025-06-15 01:29:11] JSON recebido: 2851398 bytes
+[2025-06-15 01:29:11] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:29:11] Arquivo salvo: hardem-backup-2025-06-15_01-29-11.json (2851398 bytes)
+[2025-06-15 01:29:11] Iniciando processamento de salvamento - POST size: 2851493 bytes
+[2025-06-15 01:29:11] JSON recebido: 2851358 bytes
+[2025-06-15 01:29:11] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:29:11] Arquivo salvo: hardem-backup-2025-06-15_01-29-11.json (2851358 bytes)
+[2025-06-15 01:29:11] Iniciando processamento de salvamento - POST size: 1427472 bytes
+[2025-06-15 01:29:11] JSON recebido: 1427337 bytes
+[2025-06-15 01:29:11] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:29:11] Arquivo salvo: hardem-backup-2025-06-15_01-29-11.json (1427337 bytes)
+[2025-06-15 01:29:11] Iniciando processamento de salvamento - POST size: 732 bytes
+[2025-06-15 01:29:11] JSON recebido: 597 bytes
+[2025-06-15 01:29:11] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:29:11] Arquivo salvo: hardem-backup-2025-06-15_01-29-11.json (597 bytes)
+[2025-06-15 01:35:14] Iniciando processamento de salvamento - POST size: 2851607 bytes
+[2025-06-15 01:35:14] JSON recebido: 2851472 bytes
+[2025-06-15 01:35:14] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:35:14] Arquivo salvo: hardem-backup-2025-06-15_01-35-14.json (2851472 bytes)
+[2025-06-15 01:35:14] Iniciando processamento de salvamento - POST size: 2851607 bytes
+[2025-06-15 01:35:14] JSON recebido: 2851472 bytes
+[2025-06-15 01:35:14] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:35:14] Arquivo salvo: hardem-backup-2025-06-15_01-35-14.json (2851472 bytes)
+[2025-06-15 01:35:14] Iniciando processamento de salvamento - POST size: 2851607 bytes
+[2025-06-15 01:35:14] JSON recebido: 2851472 bytes
+[2025-06-15 01:35:14] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:35:14] Arquivo salvo: hardem-backup-2025-06-15_01-35-14.json (2851472 bytes)
+[2025-06-15 01:35:14] Iniciando processamento de salvamento - POST size: 1430148 bytes
+[2025-06-15 01:35:14] JSON recebido: 1430013 bytes
+[2025-06-15 01:35:14] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:35:14] Arquivo salvo: hardem-backup-2025-06-15_01-35-14.json (1430013 bytes)
+[2025-06-15 01:35:15] Iniciando processamento de salvamento - POST size: 987 bytes
+[2025-06-15 01:35:15] JSON recebido: 852 bytes
+[2025-06-15 01:35:15] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:35:15] Arquivo salvo: hardem-backup-2025-06-15_01-35-15.json (852 bytes)
+[2025-06-15 01:38:41] Iniciando processamento de salvamento - POST size: 2851607 bytes
+[2025-06-15 01:38:41] JSON recebido: 2851472 bytes
+[2025-06-15 01:38:41] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:38:41] Arquivo salvo: hardem-backup-2025-06-15_01-38-41.json (2851472 bytes)
+[2025-06-15 01:38:42] Iniciando processamento de salvamento - POST size: 2851607 bytes
+[2025-06-15 01:38:42] JSON recebido: 2851472 bytes
+[2025-06-15 01:38:42] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:38:42] Arquivo salvo: hardem-backup-2025-06-15_01-38-42.json (2851472 bytes)
+[2025-06-15 01:38:42] Iniciando processamento de salvamento - POST size: 2851607 bytes
+[2025-06-15 01:38:42] JSON recebido: 2851472 bytes
+[2025-06-15 01:38:42] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:38:42] Arquivo salvo: hardem-backup-2025-06-15_01-38-42.json (2851472 bytes)
+[2025-06-15 01:38:42] Iniciando processamento de salvamento - POST size: 1430148 bytes
+[2025-06-15 01:38:42] JSON recebido: 1430013 bytes
+[2025-06-15 01:38:42] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:38:42] Arquivo salvo: hardem-backup-2025-06-15_01-38-42.json (1430013 bytes)
+[2025-06-15 01:38:42] Iniciando processamento de salvamento - POST size: 987 bytes
+[2025-06-15 01:38:42] JSON recebido: 852 bytes
+[2025-06-15 01:38:42] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:38:42] Arquivo salvo: hardem-backup-2025-06-15_01-38-42.json (852 bytes)
+[2025-06-15 01:41:45] Iniciando processamento de salvamento - POST size: 2852036 bytes
+[2025-06-15 01:41:45] JSON recebido: 2851901 bytes
+[2025-06-15 01:41:45] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:41:45] Arquivo salvo: hardem-backup-2025-06-15_01-41-45.json (2851901 bytes)
+[2025-06-15 01:41:45] Iniciando processamento de salvamento - POST size: 2851607 bytes
+[2025-06-15 01:41:45] JSON recebido: 2851472 bytes
+[2025-06-15 01:41:45] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:41:45] Arquivo salvo: hardem-backup-2025-06-15_01-41-45.json (2851472 bytes)
+[2025-06-15 01:41:46] Iniciando processamento de salvamento - POST size: 2851607 bytes
+[2025-06-15 01:41:46] JSON recebido: 2851472 bytes
+[2025-06-15 01:41:46] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:41:46] Arquivo salvo: hardem-backup-2025-06-15_01-41-46.json (2851472 bytes)
+[2025-06-15 01:41:46] Iniciando processamento de salvamento - POST size: 2855368 bytes
+[2025-06-15 01:41:46] JSON recebido: 2855233 bytes
+[2025-06-15 01:41:46] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:41:46] Arquivo salvo: hardem-backup-2025-06-15_01-41-46.json (2855233 bytes)
+[2025-06-15 01:41:46] Iniciando processamento de salvamento - POST size: 987 bytes
+[2025-06-15 01:41:46] JSON recebido: 852 bytes
+[2025-06-15 01:41:46] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:41:46] Arquivo salvo: hardem-backup-2025-06-15_01-41-46.json (852 bytes)
+[2025-06-15 01:47:28] Iniciando processamento de salvamento - POST size: 2852036 bytes
+[2025-06-15 01:47:28] JSON recebido: 2851901 bytes
+[2025-06-15 01:47:28] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:47:28] Arquivo salvo: hardem-backup-2025-06-15_01-47-28.json (2851901 bytes)
+[2025-06-15 01:47:28] Iniciando processamento de salvamento - POST size: 2851607 bytes
+[2025-06-15 01:47:28] JSON recebido: 2851472 bytes
+[2025-06-15 01:47:28] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:47:28] Arquivo salvo: hardem-backup-2025-06-15_01-47-28.json (2851472 bytes)
+[2025-06-15 01:47:29] Iniciando processamento de salvamento - POST size: 2851607 bytes
+[2025-06-15 01:47:29] JSON recebido: 2851472 bytes
+[2025-06-15 01:47:29] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:47:29] Arquivo salvo: hardem-backup-2025-06-15_01-47-29.json (2851472 bytes)
+[2025-06-15 01:47:29] Iniciando processamento de salvamento - POST size: 2855368 bytes
+[2025-06-15 01:47:29] JSON recebido: 2855233 bytes
+[2025-06-15 01:47:29] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:47:29] Arquivo salvo: hardem-backup-2025-06-15_01-47-29.json (2855233 bytes)
+[2025-06-15 01:47:29] Iniciando processamento de salvamento - POST size: 987 bytes
+[2025-06-15 01:47:29] JSON recebido: 852 bytes
+[2025-06-15 01:47:29] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:47:29] Arquivo salvo: hardem-backup-2025-06-15_01-47-29.json (852 bytes)
+[2025-06-15 01:49:23] Iniciando processamento de salvamento - POST size: 2852036 bytes
+[2025-06-15 01:49:23] JSON recebido: 2851901 bytes
+[2025-06-15 01:49:23] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:49:23] Arquivo salvo: hardem-backup-2025-06-15_01-49-23.json (2851901 bytes)
+[2025-06-15 01:49:24] Iniciando processamento de salvamento - POST size: 2851607 bytes
+[2025-06-15 01:49:24] JSON recebido: 2851472 bytes
+[2025-06-15 01:49:24] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:49:24] Arquivo salvo: hardem-backup-2025-06-15_01-49-24.json (2851472 bytes)
+[2025-06-15 01:49:24] Iniciando processamento de salvamento - POST size: 2851607 bytes
+[2025-06-15 01:49:24] JSON recebido: 2851472 bytes
+[2025-06-15 01:49:24] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:49:24] Arquivo salvo: hardem-backup-2025-06-15_01-49-24.json (2851472 bytes)
+[2025-06-15 01:49:24] Iniciando processamento de salvamento - POST size: 2855368 bytes
+[2025-06-15 01:49:24] JSON recebido: 2855233 bytes
+[2025-06-15 01:49:24] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:49:24] Arquivo salvo: hardem-backup-2025-06-15_01-49-24.json (2855233 bytes)
+[2025-06-15 01:49:24] Iniciando processamento de salvamento - POST size: 987 bytes
+[2025-06-15 01:49:24] JSON recebido: 852 bytes
+[2025-06-15 01:49:24] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:49:24] Arquivo salvo: hardem-backup-2025-06-15_01-49-24.json (852 bytes)
+[2025-06-15 01:51:47] Iniciando processamento de salvamento - POST size: 2852036 bytes
+[2025-06-15 01:51:47] JSON recebido: 2851901 bytes
+[2025-06-15 01:51:47] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:51:47] Arquivo salvo: hardem-backup-2025-06-15_01-51-47.json (2851901 bytes)
+[2025-06-15 01:51:47] Iniciando processamento de salvamento - POST size: 2851607 bytes
+[2025-06-15 01:51:47] JSON recebido: 2851472 bytes
+[2025-06-15 01:51:47] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:51:47] Arquivo salvo: hardem-backup-2025-06-15_01-51-47.json (2851472 bytes)
+[2025-06-15 01:51:48] Iniciando processamento de salvamento - POST size: 2851607 bytes
+[2025-06-15 01:51:48] JSON recebido: 2851472 bytes
+[2025-06-15 01:51:48] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:51:48] Arquivo salvo: hardem-backup-2025-06-15_01-51-48.json (2851472 bytes)
+[2025-06-15 01:51:48] Iniciando processamento de salvamento - POST size: 2855368 bytes
+[2025-06-15 01:51:48] JSON recebido: 2855233 bytes
+[2025-06-15 01:51:48] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:51:48] Arquivo salvo: hardem-backup-2025-06-15_01-51-48.json (2855233 bytes)
+[2025-06-15 01:51:48] Iniciando processamento de salvamento - POST size: 987 bytes
+[2025-06-15 01:51:48] JSON recebido: 852 bytes
+[2025-06-15 01:51:48] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 01:51:48] Arquivo salvo: hardem-backup-2025-06-15_01-51-48.json (852 bytes)
+[2025-06-15 02:05:56] Iniciando processamento de salvamento - POST size: 461323 bytes
+[2025-06-15 02:05:56] JSON recebido: 433452 bytes
+[2025-06-15 02:05:56] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 02:05:56] Arquivo salvo: hardem-backup-2025-06-15_02-05-56.json (433452 bytes)
+[2025-06-15 02:05:56] Iniciando processamento de salvamento - POST size: 461322 bytes
+[2025-06-15 02:05:56] JSON recebido: 433451 bytes
+[2025-06-15 02:05:56] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 02:05:56] Arquivo salvo: hardem-backup-2025-06-15_02-05-56.json (433451 bytes)
+[2025-06-15 02:05:56] Iniciando processamento de salvamento - POST size: 461323 bytes
+[2025-06-15 02:05:56] JSON recebido: 433452 bytes
+[2025-06-15 02:05:56] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 02:05:56] Arquivo salvo: hardem-backup-2025-06-15_02-05-56.json (433452 bytes)
+[2025-06-15 02:05:57] Iniciando processamento de salvamento - POST size: 461313 bytes
+[2025-06-15 02:05:57] JSON recebido: 433442 bytes
+[2025-06-15 02:05:57] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 02:05:57] Arquivo salvo: hardem-backup-2025-06-15_02-05-57.json (433442 bytes)
+[2025-06-15 02:05:57] Iniciando processamento de salvamento - POST size: 461354 bytes
+[2025-06-15 02:05:57] JSON recebido: 433487 bytes
+[2025-06-15 02:05:57] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 02:05:57] Arquivo salvo: hardem-backup-2025-06-15_02-05-57.json (433487 bytes)
+[2025-06-15 02:05:57] Iniciando processamento de salvamento - POST size: 461353 bytes
+[2025-06-15 02:05:57] JSON recebido: 433486 bytes
+[2025-06-15 02:05:57] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 02:05:57] Arquivo salvo: hardem-backup-2025-06-15_02-05-57.json (433486 bytes)
+[2025-06-15 02:05:57] Iniciando processamento de salvamento - POST size: 461353 bytes
+[2025-06-15 02:05:57] JSON recebido: 433486 bytes
+[2025-06-15 02:05:57] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 02:05:57] Arquivo salvo: hardem-backup-2025-06-15_02-05-57.json (433486 bytes)
+[2025-06-15 02:05:57] Iniciando processamento de salvamento - POST size: 461342 bytes
+[2025-06-15 02:05:57] JSON recebido: 433475 bytes
+[2025-06-15 02:05:57] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 02:05:57] Arquivo salvo: hardem-backup-2025-06-15_02-05-57.json (433475 bytes)
+[2025-06-15 02:05:57] Iniciando processamento de salvamento - POST size: 1523088 bytes
+[2025-06-15 02:05:57] JSON recebido: 1426323 bytes
+[2025-06-15 02:05:57] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 02:05:57] Arquivo salvo: hardem-backup-2025-06-15_02-05-57.json (1426323 bytes)
+[2025-06-15 02:05:57] Iniciando processamento de salvamento - POST size: 1523090 bytes
+[2025-06-15 02:05:57] JSON recebido: 1426325 bytes
+[2025-06-15 02:05:57] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 02:05:57] Arquivo salvo: hardem-backup-2025-06-15_02-05-57.json (1426325 bytes)
+[2025-06-15 02:05:58] Iniciando processamento de salvamento - POST size: 1523090 bytes
+[2025-06-15 02:05:58] JSON recebido: 1426325 bytes
+[2025-06-15 02:05:58] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 02:05:58] Arquivo salvo: hardem-backup-2025-06-15_02-05-58.json (1426325 bytes)
+[2025-06-15 02:05:58] Iniciando processamento de salvamento - POST size: 1523090 bytes
+[2025-06-15 02:05:58] JSON recebido: 1426325 bytes
+[2025-06-15 02:05:58] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 02:05:58] Arquivo salvo: hardem-backup-2025-06-15_02-05-58.json (1426325 bytes)
+[2025-06-15 02:05:58] Iniciando processamento de salvamento - POST size: 1523090 bytes
+[2025-06-15 02:05:58] JSON recebido: 1426325 bytes
+[2025-06-15 02:05:58] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 02:05:58] Arquivo salvo: hardem-backup-2025-06-15_02-05-58.json (1426325 bytes)
+[2025-06-15 02:05:58] Iniciando processamento de salvamento - POST size: 1523041 bytes
+[2025-06-15 02:05:58] JSON recebido: 1426296 bytes
+[2025-06-15 02:05:58] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 02:05:58] Arquivo salvo: hardem-backup-2025-06-15_02-05-58.json (1426296 bytes)
+[2025-06-15 02:05:58] Iniciando processamento de salvamento - POST size: 1523041 bytes
+[2025-06-15 02:05:58] JSON recebido: 1426296 bytes
+[2025-06-15 02:05:58] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 02:05:58] Arquivo salvo: hardem-backup-2025-06-15_02-05-58.json (1426296 bytes)
+[2025-06-15 02:05:58] Iniciando processamento de salvamento - POST size: 2799 bytes
+[2025-06-15 02:05:58] JSON recebido: 2256 bytes
+[2025-06-15 02:05:58] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 02:05:58] Arquivo salvo: hardem-backup-2025-06-15_02-05-58.json (2256 bytes)
+[2025-06-15 02:05:59] Iniciando processamento de salvamento - POST size: 2799 bytes
+[2025-06-15 02:05:59] JSON recebido: 2256 bytes
+[2025-06-15 02:05:59] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 02:05:59] Arquivo salvo: hardem-backup-2025-06-15_02-05-59.json (2256 bytes)
+[2025-06-15 02:05:59] Iniciando processamento de salvamento - POST size: 461319 bytes
+[2025-06-15 02:05:59] JSON recebido: 433452 bytes
+[2025-06-15 02:05:59] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 02:05:59] Arquivo salvo: hardem-backup-2025-06-15_02-05-59.json (433452 bytes)
+[2025-06-15 02:05:59] Iniciando processamento de salvamento - POST size: 461318 bytes
+[2025-06-15 02:05:59] JSON recebido: 433451 bytes
+[2025-06-15 02:05:59] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 02:05:59] Arquivo salvo: hardem-backup-2025-06-15_02-05-59.json (433451 bytes)
+[2025-06-15 02:05:59] Iniciando processamento de salvamento - POST size: 1522756 bytes
+[2025-06-15 02:05:59] JSON recebido: 1426169 bytes
+[2025-06-15 02:05:59] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 02:05:59] Arquivo salvo: hardem-backup-2025-06-15_02-05-59.json (1426169 bytes)
+[2025-06-15 02:05:59] Iniciando processamento de salvamento - POST size: 394272 bytes
+[2025-06-15 02:05:59] JSON recebido: 370363 bytes
+[2025-06-15 02:05:59] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 02:05:59] Arquivo salvo: hardem-backup-2025-06-15_02-05-59.json (370363 bytes)
+[2025-06-15 02:05:59] Iniciando processamento de salvamento - POST size: 394272 bytes
+[2025-06-15 02:05:59] JSON recebido: 370363 bytes
+[2025-06-15 02:05:59] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 02:05:59] Arquivo salvo: hardem-backup-2025-06-15_02-05-59.json (370363 bytes)
+[2025-06-15 02:05:59] Iniciando processamento de salvamento - POST size: 393962 bytes
+[2025-06-15 02:05:59] JSON recebido: 370161 bytes
+[2025-06-15 02:05:59] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 02:05:59] Arquivo salvo: hardem-backup-2025-06-15_02-05-59.json (370161 bytes)
+[2025-06-15 02:05:59] Iniciando processamento de salvamento - POST size: 1928 bytes
+[2025-06-15 02:05:59] JSON recebido: 1515 bytes
+[2025-06-15 02:05:59] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 02:05:59] Arquivo salvo: hardem-backup-2025-06-15_02-05-59.json (1515 bytes)
+[2025-06-15 04:14:07] Iniciando processamento de salvamento - POST size: 2852354 bytes
+[2025-06-15 04:14:07] JSON recebido: 2852219 bytes
+[2025-06-15 04:14:08] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 04:14:08] Arquivo salvo: hardem-backup-2025-06-15_04-14-08.json (2852219 bytes)
+[2025-06-15 04:14:29] Iniciando processamento de salvamento - POST size: 3260516 bytes
+[2025-06-15 04:14:29] JSON recebido: 3260381 bytes
+[2025-06-15 04:14:29] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 04:14:29] Arquivo salvo: hardem-backup-2025-06-15_04-14-29.json (3260381 bytes)
+[2025-06-15 04:15:05] Iniciando processamento de salvamento - POST size: 4993510 bytes
+[2025-06-15 04:15:05] JSON recebido: 4993375 bytes
+[2025-06-15 04:15:05] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 04:15:05] Arquivo salvo: hardem-backup-2025-06-15_04-15-05.json (4993375 bytes)
+[2025-06-15 04:15:23] Iniciando processamento de salvamento - POST size: 5031312 bytes
+[2025-06-15 04:15:23] JSON recebido: 5031177 bytes
+[2025-06-15 04:15:23] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 04:15:23] Arquivo salvo: hardem-backup-2025-06-15_04-15-23.json (5031177 bytes)
+[2025-06-15 04:15:46] Iniciando processamento de salvamento - POST size: 6764448 bytes
+[2025-06-15 04:15:46] JSON recebido: 6764313 bytes
+[2025-06-15 04:15:46] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 04:15:46] Arquivo salvo: hardem-backup-2025-06-15_04-15-46.json (6764313 bytes)
+[2025-06-15 04:16:46] Iniciando processamento de salvamento - POST size: 5704904 bytes
+[2025-06-15 04:16:46] JSON recebido: 5704769 bytes
+[2025-06-15 04:16:46] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 04:16:46] Arquivo salvo: hardem-backup-2025-06-15_04-16-46.json (5704769 bytes)
+[2025-06-15 04:17:49] Iniciando processamento de salvamento - POST size: 1428569 bytes
+[2025-06-15 04:17:49] JSON recebido: 1428434 bytes
+[2025-06-15 04:17:49] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 04:17:49] Arquivo salvo: hardem-backup-2025-06-15_04-17-49.json (1428434 bytes)
+[2025-06-15 04:18:27] Iniciando processamento de salvamento - POST size: 1523029 bytes
+[2025-06-15 04:18:27] JSON recebido: 1426284 bytes
+[2025-06-15 04:18:27] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 04:18:27] Arquivo salvo: hardem-backup-2025-06-15_04-18-27.json (1426284 bytes)
+[2025-06-15 04:18:27] Iniciando processamento de salvamento - POST size: 2787 bytes
+[2025-06-15 04:18:27] JSON recebido: 2244 bytes
+[2025-06-15 04:18:27] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 04:18:27] Arquivo salvo: hardem-backup-2025-06-15_04-18-27.json (2244 bytes)
+[2025-06-15 04:18:27] Iniciando processamento de salvamento - POST size: 1523078 bytes
+[2025-06-15 04:18:27] JSON recebido: 1426313 bytes
+[2025-06-15 04:18:27] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 04:18:27] Arquivo salvo: hardem-backup-2025-06-15_04-18-27.json (1426313 bytes)
+[2025-06-15 04:18:28] Iniciando processamento de salvamento - POST size: 1523078 bytes
+[2025-06-15 04:18:28] JSON recebido: 1426313 bytes
+[2025-06-15 04:18:28] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 04:18:28] Arquivo salvo: hardem-backup-2025-06-15_04-18-28.json (1426313 bytes)
+[2025-06-15 04:18:28] Iniciando processamento de salvamento - POST size: 1523078 bytes
+[2025-06-15 04:18:28] JSON recebido: 1426313 bytes
+[2025-06-15 04:18:28] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 04:18:28] Arquivo salvo: hardem-backup-2025-06-15_04-18-28.json (1426313 bytes)
+[2025-06-15 04:18:28] Iniciando processamento de salvamento - POST size: 1523078 bytes
+[2025-06-15 04:18:28] JSON recebido: 1426313 bytes
+[2025-06-15 04:18:28] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 04:18:28] Arquivo salvo: hardem-backup-2025-06-15_04-18-28.json (1426313 bytes)
+[2025-06-15 04:18:28] Iniciando processamento de salvamento - POST size: 1523078 bytes
+[2025-06-15 04:18:28] JSON recebido: 1426313 bytes
+[2025-06-15 04:18:28] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 04:18:28] Arquivo salvo: hardem-backup-2025-06-15_04-18-28.json (1426313 bytes)
+[2025-06-15 04:18:28] Iniciando processamento de salvamento - POST size: 1162 bytes
+[2025-06-15 04:18:28] JSON recebido: 845 bytes
+[2025-06-15 04:18:28] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 04:18:28] Arquivo salvo: hardem-backup-2025-06-15_04-18-28.json (845 bytes)
+[2025-06-15 04:18:53] Iniciando processamento de salvamento - POST size: 2854689 bytes
+[2025-06-15 04:18:53] JSON recebido: 2854554 bytes
+[2025-06-15 04:18:53] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 04:18:53] Arquivo salvo: hardem-backup-2025-06-15_04-18-53.json (2854554 bytes)
+[2025-06-15 04:19:20] Iniciando processamento de salvamento - POST size: 1523029 bytes
+[2025-06-15 04:19:20] JSON recebido: 1426284 bytes
+[2025-06-15 04:19:20] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 04:19:20] Arquivo salvo: hardem-backup-2025-06-15_04-19-20.json (1426284 bytes)
+[2025-06-15 04:19:21] Iniciando processamento de salvamento - POST size: 2787 bytes
+[2025-06-15 04:19:21] JSON recebido: 2244 bytes
+[2025-06-15 04:19:21] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 04:19:21] Arquivo salvo: hardem-backup-2025-06-15_04-19-21.json (2244 bytes)
+[2025-06-15 04:19:21] Iniciando processamento de salvamento - POST size: 1523078 bytes
+[2025-06-15 04:19:21] JSON recebido: 1426313 bytes
+[2025-06-15 04:19:21] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 04:19:21] Arquivo salvo: hardem-backup-2025-06-15_04-19-21.json (1426313 bytes)
+[2025-06-15 04:19:21] Iniciando processamento de salvamento - POST size: 1523078 bytes
+[2025-06-15 04:19:21] JSON recebido: 1426313 bytes
+[2025-06-15 04:19:21] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 04:19:21] Arquivo salvo: hardem-backup-2025-06-15_04-19-21.json (1426313 bytes)
+[2025-06-15 04:19:21] Iniciando processamento de salvamento - POST size: 1523078 bytes
+[2025-06-15 04:19:21] JSON recebido: 1426313 bytes
+[2025-06-15 04:19:21] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 04:19:21] Arquivo salvo: hardem-backup-2025-06-15_04-19-21.json (1426313 bytes)
+[2025-06-15 04:19:21] Iniciando processamento de salvamento - POST size: 1523078 bytes
+[2025-06-15 04:19:21] JSON recebido: 1426313 bytes
+[2025-06-15 04:19:21] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 04:19:21] Arquivo salvo: hardem-backup-2025-06-15_04-19-21.json (1426313 bytes)
+[2025-06-15 04:19:21] Iniciando processamento de salvamento - POST size: 1523078 bytes
+[2025-06-15 04:19:21] JSON recebido: 1426313 bytes
+[2025-06-15 04:19:21] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 04:19:21] Arquivo salvo: hardem-backup-2025-06-15_04-19-21.json (1426313 bytes)
+[2025-06-15 04:19:22] Iniciando processamento de salvamento - POST size: 1162 bytes
+[2025-06-15 04:19:22] JSON recebido: 845 bytes
+[2025-06-15 04:19:22] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 04:19:22] Arquivo salvo: hardem-backup-2025-06-15_04-19-22.json (845 bytes)
+[2025-06-15 04:19:59] Iniciando processamento de salvamento - POST size: 4587811 bytes
+[2025-06-15 04:19:59] JSON recebido: 4587676 bytes
+[2025-06-15 04:19:59] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 04:19:59] Arquivo salvo: hardem-backup-2025-06-15_04-19-59.json (4587676 bytes)
+[2025-06-15 04:20:41] Iniciando processamento de salvamento - POST size: 7431062 bytes
+[2025-06-15 04:20:41] JSON recebido: 7430927 bytes
+[2025-06-15 04:20:41] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 04:20:41] Arquivo salvo: hardem-backup-2025-06-15_04-20-41.json (7430927 bytes)
+[2025-06-15 05:09:43] Iniciando processamento de salvamento - POST size: 2003658 bytes
+[2025-06-15 05:09:43] JSON recebido: 2003523 bytes
+[2025-06-15 05:09:43] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 05:09:43] Arquivo salvo: hardem-backup-2025-06-15_05-09-43.json (2003523 bytes)
+[2025-06-15 05:10:13] Iniciando processamento de salvamento - POST size: 2779620 bytes
+[2025-06-15 05:10:13] JSON recebido: 2779485 bytes
+[2025-06-15 05:10:13] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 05:10:13] Arquivo salvo: hardem-backup-2025-06-15_05-10-13.json (2779485 bytes)
+[2025-06-15 05:10:47] Iniciando processamento de salvamento - POST size: 3844152 bytes
+[2025-06-15 05:10:47] JSON recebido: 3844017 bytes
+[2025-06-15 05:10:47] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 05:10:47] Arquivo salvo: hardem-backup-2025-06-15_05-10-47.json (3844017 bytes)
+[2025-06-15 05:11:21] Iniciando processamento de salvamento - POST size: 204164 bytes
+[2025-06-15 05:11:21] JSON recebido: 194185 bytes
+[2025-06-15 05:11:21] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 05:11:21] Arquivo salvo: hardem-backup-2025-06-15_05-11-21.json (194185 bytes)
+[2025-06-15 05:11:21] Iniciando processamento de salvamento - POST size: 204164 bytes
+[2025-06-15 05:11:21] JSON recebido: 194185 bytes
+[2025-06-15 05:11:21] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 05:11:21] Arquivo salvo: hardem-backup-2025-06-15_05-11-21.json (194185 bytes)
+[2025-06-15 05:11:22] Iniciando processamento de salvamento - POST size: 204164 bytes
+[2025-06-15 05:11:22] JSON recebido: 194185 bytes
+[2025-06-15 05:11:22] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 05:11:22] Arquivo salvo: hardem-backup-2025-06-15_05-11-22.json (194185 bytes)
+[2025-06-15 05:11:22] Iniciando processamento de salvamento - POST size: 204154 bytes
+[2025-06-15 05:11:22] JSON recebido: 194175 bytes
+[2025-06-15 05:11:22] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 05:11:22] Arquivo salvo: hardem-backup-2025-06-15_05-11-22.json (194175 bytes)
+[2025-06-15 05:11:22] Iniciando processamento de salvamento - POST size: 204195 bytes
+[2025-06-15 05:11:22] JSON recebido: 194220 bytes
+[2025-06-15 05:11:22] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 05:11:22] Arquivo salvo: hardem-backup-2025-06-15_05-11-22.json (194220 bytes)
+[2025-06-15 05:11:22] Iniciando processamento de salvamento - POST size: 204194 bytes
+[2025-06-15 05:11:22] JSON recebido: 194219 bytes
+[2025-06-15 05:11:22] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 05:11:22] Arquivo salvo: hardem-backup-2025-06-15_05-11-22.json (194219 bytes)
+[2025-06-15 05:11:22] Iniciando processamento de salvamento - POST size: 204194 bytes
+[2025-06-15 05:11:22] JSON recebido: 194219 bytes
+[2025-06-15 05:11:22] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 05:11:22] Arquivo salvo: hardem-backup-2025-06-15_05-11-22.json (194219 bytes)
+[2025-06-15 05:11:22] Iniciando processamento de salvamento - POST size: 204183 bytes
+[2025-06-15 05:11:22] JSON recebido: 194208 bytes
+[2025-06-15 05:11:22] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 05:11:22] Arquivo salvo: hardem-backup-2025-06-15_05-11-22.json (194208 bytes)
+[2025-06-15 05:11:22] Iniciando processamento de salvamento - POST size: 1523078 bytes
+[2025-06-15 05:11:22] JSON recebido: 1426313 bytes
+[2025-06-15 05:11:22] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 05:11:22] Arquivo salvo: hardem-backup-2025-06-15_05-11-22.json (1426313 bytes)
+[2025-06-15 05:11:22] Iniciando processamento de salvamento - POST size: 1523080 bytes
+[2025-06-15 05:11:22] JSON recebido: 1426315 bytes
+[2025-06-15 05:11:22] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 05:11:22] Arquivo salvo: hardem-backup-2025-06-15_05-11-22.json (1426315 bytes)
+[2025-06-15 05:11:23] Iniciando processamento de salvamento - POST size: 1523080 bytes
+[2025-06-15 05:11:23] JSON recebido: 1426315 bytes
+[2025-06-15 05:11:23] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 05:11:23] Arquivo salvo: hardem-backup-2025-06-15_05-11-23.json (1426315 bytes)
+[2025-06-15 05:11:23] Iniciando processamento de salvamento - POST size: 1523080 bytes
+[2025-06-15 05:11:23] JSON recebido: 1426315 bytes
+[2025-06-15 05:11:23] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 05:11:23] Arquivo salvo: hardem-backup-2025-06-15_05-11-23.json (1426315 bytes)
+[2025-06-15 05:11:23] Iniciando processamento de salvamento - POST size: 1523080 bytes
+[2025-06-15 05:11:23] JSON recebido: 1426315 bytes
+[2025-06-15 05:11:23] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 05:11:23] Arquivo salvo: hardem-backup-2025-06-15_05-11-23.json (1426315 bytes)
+[2025-06-15 05:11:23] Iniciando processamento de salvamento - POST size: 1522746 bytes
+[2025-06-15 05:11:23] JSON recebido: 1426159 bytes
+[2025-06-15 05:11:23] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 05:11:23] Arquivo salvo: hardem-backup-2025-06-15_05-11-23.json (1426159 bytes)
+[2025-06-15 05:11:23] Iniciando processamento de salvamento - POST size: 305398 bytes
+[2025-06-15 05:11:23] JSON recebido: 288833 bytes
+[2025-06-15 05:11:23] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 05:11:23] Arquivo salvo: hardem-backup-2025-06-15_05-11-23.json (288833 bytes)
+[2025-06-15 05:11:23] Iniciando processamento de salvamento - POST size: 305399 bytes
+[2025-06-15 05:11:23] JSON recebido: 288834 bytes
+[2025-06-15 05:11:23] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 05:11:23] Arquivo salvo: hardem-backup-2025-06-15_05-11-23.json (288834 bytes)
+[2025-06-15 05:11:23] Iniciando processamento de salvamento - POST size: 305087 bytes
+[2025-06-15 05:11:23] JSON recebido: 288630 bytes
+[2025-06-15 05:11:23] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 05:11:23] Arquivo salvo: hardem-backup-2025-06-15_05-11-23.json (288630 bytes)
+[2025-06-15 05:11:24] Iniciando processamento de salvamento - POST size: 1636 bytes
+[2025-06-15 05:11:24] JSON recebido: 1259 bytes
+[2025-06-15 05:11:24] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 05:11:24] Arquivo salvo: hardem-backup-2025-06-15_05-11-24.json (1259 bytes)
+[2025-06-15 05:11:40] Iniciando processamento de salvamento - POST size: 5270272 bytes
+[2025-06-15 05:11:40] JSON recebido: 5270137 bytes
+[2025-06-15 05:11:40] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 05:11:40] Arquivo salvo: hardem-backup-2025-06-15_05-11-40.json (5270137 bytes)
+[2025-06-15 05:12:52] Iniciando processamento de salvamento - POST size: 3844154 bytes
+[2025-06-15 05:12:52] JSON recebido: 3844019 bytes
+[2025-06-15 05:12:52] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 05:12:52] Arquivo salvo: hardem-backup-2025-06-15_05-12-52.json (3844019 bytes)
+[2025-06-15 05:13:19] Iniciando processamento de salvamento - POST size: 5272299 bytes
+[2025-06-15 05:13:19] JSON recebido: 5272164 bytes
+[2025-06-15 05:13:19] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 05:13:19] Arquivo salvo: hardem-backup-2025-06-15_05-13-19.json (5272164 bytes)
+[2025-06-15 05:47:35] Iniciando processamento de salvamento - POST size: 3844185 bytes
+[2025-06-15 05:47:35] JSON recebido: 3844050 bytes
+[2025-06-15 05:47:35] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 05:47:35] Arquivo salvo: hardem-backup-2025-06-15_05-47-35.json (3844050 bytes)
+[2025-06-15 05:48:22] Iniciando processamento de salvamento - POST size: 4928950 bytes
+[2025-06-15 05:48:22] JSON recebido: 4928815 bytes
+[2025-06-15 05:48:22] JSON decodificado com sucesso - 4 elementos
+[2025-06-15 05:48:22] Arquivo salvo: hardem-backup-2025-06-15_05-48-22.json (4928815 bytes)
