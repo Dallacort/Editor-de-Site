@@ -502,3 +502,680 @@
 [2025-06-15 05:48:22] JSON recebido: 4928815 bytes
 [2025-06-15 05:48:22] JSON decodificado com sucesso - 4 elementos
 [2025-06-15 05:48:22] Arquivo salvo: hardem-backup-2025-06-15_05-48-22.json (4928815 bytes)
+[2025-06-17 03:28:52] Iniciando processamento de salvamento - POST size: 1426385 bytes
+[2025-06-17 03:28:52] JSON recebido: 1426250 bytes
+[2025-06-17 03:28:52] JSON decodificado com sucesso - 4 elementos
+[2025-06-17 03:28:52] Arquivo salvo: hardem-backup-2025-06-17_03-28-52.json (1426250 bytes)
+[2025-06-17 03:37:32] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 03:37:32] [LOAD-DB] Carregando dados para página: siteContent_index
+[2025-06-17 03:37:33] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 03:37:33] [LOAD-DB] Carregando dados para página: siteContent_index
+[2025-06-17 03:37:36] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 03:37:36] [LOAD-DB] Carregando dados para página: siteContent_index
+[2025-06-17 03:37:38] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 03:37:38] [LOAD-DB] Carregando dados para página: siteContent_index
+[2025-06-17 03:38:01] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 03:38:01] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 03:38:01] [LOAD-DB] Carregando dados para página: siteContent_index
+[2025-06-17 03:44:25] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-06-17 03:46:21] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 03:46:21] [LOAD-DB] Carregando dados para página: siteContent_index
+[2025-06-17 03:46:21] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-06-17 03:46:21] [LOAD-DB] Banco vazio, carregando do arquivo JSON para migração
+[2025-06-17 03:46:22] [LOAD-DB] Dados JSON carregados com sucesso para migração
+[2025-06-17 03:46:22] [LOAD-DB] Carregamento concluído - Textos: 0, Imagens: 0
+[2025-06-17 03:46:24] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 03:46:24] [LOAD-DB] Carregando dados para página: siteContent_index
+[2025-06-17 03:46:24] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-06-17 03:46:24] [LOAD-DB] Banco vazio, carregando do arquivo JSON para migração
+[2025-06-17 03:46:24] [LOAD-DB] Dados JSON carregados com sucesso para migração
+[2025-06-17 03:46:24] [LOAD-DB] Carregamento concluído - Textos: 0, Imagens: 0
+[2025-06-17 03:46:32] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 03:46:32] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-06-17 03:46:32] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-06-17 03:46:33] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 03:46:33] [LOAD-DB] Carregando dados para página: siteContent_index
+[2025-06-17 03:46:33] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-06-17 03:46:33] [LOAD-DB] Banco vazio, carregando do arquivo JSON para migração
+[2025-06-17 03:46:33] [LOAD-DB] Dados JSON carregados com sucesso para migração
+[2025-06-17 03:46:33] [LOAD-DB] Carregamento concluído - Textos: 0, Imagens: 0
+[2025-06-17 03:46:39] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 03:46:39] [LOAD-DB] Carregando dados para página: siteContent_index
+[2025-06-17 03:46:39] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-06-17 03:46:39] [LOAD-DB] Banco vazio, carregando do arquivo JSON para migração
+[2025-06-17 03:46:39] [LOAD-DB] Dados JSON carregados com sucesso para migração
+[2025-06-17 03:46:39] [LOAD-DB] Carregamento concluído - Textos: 0, Imagens: 0
+[2025-06-17 03:46:40] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 03:46:40] [LOAD-DB] Carregando dados para página: siteContent_index
+[2025-06-17 03:46:40] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-06-17 03:46:40] [LOAD-DB] Banco vazio, carregando do arquivo JSON para migração
+[2025-06-17 03:46:40] [LOAD-DB] Dados JSON carregados com sucesso para migração
+[2025-06-17 03:46:40] [LOAD-DB] Carregamento concluído - Textos: 0, Imagens: 0
+[2025-06-17 03:50:31] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 03:51:24] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 03:51:46] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 03:52:28] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 03:52:28] [LOAD-DB] Carregando dados para página: siteContent_index
+[2025-06-17 03:52:28] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 03:52:28] [LOAD-DB] ERRO: Erro na query: Unknown column 'tipo_conteudo' in 'field list' | SQL: 
+        SELECT chave, conteudo, tipo_conteudo 
+        FROM textos 
+        WHERE pagina = ? AND status = 'ativo' 
+        ORDER BY criado_em DESC
+     (Código: 500)
+[2025-06-17 03:52:28] [LOAD-DB] Fallback para JSON executado com sucesso
+[2025-06-17 03:52:29] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 03:52:29] [LOAD-DB] Carregando dados para página: siteContent_index
+[2025-06-17 03:52:29] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 03:52:29] [LOAD-DB] ERRO: Erro na query: Unknown column 'tipo_conteudo' in 'field list' | SQL: 
+        SELECT chave, conteudo, tipo_conteudo 
+        FROM textos 
+        WHERE pagina = ? AND status = 'ativo' 
+        ORDER BY criado_em DESC
+     (Código: 500)
+[2025-06-17 03:52:29] [LOAD-DB] Fallback para JSON executado com sucesso
+[2025-06-17 03:52:48] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 03:52:48] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 03:52:48] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-06-17 03:52:48] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 03:52:48] [LOAD-DB] Carregando dados para página: siteContent_index
+[2025-06-17 03:52:48] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 03:52:48] [LOAD-DB] ERRO: Erro na query: Unknown column 'tipo_conteudo' in 'field list' | SQL: 
+        SELECT chave, conteudo, tipo_conteudo 
+        FROM textos 
+        WHERE pagina = ? AND status = 'ativo' 
+        ORDER BY criado_em DESC
+     (Código: 500)
+[2025-06-17 03:52:48] [LOAD-DB] Fallback para JSON executado com sucesso
+[2025-06-17 03:56:51] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 03:57:57] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 03:57:57] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 03:57:57] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-06-17 03:59:26] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 03:59:26] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 03:59:26] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-06-17 03:59:44] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 03:59:44] [LOAD-DB] Carregando dados para página: siteContent_index
+[2025-06-17 03:59:44] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 03:59:44] [LOAD-DB] ERRO: Erro na query: Unknown column 'pi.chave' in 'field list' | SQL: 
+        SELECT pi.chave, i.url_original, i.url_otimizada, i.alt_text, i.largura, i.altura, i.hash_md5
+        FROM pagina_imagens pi
+        JOIN imagens i ON pi.imagem_id = i.id
+        WHERE pi.pagina = ? AND pi.status = 'ativo' AND i.status = 'ativo'
+        ORDER BY pi.criado_em DESC
+     (Código: 500)
+[2025-06-17 03:59:44] [LOAD-DB] Fallback para JSON executado com sucesso
+[2025-06-17 03:59:45] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 03:59:45] [LOAD-DB] Carregando dados para página: siteContent_index
+[2025-06-17 03:59:45] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 03:59:45] [LOAD-DB] ERRO: Erro na query: Unknown column 'pi.chave' in 'field list' | SQL: 
+        SELECT pi.chave, i.url_original, i.url_otimizada, i.alt_text, i.largura, i.altura, i.hash_md5
+        FROM pagina_imagens pi
+        JOIN imagens i ON pi.imagem_id = i.id
+        WHERE pi.pagina = ? AND pi.status = 'ativo' AND i.status = 'ativo'
+        ORDER BY pi.criado_em DESC
+     (Código: 500)
+[2025-06-17 03:59:45] [LOAD-DB] Fallback para JSON executado com sucesso
+[2025-06-17 03:59:47] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 03:59:47] [LOAD-DB] Carregando dados para página: siteContent_contact
+[2025-06-17 03:59:47] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 03:59:47] [LOAD-DB] ERRO: Erro na query: Unknown column 'pi.chave' in 'field list' | SQL: 
+        SELECT pi.chave, i.url_original, i.url_otimizada, i.alt_text, i.largura, i.altura, i.hash_md5
+        FROM pagina_imagens pi
+        JOIN imagens i ON pi.imagem_id = i.id
+        WHERE pi.pagina = ? AND pi.status = 'ativo' AND i.status = 'ativo'
+        ORDER BY pi.criado_em DESC
+     (Código: 500)
+[2025-06-17 03:59:47] [LOAD-DB] Fallback para JSON executado com sucesso
+[2025-06-17 03:59:49] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 03:59:49] [LOAD-DB] Carregando dados para página: siteContent_contact
+[2025-06-17 03:59:49] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 03:59:49] [LOAD-DB] ERRO: Erro na query: Unknown column 'pi.chave' in 'field list' | SQL: 
+        SELECT pi.chave, i.url_original, i.url_otimizada, i.alt_text, i.largura, i.altura, i.hash_md5
+        FROM pagina_imagens pi
+        JOIN imagens i ON pi.imagem_id = i.id
+        WHERE pi.pagina = ? AND pi.status = 'ativo' AND i.status = 'ativo'
+        ORDER BY pi.criado_em DESC
+     (Código: 500)
+[2025-06-17 03:59:49] [LOAD-DB] Fallback para JSON executado com sucesso
+[2025-06-17 04:00:05] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:00:05] [LOAD-DB] Carregando dados para página: siteContent_contact
+[2025-06-17 04:00:05] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:00:05] [LOAD-DB] ERRO: Erro na query: Unknown column 'pi.chave' in 'field list' | SQL: 
+        SELECT pi.chave, i.url_original, i.url_otimizada, i.alt_text, i.largura, i.altura, i.hash_md5
+        FROM pagina_imagens pi
+        JOIN imagens i ON pi.imagem_id = i.id
+        WHERE pi.pagina = ? AND pi.status = 'ativo' AND i.status = 'ativo'
+        ORDER BY pi.criado_em DESC
+     (Código: 500)
+[2025-06-17 04:00:05] [LOAD-DB] Fallback para JSON executado com sucesso
+[2025-06-17 04:00:07] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:00:07] [LOAD-DB] Carregando dados para página: siteContent_contact
+[2025-06-17 04:00:07] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:00:07] [LOAD-DB] ERRO: Erro na query: Unknown column 'pi.chave' in 'field list' | SQL: 
+        SELECT pi.chave, i.url_original, i.url_otimizada, i.alt_text, i.largura, i.altura, i.hash_md5
+        FROM pagina_imagens pi
+        JOIN imagens i ON pi.imagem_id = i.id
+        WHERE pi.pagina = ? AND pi.status = 'ativo' AND i.status = 'ativo'
+        ORDER BY pi.criado_em DESC
+     (Código: 500)
+[2025-06-17 04:00:07] [LOAD-DB] Fallback para JSON executado com sucesso
+[2025-06-17 04:00:26] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 04:00:26] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:00:26] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-06-17 04:01:26] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 04:01:26] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:01:26] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-06-17 04:02:08] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 04:02:08] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:02:08] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-06-17 04:02:08] [IMAGE] Imagem salva com sucesso: ID 1, arquivo img_6850e8c0251ee0.07389851.png
+[2025-06-17 04:02:08] [SAVE-DB] Imagem salva: chave test-image-1750132928, ID 1
+[2025-06-17 04:02:08] [SAVE-DB] Salvamento concluído - Textos: 1, Imagens: 1, Erros: 0
+[2025-06-17 04:02:43] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:03:09] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:03:09] [LOAD-DB] Carregando dados para página: siteContent_index
+[2025-06-17 04:03:09] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:03:09] [LOAD-DB] ERRO: Erro na query: Unknown column 'pi.chave' in 'field list' | SQL: 
+        SELECT pi.chave, i.url_original, i.url_otimizada, i.alt_text, i.largura, i.altura, i.hash_md5
+        FROM pagina_imagens pi
+        JOIN imagens i ON pi.imagem_id = i.id
+        WHERE pi.pagina = ? AND pi.status = 'ativo' AND i.status = 'ativo'
+        ORDER BY pi.criado_em DESC
+     (Código: 500)
+[2025-06-17 04:03:09] [LOAD-DB] Fallback para JSON executado com sucesso
+[2025-06-17 04:03:11] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:03:11] [LOAD-DB] Carregando dados para página: siteContent_index
+[2025-06-17 04:03:11] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:03:11] [LOAD-DB] ERRO: Erro na query: Unknown column 'pi.chave' in 'field list' | SQL: 
+        SELECT pi.chave, i.url_original, i.url_otimizada, i.alt_text, i.largura, i.altura, i.hash_md5
+        FROM pagina_imagens pi
+        JOIN imagens i ON pi.imagem_id = i.id
+        WHERE pi.pagina = ? AND pi.status = 'ativo' AND i.status = 'ativo'
+        ORDER BY pi.criado_em DESC
+     (Código: 500)
+[2025-06-17 04:03:11] [LOAD-DB] Fallback para JSON executado com sucesso
+[2025-06-17 04:03:24] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 04:03:24] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:03:24] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-06-17 04:03:24] [SAVE-DB] Imagem salva: chave http-image-1750133004, ID 1
+[2025-06-17 04:03:24] [SAVE-DB] Salvamento concluído - Textos: 1, Imagens: 1, Erros: 0
+[2025-06-17 04:03:50] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 04:03:50] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:03:50] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-06-17 04:03:50] [SAVE-DB] Salvamento concluído - Textos: 1, Imagens: 0, Erros: 0
+[2025-06-17 04:04:47] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:04:47] [LOAD-DB] Carregando dados para página: siteContent_index
+[2025-06-17 04:04:47] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:04:47] [LOAD-DB] ERRO: Erro na query: Unknown column 'pi.chave' in 'field list' | SQL: 
+        SELECT pi.chave, i.url_original, i.url_otimizada, i.alt_text, i.largura, i.altura, i.hash_md5
+        FROM pagina_imagens pi
+        JOIN imagens i ON pi.imagem_id = i.id
+        WHERE pi.pagina = ? AND pi.status = 'ativo' AND i.status = 'ativo'
+        ORDER BY pi.criado_em DESC
+     (Código: 500)
+[2025-06-17 04:04:47] [LOAD-DB] Fallback para JSON executado com sucesso
+[2025-06-17 04:04:49] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:04:49] [LOAD-DB] Carregando dados para página: siteContent_index
+[2025-06-17 04:04:49] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:04:49] [LOAD-DB] ERRO: Erro na query: Unknown column 'pi.chave' in 'field list' | SQL: 
+        SELECT pi.chave, i.url_original, i.url_otimizada, i.alt_text, i.largura, i.altura, i.hash_md5
+        FROM pagina_imagens pi
+        JOIN imagens i ON pi.imagem_id = i.id
+        WHERE pi.pagina = ? AND pi.status = 'ativo' AND i.status = 'ativo'
+        ORDER BY pi.criado_em DESC
+     (Código: 500)
+[2025-06-17 04:04:49] [LOAD-DB] Fallback para JSON executado com sucesso
+[2025-06-17 04:05:07] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 04:05:07] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:05:07] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-06-17 04:05:07] [SAVE-DB] Salvamento concluído - Textos: 1, Imagens: 0, Erros: 0
+[2025-06-17 04:05:07] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:05:07] [LOAD-DB] Carregando dados para página: siteContent_index
+[2025-06-17 04:05:07] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:05:07] [LOAD-DB] ERRO: Erro na query: Unknown column 'pi.chave' in 'field list' | SQL: 
+        SELECT pi.chave, i.url_original, i.url_otimizada, i.alt_text, i.largura, i.altura, i.hash_md5
+        FROM pagina_imagens pi
+        JOIN imagens i ON pi.imagem_id = i.id
+        WHERE pi.pagina = ? AND pi.status = 'ativo' AND i.status = 'ativo'
+        ORDER BY pi.criado_em DESC
+     (Código: 500)
+[2025-06-17 04:05:07] [LOAD-DB] Fallback para JSON executado com sucesso
+[2025-06-17 04:05:25] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:05:25] [LOAD-DB] Carregando dados para página: siteContent_index
+[2025-06-17 04:05:25] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:05:25] [LOAD-DB] ERRO: Erro na query: Unknown column 'pi.chave' in 'field list' | SQL: 
+        SELECT pi.chave, i.url_original, i.url_otimizada, i.alt_text, i.largura, i.altura, i.hash_md5
+        FROM pagina_imagens pi
+        JOIN imagens i ON pi.imagem_id = i.id
+        WHERE pi.pagina = ? AND pi.status = 'ativo' AND i.status = 'ativo'
+        ORDER BY pi.criado_em DESC
+     (Código: 500)
+[2025-06-17 04:05:25] [LOAD-DB] Fallback para JSON executado com sucesso
+[2025-06-17 04:05:26] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:05:26] [LOAD-DB] Carregando dados para página: siteContent_index
+[2025-06-17 04:05:26] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:05:26] [LOAD-DB] ERRO: Erro na query: Unknown column 'pi.chave' in 'field list' | SQL: 
+        SELECT pi.chave, i.url_original, i.url_otimizada, i.alt_text, i.largura, i.altura, i.hash_md5
+        FROM pagina_imagens pi
+        JOIN imagens i ON pi.imagem_id = i.id
+        WHERE pi.pagina = ? AND pi.status = 'ativo' AND i.status = 'ativo'
+        ORDER BY pi.criado_em DESC
+     (Código: 500)
+[2025-06-17 04:05:26] [LOAD-DB] Fallback para JSON executado com sucesso
+[2025-06-17 04:08:34] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:08:34] [LOAD-DB] Carregando dados para página: siteContent_index
+[2025-06-17 04:08:34] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:08:34] [LOAD-DB] ERRO: Erro na query: Unknown column 'pi.chave' in 'field list' | SQL: 
+        SELECT pi.chave, i.url_original, i.url_otimizada, i.alt_text, i.largura, i.altura, i.hash_md5
+        FROM pagina_imagens pi
+        JOIN imagens i ON pi.imagem_id = i.id
+        WHERE pi.pagina = ? AND pi.status = 'ativo' AND i.status = 'ativo'
+        ORDER BY pi.criado_em DESC
+     (Código: 500)
+[2025-06-17 04:08:34] [LOAD-DB] Fallback para JSON executado com sucesso
+[2025-06-17 04:12:35] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:12:35] [LOAD-DB] Carregando dados para página: siteContent_index
+[2025-06-17 04:12:35] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:12:35] [LOAD-DB] ERRO: Erro na query: Unknown column 'pi.chave' in 'field list' | SQL: 
+        SELECT pi.chave, i.url_original, i.url_otimizada, i.alt_text, i.largura, i.altura, i.hash_md5
+        FROM pagina_imagens pi
+        JOIN imagens i ON pi.imagem_id = i.id
+        WHERE pi.pagina = ? AND pi.status = 'ativo' AND i.status = 'ativo'
+        ORDER BY pi.criado_em DESC
+     (Código: 500)
+[2025-06-17 04:12:35] [LOAD-DB] Fallback para JSON executado com sucesso
+[2025-06-17 04:13:15] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:13:47] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:14:13] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:14:26] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:14:26] [LOAD-DB] Carregando dados para página: siteContent_index
+[2025-06-17 04:14:26] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:14:26] [LOAD-DB] Banco vazio, carregando do arquivo JSON para migração
+[2025-06-17 04:14:26] [LOAD-DB] Dados JSON carregados com sucesso para migração
+[2025-06-17 04:14:26] [LOAD-DB] Carregamento concluído - Textos: 0, Imagens: 0
+[2025-06-17 04:15:34] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:16:01] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:16:01] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:16:01] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:16:01] [LOAD-DB] Carregamento concluído - Textos: 6, Imagens: 1
+[2025-06-17 04:16:26] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:16:26] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:16:26] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:16:26] [LOAD-DB] Carregamento concluído - Textos: 6, Imagens: 1
+[2025-06-17 04:16:27] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:16:27] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:16:27] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:16:27] [LOAD-DB] Carregamento concluído - Textos: 6, Imagens: 1
+[2025-06-17 04:16:35] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:16:35] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:16:35] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:16:35] [LOAD-DB] Carregamento concluído - Textos: 6, Imagens: 1
+[2025-06-17 04:16:37] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:16:37] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:16:37] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:16:37] [LOAD-DB] Carregamento concluído - Textos: 6, Imagens: 1
+[2025-06-17 04:16:54] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 04:16:54] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:16:54] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-06-17 04:16:54] [SAVE-DB] Salvamento concluído - Textos: 2, Imagens: 0, Erros: 0
+[2025-06-17 04:16:54] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:16:54] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:16:54] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:16:54] [LOAD-DB] Carregamento concluído - Textos: 7, Imagens: 1
+[2025-06-17 04:17:03] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:17:03] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:17:03] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:17:03] [LOAD-DB] Carregamento concluído - Textos: 7, Imagens: 1
+[2025-06-17 04:17:04] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:17:04] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:17:04] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:17:04] [LOAD-DB] Carregamento concluído - Textos: 7, Imagens: 1
+[2025-06-17 04:19:59] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 04:19:59] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:19:59] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-06-17 04:19:59] [IMAGE] Imagem salva com sucesso: ID 2, arquivo img_6850ecefc704e6.71573696.jpg
+[2025-06-17 04:19:59] [SAVE-DB] Imagem salva: chave img_18, ID 2
+[2025-06-17 04:19:59] [SAVE-DB] Imagem salva: chave img_19, ID 2
+[2025-06-17 04:19:59] [SAVE-DB] Imagem salva: chave img_20, ID 2
+[2025-06-17 04:19:59] [SAVE-DB] Imagem salva: chave img_17, ID 2
+[2025-06-17 04:19:59] [SAVE-DB] Imagem salva: chave img_21, ID 2
+[2025-06-17 04:19:59] [SAVE-DB] Imagem salva: chave img_22, ID 2
+[2025-06-17 04:19:59] [SAVE-DB] Imagem salva: chave img_23, ID 2
+[2025-06-17 04:19:59] [SAVE-DB] Imagem salva: chave img_24, ID 2
+[2025-06-17 04:19:59] [IMAGE] Imagem salva com sucesso: ID 3, arquivo img_6850ecefcd1fe8.19637638.png
+[2025-06-17 04:19:59] [SAVE-DB] Imagem salva: chave img_30, ID 3
+[2025-06-17 04:19:59] [SAVE-DB] Imagem salva: chave img_33, ID 3
+[2025-06-17 04:19:59] [IMAGE] Imagem salva com sucesso: ID 4, arquivo img_6850ecefd14de8.19513304.svg
+[2025-06-17 04:19:59] [SAVE-DB] Imagem salva: chave img_34, ID 4
+[2025-06-17 04:19:59] [SAVE-DB] Imagem salva: chave img_31, ID 4
+[2025-06-17 04:19:59] [SAVE-DB] Salvamento concluído - Textos: 4, Imagens: 12, Erros: 0
+[2025-06-17 04:20:00] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:20:00] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:20:00] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:20:00] [LOAD-DB] Carregamento concluído - Textos: 9, Imagens: 13
+[2025-06-17 04:20:05] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:20:05] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:20:05] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:20:05] [LOAD-DB] Carregamento concluído - Textos: 9, Imagens: 13
+[2025-06-17 04:20:07] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:20:07] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:20:07] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:20:07] [LOAD-DB] Carregamento concluído - Textos: 9, Imagens: 13
+[2025-06-17 04:20:38] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 04:20:38] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:20:38] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-06-17 04:20:38] [SAVE-DB] Imagem salva: chave img_30, ID 5
+[2025-06-17 04:20:38] [SAVE-DB] Imagem salva: chave img_17, ID 6
+[2025-06-17 04:20:38] [SAVE-DB] Imagem salva: chave img_33, ID 5
+[2025-06-17 04:20:38] [SAVE-DB] Imagem salva: chave img_21, ID 6
+[2025-06-17 04:20:38] [SAVE-DB] Imagem salva: chave img_34, ID 7
+[2025-06-17 04:20:38] [SAVE-DB] Imagem salva: chave img_22, ID 6
+[2025-06-17 04:20:38] [SAVE-DB] Imagem salva: chave img_18, ID 6
+[2025-06-17 04:20:38] [SAVE-DB] Imagem salva: chave img_31, ID 7
+[2025-06-17 04:20:38] [SAVE-DB] Imagem salva: chave img_23, ID 6
+[2025-06-17 04:20:38] [SAVE-DB] Imagem salva: chave img_19, ID 6
+[2025-06-17 04:20:38] [SAVE-DB] Imagem salva: chave img_24, ID 6
+[2025-06-17 04:20:38] [SAVE-DB] Imagem salva: chave img_20, ID 6
+[2025-06-17 04:20:38] [IMAGE] Imagem salva com sucesso: ID 8, arquivo img_6850ed16590c20.80978404.jpg
+[2025-06-17 04:20:38] [SAVE-DB] Imagem salva: chave img_39, ID 8
+[2025-06-17 04:20:38] [SAVE-DB] Imagem salva: chave img_40, ID 8
+[2025-06-17 04:20:38] [SAVE-DB] Salvamento concluído - Textos: 4, Imagens: 14, Erros: 0
+[2025-06-17 04:20:38] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:20:38] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:20:38] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:20:38] [LOAD-DB] Carregamento concluído - Textos: 9, Imagens: 27
+[2025-06-17 04:20:42] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:20:42] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:20:42] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:20:42] [LOAD-DB] Carregamento concluído - Textos: 9, Imagens: 27
+[2025-06-17 04:20:44] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:20:44] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:20:44] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:20:44] [LOAD-DB] Carregamento concluído - Textos: 9, Imagens: 27
+[2025-06-17 04:21:10] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 04:21:10] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:21:10] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-06-17 04:21:10] [SAVE-DB] Imagem salva: chave img_19, ID 6
+[2025-06-17 04:21:10] [SAVE-DB] Imagem salva: chave img_17, ID 6
+[2025-06-17 04:21:10] [SAVE-DB] Imagem salva: chave img_40, ID 9
+[2025-06-17 04:21:10] [SAVE-DB] Imagem salva: chave img_24, ID 6
+[2025-06-17 04:21:10] [SAVE-DB] Imagem salva: chave img_21, ID 6
+[2025-06-17 04:21:10] [SAVE-DB] Imagem salva: chave img_20, ID 6
+[2025-06-17 04:21:10] [SAVE-DB] Imagem salva: chave img_22, ID 6
+[2025-06-17 04:21:10] [SAVE-DB] Imagem salva: chave img_34, ID 7
+[2025-06-17 04:21:10] [SAVE-DB] Imagem salva: chave img_18, ID 6
+[2025-06-17 04:21:10] [SAVE-DB] Imagem salva: chave img_31, ID 7
+[2025-06-17 04:21:10] [SAVE-DB] Imagem salva: chave img_30, ID 5
+[2025-06-17 04:21:10] [SAVE-DB] Imagem salva: chave img_23, ID 6
+[2025-06-17 04:21:10] [SAVE-DB] Imagem salva: chave img_33, ID 5
+[2025-06-17 04:21:10] [SAVE-DB] Imagem salva: chave img_39, ID 9
+[2025-06-17 04:21:10] [SAVE-DB] Salvamento concluído - Textos: 6, Imagens: 14, Erros: 0
+[2025-06-17 04:21:10] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:21:10] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:21:10] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:21:10] [LOAD-DB] Carregamento concluído - Textos: 11, Imagens: 29
+[2025-06-17 04:21:15] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:21:15] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:21:15] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:21:15] [LOAD-DB] Carregamento concluído - Textos: 11, Imagens: 29
+[2025-06-17 04:21:16] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:21:16] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:21:16] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:21:16] [LOAD-DB] Carregamento concluído - Textos: 11, Imagens: 29
+[2025-06-17 04:21:30] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 04:21:30] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:21:30] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-06-17 04:21:30] [SAVE-DB] Imagem salva: chave img_40, ID 9
+[2025-06-17 04:21:30] [SAVE-DB] Imagem salva: chave img_39, ID 9
+[2025-06-17 04:21:30] [SAVE-DB] Imagem salva: chave img_19, ID 6
+[2025-06-17 04:21:30] [SAVE-DB] Imagem salva: chave img_17, ID 6
+[2025-06-17 04:21:30] [SAVE-DB] Imagem salva: chave img_24, ID 6
+[2025-06-17 04:21:30] [SAVE-DB] Imagem salva: chave img_21, ID 6
+[2025-06-17 04:21:30] [SAVE-DB] Imagem salva: chave img_20, ID 6
+[2025-06-17 04:21:30] [SAVE-DB] Imagem salva: chave img_22, ID 6
+[2025-06-17 04:21:30] [SAVE-DB] Imagem salva: chave img_34, ID 7
+[2025-06-17 04:21:30] [SAVE-DB] Imagem salva: chave img_18, ID 6
+[2025-06-17 04:21:30] [SAVE-DB] Imagem salva: chave img_31, ID 7
+[2025-06-17 04:21:30] [SAVE-DB] Imagem salva: chave img_30, ID 5
+[2025-06-17 04:21:30] [SAVE-DB] Imagem salva: chave img_23, ID 6
+[2025-06-17 04:21:30] [SAVE-DB] Imagem salva: chave img_33, ID 5
+[2025-06-17 04:21:30] [SAVE-DB] Salvamento concluído - Textos: 7, Imagens: 14, Erros: 0
+[2025-06-17 04:21:31] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:21:31] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:21:31] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:21:31] [LOAD-DB] Carregamento concluído - Textos: 12, Imagens: 29
+[2025-06-17 04:21:35] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:21:35] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:21:35] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:21:35] [LOAD-DB] Carregamento concluído - Textos: 12, Imagens: 29
+[2025-06-17 04:21:36] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:21:36] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:21:36] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:21:36] [LOAD-DB] Carregamento concluído - Textos: 12, Imagens: 29
+[2025-06-17 04:25:17] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 04:25:17] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:25:17] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-06-17 04:25:17] [SAVE-DB] Imagem salva: chave img_40, ID 9
+[2025-06-17 04:25:17] [SAVE-DB] Imagem salva: chave img_39, ID 9
+[2025-06-17 04:25:17] [SAVE-DB] Imagem salva: chave img_19, ID 6
+[2025-06-17 04:25:17] [SAVE-DB] Imagem salva: chave img_17, ID 6
+[2025-06-17 04:25:17] [SAVE-DB] Imagem salva: chave img_24, ID 6
+[2025-06-17 04:25:17] [SAVE-DB] Imagem salva: chave img_21, ID 6
+[2025-06-17 04:25:17] [SAVE-DB] Imagem salva: chave img_20, ID 6
+[2025-06-17 04:25:17] [SAVE-DB] Imagem salva: chave img_22, ID 6
+[2025-06-17 04:25:17] [SAVE-DB] Imagem salva: chave img_34, ID 7
+[2025-06-17 04:25:17] [SAVE-DB] Imagem salva: chave img_18, ID 6
+[2025-06-17 04:25:17] [SAVE-DB] Imagem salva: chave img_31, ID 7
+[2025-06-17 04:25:17] [SAVE-DB] Imagem salva: chave img_30, ID 5
+[2025-06-17 04:25:17] [SAVE-DB] Imagem salva: chave img_23, ID 6
+[2025-06-17 04:25:17] [SAVE-DB] Imagem salva: chave img_33, ID 5
+[2025-06-17 04:25:17] [SAVE-DB] Salvamento concluído - Textos: 0, Imagens: 14, Erros: 0
+[2025-06-17 04:25:17] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 04:25:17] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:25:17] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-06-17 04:25:17] [SAVE-DB] Imagem salva: chave img_25, ID 3
+[2025-06-17 04:25:17] [SAVE-DB] Salvamento concluído - Textos: 0, Imagens: 1, Erros: 0
+[2025-06-17 04:25:18] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 04:25:18] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:25:18] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-06-17 04:25:18] [SAVE-DB] Imagem salva: chave img_27, ID 3
+[2025-06-17 04:25:18] [SAVE-DB] Salvamento concluído - Textos: 0, Imagens: 1, Erros: 0
+[2025-06-17 04:25:18] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 04:25:18] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:25:18] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-06-17 04:25:18] [SAVE-DB] Imagem salva: chave img_28, ID 3
+[2025-06-17 04:25:18] [SAVE-DB] Salvamento concluído - Textos: 0, Imagens: 1, Erros: 0
+[2025-06-17 04:25:18] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 04:25:18] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:25:18] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-06-17 04:25:18] [SAVE-DB] Imagem salva: chave img_29, ID 3
+[2025-06-17 04:25:18] [SAVE-DB] Salvamento concluído - Textos: 0, Imagens: 1, Erros: 0
+[2025-06-17 04:25:18] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 04:25:18] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:25:18] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-06-17 04:25:18] [SAVE-DB] Imagem salva: chave img_26, ID 3
+[2025-06-17 04:25:18] [SAVE-DB] Salvamento concluído - Textos: 0, Imagens: 1, Erros: 0
+[2025-06-17 04:25:18] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 04:25:18] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:25:18] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-06-17 04:25:18] [SAVE-DB] Salvamento concluído - Textos: 1, Imagens: 0, Erros: 0
+[2025-06-17 04:25:18] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 04:25:18] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:25:18] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-06-17 04:25:18] [SAVE-DB] Salvamento concluído - Textos: 1, Imagens: 0, Erros: 0
+[2025-06-17 04:25:19] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 04:25:19] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:25:19] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-06-17 04:25:19] [SAVE-DB] Salvamento concluído - Textos: 1, Imagens: 0, Erros: 0
+[2025-06-17 04:25:19] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 04:25:19] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:25:19] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-06-17 04:25:19] [SAVE-DB] Salvamento concluído - Textos: 1, Imagens: 0, Erros: 0
+[2025-06-17 04:25:19] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 04:25:19] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:25:19] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-06-17 04:25:19] [SAVE-DB] Salvamento concluído - Textos: 1, Imagens: 0, Erros: 0
+[2025-06-17 04:25:19] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 04:25:19] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:25:19] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-06-17 04:25:19] [SAVE-DB] Salvamento concluído - Textos: 1, Imagens: 0, Erros: 0
+[2025-06-17 04:25:19] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 04:25:19] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:25:19] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-06-17 04:25:19] [SAVE-DB] Salvamento concluído - Textos: 1, Imagens: 0, Erros: 0
+[2025-06-17 04:25:19] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 04:25:19] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:25:19] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-06-17 04:25:19] [SAVE-DB] Salvamento concluído - Textos: 2, Imagens: 0, Erros: 0
+[2025-06-17 04:25:24] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:25:24] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:25:24] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:25:24] [LOAD-DB] Carregamento concluído - Textos: 14, Imagens: 34
+[2025-06-17 04:25:26] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:25:26] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:25:26] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:25:26] [LOAD-DB] Carregamento concluído - Textos: 14, Imagens: 34
+[2025-06-17 04:25:50] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 04:25:50] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:25:50] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-06-17 04:25:50] [SAVE-DB] Imagem salva: chave img_26, ID 5
+[2025-06-17 04:25:50] [SAVE-DB] Imagem salva: chave img_27, ID 5
+[2025-06-17 04:25:50] [SAVE-DB] Imagem salva: chave img_28, ID 5
+[2025-06-17 04:25:50] [SAVE-DB] Imagem salva: chave img_29, ID 5
+[2025-06-17 04:25:50] [SAVE-DB] Imagem salva: chave img_25, ID 5
+[2025-06-17 04:25:50] [SAVE-DB] Imagem salva: chave img_39, ID 9
+[2025-06-17 04:25:50] [SAVE-DB] Imagem salva: chave img_40, ID 9
+[2025-06-17 04:25:50] [SAVE-DB] Imagem salva: chave img_23, ID 6
+[2025-06-17 04:25:50] [SAVE-DB] Imagem salva: chave img_18, ID 6
+[2025-06-17 04:25:50] [SAVE-DB] Imagem salva: chave img_17, ID 6
+[2025-06-17 04:25:50] [SAVE-DB] Imagem salva: chave img_24, ID 6
+[2025-06-17 04:25:50] [SAVE-DB] Imagem salva: chave img_19, ID 6
+[2025-06-17 04:25:50] [SAVE-DB] Imagem salva: chave img_31, ID 7
+[2025-06-17 04:25:50] [SAVE-DB] Imagem salva: chave img_20, ID 6
+[2025-06-17 04:25:50] [SAVE-DB] Imagem salva: chave img_34, ID 7
+[2025-06-17 04:25:50] [SAVE-DB] Imagem salva: chave img_21, ID 6
+[2025-06-17 04:25:50] [SAVE-DB] Imagem salva: chave img_30, ID 5
+[2025-06-17 04:25:50] [SAVE-DB] Imagem salva: chave img_22, ID 6
+[2025-06-17 04:25:50] [SAVE-DB] Imagem salva: chave img_33, ID 5
+[2025-06-17 04:25:50] [SAVE-DB] Imagem salva: chave img_12, ID 3
+[2025-06-17 04:25:50] [SAVE-DB] Imagem salva: chave img_13, ID 3
+[2025-06-17 04:25:50] [SAVE-DB] Salvamento concluído - Textos: 7, Imagens: 21, Erros: 0
+[2025-06-17 04:25:50] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:25:50] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:25:50] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:25:50] [LOAD-DB] Carregamento concluído - Textos: 14, Imagens: 41
+[2025-06-17 04:25:55] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:25:55] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:25:55] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:25:55] [LOAD-DB] Carregamento concluído - Textos: 14, Imagens: 41
+[2025-06-17 04:25:57] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:25:57] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:25:57] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:25:57] [LOAD-DB] Carregamento concluído - Textos: 14, Imagens: 41
+[2025-06-17 04:26:29] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:26:29] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:26:29] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:26:29] [LOAD-DB] Carregamento concluído - Textos: 14, Imagens: 41
+[2025-06-17 04:26:31] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:26:31] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:26:31] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:26:31] [LOAD-DB] Carregamento concluído - Textos: 14, Imagens: 41
+[2025-06-17 04:26:35] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:26:35] [LOAD-DB] Carregando dados para página: contact
+[2025-06-17 04:26:35] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:26:35] [LOAD-DB] Carregamento concluído - Textos: 1, Imagens: 0
+[2025-06-17 04:26:36] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:26:36] [LOAD-DB] Carregando dados para página: contact
+[2025-06-17 04:26:36] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:26:36] [LOAD-DB] Carregamento concluído - Textos: 1, Imagens: 0
+[2025-06-17 04:27:31] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 04:27:31] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:27:31] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-06-17 04:27:31] [SAVE-DB] Salvamento concluído - Textos: 1, Imagens: 0, Erros: 0
+[2025-06-17 04:27:32] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:27:32] [LOAD-DB] Carregando dados para página: contact
+[2025-06-17 04:27:32] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:27:32] [LOAD-DB] Carregamento concluído - Textos: 2, Imagens: 0
+[2025-06-17 04:27:35] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:27:35] [LOAD-DB] Carregando dados para página: contact
+[2025-06-17 04:27:35] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:27:35] [LOAD-DB] Carregamento concluído - Textos: 2, Imagens: 0
+[2025-06-17 04:27:36] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:27:36] [LOAD-DB] Carregando dados para página: contact
+[2025-06-17 04:27:36] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:27:36] [LOAD-DB] Carregamento concluído - Textos: 2, Imagens: 0
+[2025-06-17 04:27:41] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:27:41] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:27:41] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:27:41] [LOAD-DB] Carregamento concluído - Textos: 14, Imagens: 41
+[2025-06-17 04:27:42] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:27:42] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:27:42] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:27:42] [LOAD-DB] Carregamento concluído - Textos: 14, Imagens: 41
+[2025-06-17 04:28:05] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:28:05] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:28:05] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:28:05] [LOAD-DB] Carregamento concluído - Textos: 14, Imagens: 41
+[2025-06-17 04:28:07] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:28:07] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:28:07] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:28:07] [LOAD-DB] Carregamento concluído - Textos: 14, Imagens: 41
+[2025-06-17 04:28:20] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:28:20] [LOAD-DB] Carregando dados para página: safety
+[2025-06-17 04:28:20] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:28:20] [LOAD-DB] Banco vazio, carregando do arquivo JSON para migração
+[2025-06-17 04:28:20] [LOAD-DB] Dados JSON carregados com sucesso para migração
+[2025-06-17 04:28:20] [LOAD-DB] Carregamento concluído - Textos: 0, Imagens: 0
+[2025-06-17 04:28:23] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:28:23] [LOAD-DB] Carregando dados para página: safety
+[2025-06-17 04:28:23] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:28:23] [LOAD-DB] Banco vazio, carregando do arquivo JSON para migração
+[2025-06-17 04:28:23] [LOAD-DB] Dados JSON carregados com sucesso para migração
+[2025-06-17 04:28:23] [LOAD-DB] Carregamento concluído - Textos: 0, Imagens: 0
+[2025-06-17 04:29:28] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-06-17 04:29:28] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:29:28] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-06-17 04:29:28] [SAVE-DB] Imagem salva: chave safety_content_image_524, ID 8
+[2025-06-17 04:29:28] [SAVE-DB] Imagem salva: chave safety_content_image_523, ID 8
+[2025-06-17 04:29:28] [SAVE-DB] Imagem salva: chave safety_content_image_519, ID 3
+[2025-06-17 04:29:28] [SAVE-DB] Imagem salva: chave safety_content_image_517, ID 8
+[2025-06-17 04:29:28] [IMAGE] Imagem salva com sucesso: ID 10, arquivo img_6850ef288e03a3.49782752.jpg
+[2025-06-17 04:29:28] [SAVE-DB] Imagem salva: chave safety_content_image_518, ID 10
+[2025-06-17 04:29:28] [SAVE-DB] Salvamento concluído - Textos: 1, Imagens: 5, Erros: 0
+[2025-06-17 04:29:29] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:29:29] [LOAD-DB] Carregando dados para página: safety
+[2025-06-17 04:29:29] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:29:29] [LOAD-DB] Carregamento concluído - Textos: 1, Imagens: 5
+[2025-06-17 04:29:38] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:29:38] [LOAD-DB] Carregando dados para página: safety
+[2025-06-17 04:29:38] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:29:38] [LOAD-DB] Carregamento concluído - Textos: 1, Imagens: 5
+[2025-06-17 04:29:39] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:29:39] [LOAD-DB] Carregando dados para página: safety
+[2025-06-17 04:29:39] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:29:39] [LOAD-DB] Carregamento concluído - Textos: 1, Imagens: 5
+[2025-06-17 04:31:01] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:31:01] [LOAD-DB] Carregando dados para página: safety
+[2025-06-17 04:31:01] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:31:01] [LOAD-DB] Carregamento concluído - Textos: 1, Imagens: 5
+[2025-06-17 04:31:02] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:31:02] [LOAD-DB] Carregando dados para página: safety
+[2025-06-17 04:31:02] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:31:02] [LOAD-DB] Carregamento concluído - Textos: 1, Imagens: 5
+[2025-06-17 04:31:15] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:31:15] [LOAD-DB] Carregando dados para página: safety
+[2025-06-17 04:31:15] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:31:15] [LOAD-DB] Carregamento concluído - Textos: 1, Imagens: 5
+[2025-06-17 04:31:17] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:31:17] [LOAD-DB] Carregando dados para página: safety
+[2025-06-17 04:31:17] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:31:17] [LOAD-DB] Carregamento concluído - Textos: 1, Imagens: 5
+[2025-06-17 04:31:42] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:31:42] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:31:42] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:31:42] [LOAD-DB] Carregamento concluído - Textos: 14, Imagens: 41
+[2025-06-17 04:31:44] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-06-17 04:31:44] [LOAD-DB] Carregando dados para página: index
+[2025-06-17 04:31:44] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-06-17 04:31:44] [LOAD-DB] Carregamento concluído - Textos: 14, Imagens: 41

@@ -2235,7 +2235,7 @@ class HardemEditor {
             };
             
             // Tentar salvar no servidor
-            fetch('save.php', {
+            fetch('save-database.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -3000,8 +3000,8 @@ class HardemEditor {
             formData.append('action', 'save_content');
             formData.append('data', JSON.stringify(exportData));
 
-            // Enviar para save.php (implementação futura)
-            fetch('save.php', {
+            // Enviar para save-database.php (implementação futura)
+            fetch('save-database.php', {
                 method: 'POST',
                 body: formData
             })
@@ -3014,8 +3014,8 @@ class HardemEditor {
                 }
             })
             .catch(error => {
-                console.warn('Save.php não encontrado, usando apenas localStorage:', error);
-                this.showAlert('Conteúdo salvo localmente (save.php não configurado)', 'success');
+                console.warn('save-database.php não encontrado, usando apenas localStorage:', error);
+                this.showAlert('Conteúdo salvo localmente (banco não configurado)', 'success');
             });
 
             console.log('📤 Dados preparados para exportação:', exportData);

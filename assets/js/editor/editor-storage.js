@@ -352,31 +352,67 @@ class HardemEditorStorage {
     /**
      * Carregar conteúdo
      */
-    loadContent(forceReload = false) {
+    async loadContent(forceReload = false) {
         try {
             const pageKey = this.getPageKey();
+            console.log(`📡 Carregando conteúdo do banco para: ${pageKey}`);
+            
+            // Tentar carregar do banco de dados primeiro
+            try {
+                const response = await fetch(`load-database.php?page=${encodeURIComponent(pageKey)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    
+                    if (result.success && result.data) {
+                        this.core.contentMap = result.data;
+                        
+                        console.log(`📥 Conteúdo carregado do ${result.source} para ${pageKey}:`, this.core.contentMap);
+                        console.log(`📊 Stats: ${result.stats?.textos_carregados || 0} textos, ${result.stats?.imagens_carregadas || 0} imagens`);
+                        
+                        if (result.source === 'json_fallback') {
+                            console.warn('⚠️ Dados carregados do JSON (banco indisponível)');
+                        }
+                        
+                        if (forceReload) {
+                            console.log('🔄 Carregamento forçado - aplicando imediatamente');
+                            this.applyLoadedContent();
+                        } else {
+                            this.waitForDOMAndApplyContent();
+                        }
+                        return;
+                    }
+                }
+            } catch (dbError) {
+                console.warn('❌ Erro ao carregar do banco, tentando localStorage:', dbError);
+            }
+            
+            // Fallback para localStorage se banco falhar
             const saved = localStorage.getItem(pageKey);
             
             if (!saved) {
-                console.log(`📄 Nenhum conteúdo salvo encontrado para: ${pageKey}`);
+                console.log(`📄 Nenhum conteúdo encontrado para: ${pageKey} (banco e localStorage vazios)`);
                 return;
             }
 
             this.core.contentMap = JSON.parse(saved);
-            
-            console.log(`📥 Conteúdo carregado para ${pageKey}:`, this.core.contentMap);
+            console.log(`📥 Conteúdo carregado do localStorage para ${pageKey}:`, this.core.contentMap);
             
             if (forceReload) {
-                // Carregamento forçado - aplicar imediatamente
                 console.log('🔄 Carregamento forçado - aplicando imediatamente');
                 this.applyLoadedContent();
             } else {
-                // Aguardar o DOM estar completamente pronto e elementos processados
                 this.waitForDOMAndApplyContent();
             }
             
         } catch (error) {
-            console.error('Erro ao carregar conteúdo:', error);
+            console.error('❌ Erro crítico ao carregar conteúdo:', error);
             this.core.ui.showAlert('Erro ao carregar conteúdo salvo!', 'error');
         }
     }
@@ -1014,13 +1050,13 @@ class HardemEditorStorage {
             };
 
             // Mostrar progresso
-            this.core.ui.showSaveProgressAlert('server-save', 'Enviando para save.php...');
+            this.core.ui.showSaveProgressAlert('server-save', 'Enviando para banco de dados...');
 
-            // Enviar para save.php
+            // Enviar para save-database.php
             const formData = new FormData();
             formData.append('data', JSON.stringify(requestData));
             
-            fetch('save.php', {
+            fetch('save-database.php', {
                 method: 'POST',
                 body: formData
             })
@@ -1159,7 +1195,7 @@ class HardemEditorStorage {
                 }
             })
             .catch(error => {
-                console.warn('❌ Erro na comunicação com save.php:', error);
+                console.warn('❌ Erro na comunicação com save-database.php:', error);
                 this.core.ui.showSaveProgressAlert('error', 'Servidor indisponível');
                 
                 // Verificar tipo de erro
@@ -1192,7 +1228,7 @@ class HardemEditorStorage {
                     setTimeout(() => {
                         this.core.ui.showDetailedErrorAlert(
                             'Servidor Indisponível',
-                            `Não foi possível conectar com save.php. Erro: ${error.message}`,
+                            `Não foi possível conectar com save-database.php. Erro: ${error.message}`,
                             [
                                 'Verifique se está executando em um servidor web (Apache/Nginx)',
                                 'Arquivo será baixado como backup',
@@ -1251,7 +1287,7 @@ class HardemEditorStorage {
      * Testar conectividade com o servidor
      */
     testServerConnection() {
-        return fetch('save.php', {
+        return fetch('save-database.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1634,7 +1670,7 @@ class HardemEditorStorage {
         };
         
         try {
-            const response = await fetch('save.php', {
+            const response = await fetch('save-database.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',

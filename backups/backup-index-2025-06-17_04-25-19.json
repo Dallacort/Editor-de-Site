@@ -1,0 +1,41 @@
+{
+    "contentMap": {
+        "metadata": {
+            "userAgent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/134.0.0.0 Safari\/537.36 OPR\/119.0.0.0 (Edition std-1)",
+            "totalElements": 26,
+            "editMode": true,
+            "savedInParts": true,
+            "totalParts": 13,
+            "partFiles": [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+            ],
+            "timestamp": "2025-06-17T04:25:19.730Z"
+        },
+        "summary": {
+            "totalImages": 5,
+            "totalBackgrounds": 7,
+            "totalTexts": 0,
+            "totalOthers": 14
+        }
+    },
+    "url": "http:\/\/localhost:8000\/",
+    "timestamp": "2025-06-17T04:25:19.730Z",
+    "metadata": {
+        "partNumber": 0,
+        "description": "indice",
+        "size": 440,
+        "timestamp": "2025-06-17T04:25:19.730Z"
+    }
+}
