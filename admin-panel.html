@@ -400,6 +400,64 @@
         </div>
     </div>
     
+    <!-- Modal de Edição de Imagem -->
+    <div id="edit-image-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditModal()">&times;</span>
+            <h2>Editar Imagem</h2>
+            <form id="edit-image-form">
+                <input type="hidden" id="edit-image-id">
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="edit-nome-original">Nome da Imagem:</label>
+                    <input type="text" id="edit-nome-original" class="search-box" required>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="edit-alt-text">Texto Alternativo (Alt):</label>
+                    <input type="text" id="edit-alt-text" class="search-box">
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="edit-descricao">Descrição:</label>
+                    <textarea id="edit-descricao" class="search-box" rows="3"></textarea>
+                </div>
+                
+                <div style="text-align: center;">
+                    <button type="submit" class="btn btn-success">Salvar</button>
+                    <button type="button" class="btn" onclick="closeEditModal()">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal de Substituição de Imagem -->
+    <div id="replace-image-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeReplaceModal()">&times;</span>
+            <h2>Substituir Imagem</h2>
+            <div id="replace-image-content">
+                <input type="hidden" id="replace-image-id">
+                
+                <div style="margin-bottom: 20px;">
+                    <h3>Imagem Atual:</h3>
+                    <div id="current-image-preview"></div>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <h3>Nova Imagem:</h3>
+                    <input type="file" id="new-image-file" accept="image/*" onchange="previewNewImage()" class="search-box">
+                    <div id="new-image-preview" style="margin-top: 10px;"></div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <button type="button" class="btn btn-success" onclick="submitReplaceImage()">Substituir</button>
+                    <button type="button" class="btn" onclick="closeReplaceModal()">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <script>
         // Variáveis globais
         let currentTab = 'images';
@@ -476,8 +534,10 @@
                     <td>${formatDate(img.data_upload)}</td>
                     <td><span class="status ${img.status === 'ativo' ? 'active' : 'inactive'}">${img.status}</span></td>
                     <td>
-                        <button class="btn btn-primary" onclick="viewImage(${img.id})">👁️</button>
-                        <button class="btn btn-danger" onclick="deleteImage(${img.id})">🗑️</button>
+                        <button class="btn btn-primary" onclick="viewImage(${img.id})" title="Visualizar">👁️</button>
+                        <button class="btn btn-success" onclick="editImage(${img.id})" title="Editar">✏️</button>
+                        <button class="btn btn-success" onclick="replaceImage(${img.id})" title="Substituir">🔄</button>
+                        <button class="btn btn-danger" onclick="deleteImage(${img.id})" title="Excluir">🗑️</button>
                     </td>
                 </tr>
             `).join('');
@@ -527,7 +587,7 @@
                     <td><span class="status ${backup.status === 'ativo' ? 'active' : 'inactive'}">${backup.status}</span></td>
                     <td>
                         <button class="btn btn-primary" onclick="downloadBackup('${backup.nome_arquivo}')">⬇️</button>
-                        <button class="btn btn-danger" onclick="deleteBackup(${backup.id})">🗑️</button>
+                        <button class="btn btn-danger" onclick="deleteBackup('${backup.nome_arquivo}')">🗑️</button>
                     </td>
                 </tr>
             `).join('');
@@ -606,14 +666,116 @@
             }
         });
         
-        // Funções de ação (implementar conforme necessário)
-        function viewImage(id) {
-            console.log('Ver imagem:', id);
+        // Funções de ação para imagens
+        async function viewImage(id) {
+            try {
+                const response = await fetch(`api-admin.php?action=get_images&search=&id=${id}`);
+                const data = await response.json();
+                
+                if (data.success && data.data.length > 0) {
+                    const img = data.data[0];
+                    const modalBody = document.getElementById('modal-body');
+                    modalBody.innerHTML = `
+                        <h2>Detalhes da Imagem</h2>
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <img src="${img.url_arquivo}" alt="${img.alt_text}" style="max-width: 100%; max-height: 400px; border-radius: 8px;">
+                        </div>
+                        <p><strong>Nome:</strong> ${img.nome_original}</p>
+                        <p><strong>Tipo:</strong> ${img.tipo_mime}</p>
+                        <p><strong>Tamanho:</strong> ${formatFileSize(img.tamanho)}</p>
+                        <p><strong>Dimensões:</strong> ${img.largura}x${img.altura}px</p>
+                        <p><strong>Alt Text:</strong> ${img.alt_text || 'Não definido'}</p>
+                        <p><strong>Descrição:</strong> ${img.descricao || 'Não definida'}</p>
+                        <p><strong>Data Upload:</strong> ${formatDate(img.data_upload)}</p>
+                        <p><strong>URL Arquivo:</strong> <a href="${img.url_arquivo}" target="_blank">${img.url_arquivo}</a></p>
+                    `;
+                    document.getElementById('modal').style.display = 'block';
+                } else {
+                    showError('Imagem não encontrada');
+                }
+            } catch (error) {
+                showError('Erro ao carregar detalhes da imagem: ' + error.message);
+            }
         }
         
-        function deleteImage(id) {
-            if (confirm('Tem certeza que deseja excluir esta imagem?')) {
-                console.log('Excluir imagem:', id);
+        async function editImage(id) {
+            try {
+                const response = await fetch(`api-admin.php?action=get_images&search=&id=${id}`);
+                const data = await response.json();
+                
+                if (data.success && data.data.length > 0) {
+                    const img = data.data[0];
+                    
+                    // Preencher o formulário
+                    document.getElementById('edit-image-id').value = img.id;
+                    document.getElementById('edit-nome-original').value = img.nome_original || '';
+                    document.getElementById('edit-alt-text').value = img.alt_text || '';
+                    document.getElementById('edit-descricao').value = img.descricao || '';
+                    
+                    // Mostrar modal
+                    document.getElementById('edit-image-modal').style.display = 'block';
+                } else {
+                    showError('Imagem não encontrada');
+                }
+            } catch (error) {
+                showError('Erro ao carregar dados da imagem: ' + error.message);
+            }
+        }
+        
+        async function replaceImage(id) {
+            try {
+                const response = await fetch(`api-admin.php?action=get_images&search=&id=${id}`);
+                const data = await response.json();
+                
+                if (data.success && data.data.length > 0) {
+                    const img = data.data[0];
+                    
+                    // Definir ID da imagem a ser substituída
+                    document.getElementById('replace-image-id').value = img.id;
+                    
+                    // Mostrar preview da imagem atual
+                    document.getElementById('current-image-preview').innerHTML = `
+                        <img src="${img.url_thumbnail || img.url_arquivo}" alt="${img.alt_text}" 
+                             style="max-width: 200px; max-height: 200px; border-radius: 8px;">
+                        <p><strong>${img.nome_original}</strong></p>
+                    `;
+                    
+                    // Limpar preview da nova imagem
+                    document.getElementById('new-image-preview').innerHTML = '';
+                    document.getElementById('new-image-file').value = '';
+                    
+                    // Mostrar modal
+                    document.getElementById('replace-image-modal').style.display = 'block';
+                } else {
+                    showError('Imagem não encontrada');
+                }
+            } catch (error) {
+                showError('Erro ao carregar dados da imagem: ' + error.message);
+            }
+        }
+        
+        async function deleteImage(id) {
+            if (confirm('Tem certeza que deseja excluir esta imagem? Esta ação não pode ser desfeita.')) {
+                try {
+                    const formData = new FormData();
+                    formData.append('id', id);
+                    
+                    const response = await fetch('api-admin.php?action=delete_image', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        showSuccess(data.message);
+                        loadTabData('images'); // Recarregar lista
+                    } else {
+                        showError(data.message);
+                    }
+                } catch (error) {
+                    showError('Erro ao excluir imagem: ' + error.message);
+                }
             }
         }
         
@@ -650,6 +812,189 @@
         function optimizeDatabase() {
             if (confirm('Esta ação irá otimizar o banco de dados. Continuar?')) {
                 console.log('Otimizar banco');
+            }
+        }
+        
+        // Funções para modais de imagem
+        function closeEditModal() {
+            document.getElementById('edit-image-modal').style.display = 'none';
+        }
+        
+        function closeReplaceModal() {
+            document.getElementById('replace-image-modal').style.display = 'none';
+        }
+        
+        // Função para preview da nova imagem
+        function previewNewImage() {
+            const file = document.getElementById('new-image-file').files[0];
+            const preview = document.getElementById('new-image-preview');
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.innerHTML = `
+                        <img src="${e.target.result}" alt="Nova imagem" 
+                             style="max-width: 200px; max-height: 200px; border-radius: 8px;">
+                        <p><strong>${file.name}</strong> (${formatFileSize(file.size)})</p>
+                    `;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.innerHTML = '';
+            }
+        }
+        
+        // Função para submeter edição de imagem
+        document.getElementById('edit-image-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('id', document.getElementById('edit-image-id').value);
+            formData.append('nome_original', document.getElementById('edit-nome-original').value);
+            formData.append('alt_text', document.getElementById('edit-alt-text').value);
+            formData.append('descricao', document.getElementById('edit-descricao').value);
+            
+            try {
+                const response = await fetch('api-admin.php?action=update_image', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess(data.message);
+                    closeEditModal();
+                    loadTabData('images'); // Recarregar lista
+                } else {
+                    showError(data.message);
+                }
+            } catch (error) {
+                showError('Erro ao atualizar imagem: ' + error.message);
+            }
+        });
+        
+        // Função para submeter substituição de imagem
+        async function submitReplaceImage() {
+            const imageId = document.getElementById('replace-image-id').value;
+            const fileInput = document.getElementById('new-image-file');
+            
+            if (!fileInput.files[0]) {
+                showError('Por favor, selecione uma nova imagem');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            
+            // Converter arquivo para base64
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const formData = new FormData();
+                    formData.append('id', imageId);
+                    formData.append('image_data', JSON.stringify({
+                        src: e.target.result,
+                        alt: file.name,
+                        title: file.name
+                    }));
+                    
+                    const response = await fetch('api-admin.php?action=replace_image', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        showSuccess(data.message);
+                        closeReplaceModal();
+                        loadTabData('images'); // Recarregar lista
+                    } else {
+                        showError(data.message);
+                    }
+                } catch (error) {
+                    showError('Erro ao substituir imagem: ' + error.message);
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // Implementar busca de imagens
+        let searchTimeout;
+        document.getElementById('search-images').addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                const search = this.value.trim();
+                loadImages(search);
+            }, 500);
+        });
+        
+        // Função específica para carregar imagens com busca
+        async function loadImages(search = '') {
+            try {
+                const response = await fetch(`api-admin.php?action=get_images&search=${encodeURIComponent(search)}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    renderImages(data.data);
+                } else {
+                    showError('Erro ao buscar imagens: ' + data.message);
+                }
+            } catch (error) {
+                showError('Erro de conexão: ' + error.message);
+            }
+        }
+        
+        // Implementar backup funcional
+        async function createBackup() {
+            const type = prompt('Tipo de backup (full, images, texts):', 'full');
+            if (!type) return;
+            
+            try {
+                const formData = new FormData();
+                formData.append('type', type);
+                
+                const response = await fetch('api-admin.php?action=create_backup', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess(`Backup criado: ${data.filename}`);
+                    loadTabData('backups'); // Recarregar lista
+                } else {
+                    showError(data.message);
+                }
+            } catch (error) {
+                showError('Erro ao criar backup: ' + error.message);
+            }
+        }
+        
+        // Implementar exclusão de backup
+        async function deleteBackup(filename) {
+            if (confirm('Tem certeza que deseja excluir este backup?')) {
+                try {
+                    const formData = new FormData();
+                    formData.append('filename', filename);
+                    
+                    const response = await fetch('api-admin.php?action=delete_backup', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        showSuccess(data.message);
+                        loadTabData('backups'); // Recarregar lista
+                    } else {
+                        showError(data.message);
+                    }
+                } catch (error) {
+                    showError('Erro ao excluir backup: ' + error.message);
+                }
             }
         }
     </script>

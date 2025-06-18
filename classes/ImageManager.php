@@ -354,7 +354,7 @@ class ImageManager {
     }
     
     public function getImagesByPage($pageId) {
-        $stmt = $this->db->query("
+        $results = $this->db->query("
             SELECT i.*, pi.contexto, pi.posicao, pi.propriedades
             FROM imagens i
             JOIN pagina_imagens pi ON i.id = pi.imagem_id
@@ -362,7 +362,78 @@ class ImageManager {
             ORDER BY pi.posicao
         ", [$pageId]);
         
-        return $stmt->fetchAll();
+        return $results;
+    }
+    
+    public function getAllImages($limit = 50, $offset = 0, $search = '') {
+        $sql = "SELECT * FROM imagens WHERE status = 'ativo'";
+        $params = [];
+        
+        if ($search) {
+            $sql .= " AND (nome_original LIKE ? OR alt_text LIKE ? OR tipo_mime LIKE ?)";
+            $searchTerm = "%{$search}%";
+            $params = [$searchTerm, $searchTerm, $searchTerm];
+        }
+        
+        $sql .= " ORDER BY data_upload DESC LIMIT ? OFFSET ?";
+        $params[] = $limit;
+        $params[] = $offset;
+        
+        return $this->db->query($sql, $params);
+    }
+    
+    public function getImageById($imageId) {
+        $results = $this->db->query("SELECT * FROM imagens WHERE id = ? AND status = 'ativo'", [$imageId]);
+        return !empty($results) ? $results[0] : null;
+    }
+    
+    public function updateImage($imageId, $data) {
+        $updateData = [];
+        
+        // Campos permitidos para atualização
+        $allowedFields = ['nome_original', 'alt_text', 'descricao'];
+        
+        foreach ($allowedFields as $field) {
+            if (isset($data[$field])) {
+                $updateData[$field] = $data[$field];
+            }
+        }
+        
+        if (!empty($updateData)) {
+            $updateData['data_modificacao'] = date('Y-m-d H:i:s');
+            $this->db->update('imagens', $updateData, 'id = ?', [$imageId]);
+            $this->safeLog("Imagem atualizada: ID {$imageId}");
+            return true;
+        }
+        
+        return false;
+    }
+    
+    public function replaceImage($oldImageId, $newImageData, $pageId = null, $context = null) {
+        $this->db->beginTransaction();
+        
+        try {
+            // Salvar nova imagem
+            $newImageId = $this->saveImage($newImageData, $pageId, $context);
+            
+            // Marcar imagem antiga como substituída
+            $this->db->update('imagens', [
+                'status' => 'substituido',
+                'data_modificacao' => date('Y-m-d H:i:s')
+            ], 'id = ?', [$oldImageId]);
+            
+            // Atualizar todos os relacionamentos para apontar para nova imagem
+            $this->db->query("UPDATE pagina_imagens SET imagem_id = ? WHERE imagem_id = ?", [$newImageId, $oldImageId]);
+            
+            $this->db->commit();
+            $this->safeLog("Imagem substituída: ID {$oldImageId} -> {$newImageId}");
+            
+            return $newImageId;
+            
+        } catch (Exception $e) {
+            $this->db->rollback();
+            throw $e;
+        }
     }
     
     public function deleteImage($imageId) {
