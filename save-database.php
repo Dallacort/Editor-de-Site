@@ -105,6 +105,11 @@ try {
         $pageId = 'index';
     }
     
+    // Converter para formato siteContent_
+    $pageId = "siteContent_{$pageId}.html";
+    
+    safeLog("Página identificada: {$pageId}");
+    
     // Iniciar transação
     $db->beginTransaction();
     
@@ -147,10 +152,7 @@ try {
         }
     }
     
-         // Criar backup dos dados originais
-     $backupId = createBackup($db, $data, $pageId);
-    
-    // Confirmar transação
+             // Confirmar transação
     $db->commit();
     
     safeLog("Salvamento concluído - Textos: {$stats['textos_salvos']}, Imagens: {$stats['imagens_salvas']}, Erros: {$stats['erros']}");
@@ -162,7 +164,6 @@ try {
         'message' => 'Conteúdo salvo com sucesso no banco de dados.',
         'stats' => $stats,
         'page_id' => $pageId,
-        'backup_id' => $backupId,
         'timestamp' => date('Y-m-d H:i:s'),
         'server_time' => time(),
         'php_version' => PHP_VERSION,
@@ -194,10 +195,10 @@ try {
 
 // Funções auxiliares
 function saveText($db, $key, $content, $pageId, $type = 'texto') {
-    // Verificar se texto já existe
+    // Verificar se texto já existe para esta página específica
     $results = $db->query(
-        "SELECT id, versao FROM textos WHERE chave = ? AND status = 'ativo'",
-        [$key]
+        "SELECT id, versao FROM textos WHERE chave = ? AND pagina = ? AND status = 'ativo'",
+        [$key, $pageId]
     );
     $existing = !empty($results) ? $results[0] : null;
     
@@ -205,11 +206,13 @@ function saveText($db, $key, $content, $pageId, $type = 'texto') {
         // Atualizar texto existente
         $db->update('textos', [
             'conteudo' => $content,
-            'pagina' => $pageId,
             'tipo' => $type,
             'versao' => $existing['versao'] + 1,
-            'data_modificacao' => date('Y-m-d H:i:s')
+            'data_modificacao' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
         ], 'id = ?', [$existing['id']]);
+        
+        safeLog("Texto atualizado: {$key} (página: {$pageId})");
         
     } else {
         // Inserir novo texto
@@ -218,36 +221,16 @@ function saveText($db, $key, $content, $pageId, $type = 'texto') {
             'conteudo' => $content,
             'pagina' => $pageId,
             'tipo' => $type,
-            'data_modificacao' => date('Y-m-d H:i:s')
+            'status' => 'ativo',
+            'versao' => 1,
+            'data_modificacao' => date('Y-m-d H:i:s'),
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
         ]);
+        
+        safeLog("Novo texto inserido: {$key} (página: {$pageId})");
     }
 }
 
-function createBackup($db, $data, $pageId) {
-    // Criar backup JSON dos dados originais
-    $backupData = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-    $timestamp = date('Y-m-d_H-i-s');
-    $filename = "backup-{$pageId}-{$timestamp}.json";
-    
-    // Salvar arquivo de backup
-    $backupDir = __DIR__ . '/backups';
-    if (!is_dir($backupDir)) {
-        mkdir($backupDir, 0755, true);
-    }
-    
-    $filepath = $backupDir . '/' . $filename;
-    file_put_contents($filepath, $backupData, LOCK_EX);
-    
-    // Registrar backup no banco
-    $backupId = $db->insert('backups', [
-        'nome_arquivo' => $filename,
-        'tamanho' => strlen($backupData),
-        'tipo' => 'completo',
-        'url_arquivo' => '/backups/' . $filename,
-        'hash_md5' => md5($backupData),
-        'descricao' => "Backup automático da página {$pageId}"
-    ]);
-    
-    return $backupId;
-}
+
 ?> 

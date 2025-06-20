@@ -1,20 +1,18 @@
 <?php
 /**
  * HARDEM Editor - Gerenciador de Imagens
- * Classe para gerenciar upload, otimização e armazenamento de imagens
+ * Versão Database-Only - Sem arquivos físicos
  */
 
 require_once __DIR__ . '/Database.php';
 
 class ImageManager {
     private $db;
-    private $uploadDir;
     private $maxFileSize;
     private $allowedTypes;
     
     public function __construct() {
         $this->db = Database::getInstance();
-        $this->uploadDir = __DIR__ . '/../uploads';
         $this->maxFileSize = 10 * 1024 * 1024; // 10MB
         $this->allowedTypes = [
             'image/jpeg',
@@ -24,24 +22,6 @@ class ImageManager {
             'image/webp',
             'image/svg+xml'
         ];
-        
-        $this->createUploadDirectories();
-    }
-    
-    private function createUploadDirectories() {
-        $dirs = [
-            $this->uploadDir,
-            $this->uploadDir . '/images',
-            $this->uploadDir . '/images/original',
-            $this->uploadDir . '/images/optimized',
-            $this->uploadDir . '/images/thumbnails'
-        ];
-        
-        foreach ($dirs as $dir) {
-            if (!is_dir($dir)) {
-                mkdir($dir, 0755, true);
-            }
-        }
     }
     
     public function saveImage($imageData, $pageId = null, $context = null) {
@@ -97,7 +77,7 @@ class ImageManager {
         
         // Verificar se imagem já existe
         $results = $this->db->query(
-            "SELECT id, url_arquivo FROM imagens WHERE hash_md5 = ? AND status = 'ativo'",
+            "SELECT id FROM imagens WHERE hash_md5 = ? AND status = 'ativo'",
             [$hash]
         );
         $existingImage = !empty($results) ? $results[0] : null;
@@ -110,42 +90,32 @@ class ImageManager {
             return $existingImage['id'];
         }
         
-        // Gerar nome único do arquivo
-        $extension = $this->getExtensionFromMimeType($mimeType);
-        $filename = uniqid('img_', true) . '.' . $extension;
+        // Obter dimensões da imagem (se possível)
+        $width = null;
+        $height = null;
         
-        // Caminhos dos arquivos
-        $originalPath = $this->uploadDir . '/images/original/' . $filename;
-        $optimizedPath = $this->uploadDir . '/images/optimized/' . $filename;
-        $thumbnailPath = $this->uploadDir . '/images/thumbnails/' . $filename;
-        
-        // Salvar arquivo original
-        if (file_put_contents($originalPath, $imageContent) === false) {
-            throw new Exception('Erro ao salvar arquivo original');
+        // Tentar extrair dimensões usando getimagesizefromstring
+        if (function_exists('getimagesizefromstring')) {
+            $imageInfo = getimagesizefromstring($imageContent);
+            if ($imageInfo) {
+                $width = $imageInfo[0];
+                $height = $imageInfo[1];
+            }
         }
         
-        // Obter dimensões da imagem
-        $imageInfo = getimagesize($originalPath);
-        $width = $imageInfo[0] ?? null;
-        $height = $imageInfo[1] ?? null;
+        // Criar thumbnail (versão reduzida em base64)
+        $thumbnailBase64 = $this->createThumbnailBase64($imageContent, $mimeType);
         
-        // Otimizar imagem
-        $this->optimizeImage($originalPath, $optimizedPath, $mimeType);
-        
-        // Criar thumbnail
-        $this->createThumbnail($originalPath, $thumbnailPath, $mimeType);
-        
-        // Salvar no banco de dados
+        // Salvar no banco de dados (TUDO no banco!)
         $imageId = $this->db->insert('imagens', [
-            'nome_arquivo' => $filename,
-            'nome_original' => $imageData['alt'] ?? $filename,
+            'nome_arquivo' => 'db_image_' . uniqid(),
+            'nome_original' => $imageData['alt'] ?? 'Imagem',
             'tipo_mime' => $mimeType,
             'tamanho' => strlen($imageContent),
             'largura' => $width,
             'altura' => $height,
-            'url_arquivo' => '/uploads/images/original/' . $filename,
-            'url_otimizada' => '/uploads/images/optimized/' . $filename,
-            'url_thumbnail' => '/uploads/images/thumbnails/' . $filename,
+            'dados_base64' => $base64Data,  // Dados originais em base64
+            'thumbnail_base64' => $thumbnailBase64,  // Thumbnail em base64
             'hash_md5' => $hash,
             'alt_text' => $imageData['alt'] ?? '',
             'descricao' => $imageData['title'] ?? ''
@@ -156,7 +126,7 @@ class ImageManager {
             $this->linkImageToPage($imageId, $pageId, $context);
         }
         
-        $this->safeLog("Imagem salva com sucesso: ID {$imageId}, arquivo {$filename}");
+        $this->safeLog("Imagem salva no banco com sucesso: ID {$imageId}");
         
         return $imageId;
     }
@@ -186,7 +156,7 @@ class ImageManager {
             'nome_original' => $imageData['alt'] ?? basename($url),
             'tipo_mime' => 'image/unknown',
             'tamanho' => 0,
-            'url_arquivo' => $url,
+            'url_externo' => $url,  // URL externa
             'hash_md5' => $hash,
             'alt_text' => $imageData['alt'] ?? '',
             'descricao' => $imageData['title'] ?? ''
@@ -199,82 +169,10 @@ class ImageManager {
         return $imageId;
     }
     
-    private function linkImageToPage($imageId, $pageId, $context = null) {
-        // Verificar se relacionamento já existe (tratando NULL no contexto)
-        if ($context === null) {
-            $results = $this->db->query(
-                "SELECT id FROM pagina_imagens WHERE pagina_id = ? AND imagem_id = ? AND contexto IS NULL",
-                [$pageId, $imageId]
-            );
-        } else {
-            $results = $this->db->query(
-                "SELECT id FROM pagina_imagens WHERE pagina_id = ? AND imagem_id = ? AND contexto = ?",
-                [$pageId, $imageId, $context]
-            );
-        }
-        
-        if (empty($results)) {
-            // Obter próxima posição
-            $results = $this->db->query(
-                "SELECT COALESCE(MAX(posicao), 0) + 1 as proxima_posicao FROM pagina_imagens WHERE pagina_id = ?",
-                [$pageId]
-            );
-            $proximaPosicao = !empty($results) ? $results[0]['proxima_posicao'] : 1;
-            
-            $this->db->insert('pagina_imagens', [
-                'pagina_id' => $pageId,
-                'imagem_id' => $imageId,
-                'posicao' => $proximaPosicao,
-                'contexto' => $context
-            ]);
-        }
-    }
-    
-    private function optimizeImage($sourcePath, $destinationPath, $mimeType) {
-        // Verificar se GD está disponível
+    private function createThumbnailBase64($imageContent, $mimeType, $maxWidth = 300, $maxHeight = 300) {
+        // Se GD não estiver disponível, retornar dados originais
         if (!extension_loaded('gd')) {
-            // Se GD não estiver disponível, apenas copiar
-            copy($sourcePath, $destinationPath);
-            return;
-        }
-        
-        // Implementação básica de otimização
-        try {
-            switch ($mimeType) {
-                case 'image/jpeg':
-                case 'image/jpg':
-                    $image = imagecreatefromjpeg($sourcePath);
-                    if ($image) {
-                        imagejpeg($image, $destinationPath, 85); // Qualidade 85%
-                        imagedestroy($image);
-                    }
-                    break;
-                    
-                case 'image/png':
-                    $image = imagecreatefrompng($sourcePath);
-                    if ($image) {
-                        imagepng($image, $destinationPath, 6); // Compressão 6
-                        imagedestroy($image);
-                    }
-                    break;
-                    
-                default:
-                    // Para outros tipos, apenas copiar
-                    copy($sourcePath, $destinationPath);
-                    break;
-            }
-        } catch (Exception $e) {
-            // Se otimização falhar, copiar original
-            copy($sourcePath, $destinationPath);
-        }
-    }
-    
-    private function createThumbnail($sourcePath, $destinationPath, $mimeType, $maxWidth = 300, $maxHeight = 300) {
-        // Verificar se GD está disponível
-        if (!extension_loaded('gd')) {
-            // Se GD não estiver disponível, apenas copiar
-            copy($sourcePath, $destinationPath);
-            return;
+            return base64_encode($imageContent);
         }
         
         try {
@@ -283,23 +181,31 @@ class ImageManager {
             switch ($mimeType) {
                 case 'image/jpeg':
                 case 'image/jpg':
-                    $image = imagecreatefromjpeg($sourcePath);
+                    $image = imagecreatefromstring($imageContent);
                     break;
                 case 'image/png':
-                    $image = imagecreatefrompng($sourcePath);
+                    $image = imagecreatefromstring($imageContent);
                     break;
                 case 'image/gif':
-                    $image = imagecreatefromgif($sourcePath);
+                    $image = imagecreatefromstring($imageContent);
                     break;
+                default:
+                    // Para outros tipos, retornar original
+                    return base64_encode($imageContent);
             }
             
             if (!$image) {
-                copy($sourcePath, $destinationPath);
-                return;
+                return base64_encode($imageContent);
             }
             
             $originalWidth = imagesx($image);
             $originalHeight = imagesy($image);
+            
+            // Se já é pequena, não redimensionar
+            if ($originalWidth <= $maxWidth && $originalHeight <= $maxHeight) {
+                imagedestroy($image);
+                return base64_encode($imageContent);
+            }
             
             // Calcular novas dimensões mantendo proporção
             $ratio = min($maxWidth / $originalWidth, $maxHeight / $originalHeight);
@@ -318,39 +224,100 @@ class ImageManager {
             // Redimensionar
             imagecopyresampled($thumbnail, $image, 0, 0, 0, 0, $newWidth, $newHeight, $originalWidth, $originalHeight);
             
-            // Salvar thumbnail
+            // Converter para base64
+            ob_start();
             switch ($mimeType) {
                 case 'image/jpeg':
                 case 'image/jpg':
-                    imagejpeg($thumbnail, $destinationPath, 80);
+                    imagejpeg($thumbnail, null, 80);
                     break;
                 case 'image/png':
-                    imagepng($thumbnail, $destinationPath);
+                    imagepng($thumbnail);
                     break;
                 case 'image/gif':
-                    imagegif($thumbnail, $destinationPath);
+                    imagegif($thumbnail);
                     break;
             }
+            $thumbnailContent = ob_get_contents();
+            ob_end_clean();
             
             imagedestroy($image);
             imagedestroy($thumbnail);
             
+            return base64_encode($thumbnailContent);
+            
         } catch (Exception $e) {
-            copy($sourcePath, $destinationPath);
+            return base64_encode($imageContent);
         }
     }
     
-    private function getExtensionFromMimeType($mimeType) {
-        $extensions = [
-            'image/jpeg' => 'jpg',
-            'image/jpg' => 'jpg',
-            'image/png' => 'png',
-            'image/gif' => 'gif',
-            'image/webp' => 'webp',
-            'image/svg+xml' => 'svg'
-        ];
-        
-        return $extensions[$mimeType] ?? 'jpg';
+    private function linkImageToPage($imageId, $pageId, $context = null) {
+        try {
+            // Verificar se relacionamento já existe
+            $existing = $this->db->query("
+                SELECT id FROM pagina_imagens 
+                WHERE imagem_id = ? AND pagina_id = ? AND status = 'ativo'
+            ", [$imageId, $pageId]);
+            
+            if (empty($existing)) {
+                // Criar novo relacionamento
+                $this->db->insert('pagina_imagens', [
+                    'imagem_id' => $imageId,
+                    'pagina_id' => $pageId,
+                    'contexto' => $context,
+                    'posicao' => 1
+                ]);
+                
+                $this->safeLog("Relacionamento criado: Imagem {$imageId} -> Página {$pageId}");
+            }
+            
+        } catch (Exception $e) {
+            $this->safeLog("Erro ao criar relacionamento: " . $e->getMessage());
+        }
+    }
+    
+    // Método para servir imagem do banco de dados
+    public function serveImage($imageId, $type = 'original') {
+        try {
+            $image = $this->getImageById($imageId);
+            
+            if (!$image) {
+                throw new Exception("Imagem não encontrada: ID {$imageId}");
+            }
+            
+            // Se for URL externa, redirecionar
+            if (!empty($image['url_externo'])) {
+                header("Location: " . $image['url_externo']);
+                exit;
+            }
+            
+            // Escolher dados corretos
+            $base64Data = null;
+            if ($type === 'thumbnail' && !empty($image['thumbnail_base64'])) {
+                $base64Data = $image['thumbnail_base64'];
+            } elseif (!empty($image['dados_base64'])) {
+                $base64Data = $image['dados_base64'];
+            }
+            
+            if (!$base64Data) {
+                throw new Exception("Dados da imagem não encontrados");
+            }
+            
+            // Decodificar e servir
+            $imageContent = base64_decode($base64Data);
+            
+            header('Content-Type: ' . $image['tipo_mime']);
+            header('Content-Length: ' . strlen($imageContent));
+            header('Cache-Control: public, max-age=31536000'); // Cache por 1 ano
+            
+            echo $imageContent;
+            exit;
+            
+        } catch (Exception $e) {
+            header('HTTP/1.1 404 Not Found');
+            echo 'Imagem não encontrada';
+            exit;
+        }
     }
     
     public function getImagesByPage($pageId) {
@@ -366,7 +333,7 @@ class ImageManager {
     }
     
     public function getAllImages($limit = 50, $offset = 0, $search = '') {
-        $sql = "SELECT * FROM imagens WHERE status = 'ativo'";
+        $sql = "SELECT id, nome_original, tipo_mime, tamanho, largura, altura, alt_text, descricao, hash_md5, created_at FROM imagens WHERE status = 'ativo'";
         $params = [];
         
         if ($search) {
@@ -375,7 +342,7 @@ class ImageManager {
             $params = [$searchTerm, $searchTerm, $searchTerm];
         }
         
-        $sql .= " ORDER BY data_upload DESC LIMIT ? OFFSET ?";
+        $sql .= " ORDER BY created_at DESC LIMIT ? OFFSET ?";
         $params[] = $limit;
         $params[] = $offset;
         
@@ -400,7 +367,7 @@ class ImageManager {
         }
         
         if (!empty($updateData)) {
-            $updateData['data_modificacao'] = date('Y-m-d H:i:s');
+            $updateData['updated_at'] = date('Y-m-d H:i:s');
             $this->db->update('imagens', $updateData, 'id = ?', [$imageId]);
             $this->safeLog("Imagem atualizada: ID {$imageId}");
             return true;
@@ -419,7 +386,7 @@ class ImageManager {
             // Marcar imagem antiga como substituída
             $this->db->update('imagens', [
                 'status' => 'substituido',
-                'data_modificacao' => date('Y-m-d H:i:s')
+                'updated_at' => date('Y-m-d H:i:s')
             ], 'id = ?', [$oldImageId]);
             
             // Atualizar todos os relacionamentos para apontar para nova imagem
@@ -441,18 +408,21 @@ class ImageManager {
         
         try {
             // Obter informações da imagem
-            $stmt = $this->db->query("SELECT * FROM imagens WHERE id = ?", [$imageId]);
-            $image = $stmt->fetch();
+            $results = $this->db->query("SELECT * FROM imagens WHERE id = ?", [$imageId]);
+            $image = !empty($results) ? $results[0] : null;
             
             if ($image) {
                 // Marcar como excluída
-                $this->db->update('imagens', ['status' => 'excluido'], 'id = ?', [$imageId]);
+                $this->db->update('imagens', [
+                    'status' => 'excluido',
+                    'updated_at' => date('Y-m-d H:i:s')
+                ], 'id = ?', [$imageId]);
                 
                 // Remover relacionamentos
                 $this->db->query("UPDATE pagina_imagens SET status = 'inativo' WHERE imagem_id = ?", [$imageId]);
                 
                 // Log da ação
-                $this->safeLog("Imagem excluída: ID {$imageId}, arquivo {$image['nome_arquivo']}");
+                $this->safeLog("Imagem excluída: ID {$imageId}");
             }
             
             $this->db->commit();
@@ -464,9 +434,68 @@ class ImageManager {
         }
     }
     
+    public function generateThumbnailBase64($base64Data, $mimeType, $maxWidth = 300, $maxHeight = 300) {
+        try {
+            // Se GD não estiver disponível, retornar dados originais
+            if (!extension_loaded('gd')) {
+                $this->safeLog("Extensão GD não disponível - usando imagem original como thumbnail");
+                return $base64Data;
+            }
+            
+            $imageContent = base64_decode($base64Data);
+            return $this->createThumbnailBase64($imageContent, $mimeType, $maxWidth, $maxHeight);
+        } catch (Exception $e) {
+            $this->safeLog("Erro ao gerar thumbnail: " . $e->getMessage());
+            return $base64Data; // Retorna original se falhar
+        }
+    }
+    
+    public function getImageDimensionsFromBase64($base64Data, $mimeType) {
+        try {
+            // Verificar se GD está disponível
+            if (!extension_loaded('gd')) {
+                $this->safeLog("Extensão GD não disponível - retornando dimensões padrão");
+                return ['width' => 800, 'height' => 600]; // Dimensões padrão
+            }
+            
+            $imageContent = base64_decode($base64Data);
+            
+            // Usar getimagesizefromstring se disponível (mais seguro)
+            if (function_exists('getimagesizefromstring')) {
+                $imageInfo = getimagesizefromstring($imageContent);
+                if ($imageInfo) {
+                    return ['width' => $imageInfo[0], 'height' => $imageInfo[1]];
+                }
+            }
+            
+            // Fallback para imagecreatefromstring
+            if (function_exists('imagecreatefromstring')) {
+                $image = imagecreatefromstring($imageContent);
+                
+                if ($image === false) {
+                    return ['width' => null, 'height' => null];
+                }
+                
+                $width = imagesx($image);
+                $height = imagesy($image);
+                
+                imagedestroy($image);
+                
+                return ['width' => $width, 'height' => $height];
+            }
+            
+            // Se nada funcionar, retornar dimensões padrão
+            return ['width' => 800, 'height' => 600];
+            
+        } catch (Exception $e) {
+            $this->safeLog("Erro ao obter dimensões: " . $e->getMessage());
+            return ['width' => 800, 'height' => 600]; // Dimensões padrão em caso de erro
+        }
+    }
+
     private function safeLog($message) {
         $logFile = __DIR__ . '/../hardem-editor.log';
         $timestamp = date('Y-m-d H:i:s');
-        file_put_contents($logFile, "[$timestamp] [IMAGE] $message\n", FILE_APPEND | LOCK_EX);
+        file_put_contents($logFile, "[$timestamp] [IMAGE-DB] $message\n", FILE_APPEND | LOCK_EX);
     }
 } 

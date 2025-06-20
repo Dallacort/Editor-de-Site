@@ -152,13 +152,17 @@ class HardemTextEditor {
             if (newText && newText !== originalText) {
                 element.textContent = newText;
                 
-                // Salvar no contentMap
+                // Salvar no contentMap com informações de header
                 if (!this.core.contentMap[dataKey]) {
                     this.core.contentMap[dataKey] = {};
                 }
                 this.core.contentMap[dataKey].text = newText;
+                this.core.contentMap[dataKey].isHeaderContent = element.closest('header') !== null;
+                this.core.contentMap[dataKey].elementInfo = this.core.utils.collectElementInfo ? 
+                    this.core.utils.collectElementInfo(element) : null;
+                this.core.contentMap[dataKey].timestamp = new Date().toISOString();
                 
-                console.log(`Texto atualizado: ${dataKey} = "${newText}"`);
+                console.log(`Texto atualizado: ${dataKey} = "${newText}" (header: ${this.core.contentMap[dataKey].isHeaderContent})`);
                 this.core.ui.showAlert('Texto atualizado!', 'success');
             }
             
@@ -626,13 +630,17 @@ class HardemTextEditor {
             
             element.textContent = newText;
             
-            // Salvar no contentMap
+            // Salvar no contentMap com informações de header
             if (!this.core.contentMap[dataKey]) {
                 this.core.contentMap[dataKey] = {};
             }
             this.core.contentMap[dataKey].text = newText;
+            this.core.contentMap[dataKey].isHeaderContent = element.closest('header') !== null;
+            this.core.contentMap[dataKey].elementInfo = this.core.utils.collectElementInfo ? 
+                this.core.utils.collectElementInfo(element) : null;
+            this.core.contentMap[dataKey].timestamp = new Date().toISOString();
             
-            console.log(`Texto atualizado via painel: ${dataKey} = "${newText}"`);
+            console.log(`Texto atualizado via painel: ${dataKey} = "${newText}" (header: ${this.core.contentMap[dataKey].isHeaderContent})`);
             this.core.ui.showAlert('Texto atualizado!', 'success');
         }
     }

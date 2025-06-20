@@ -79,25 +79,6 @@ CREATE TABLE IF NOT EXISTS pagina_imagens (
     FOREIGN KEY (imagem_id) REFERENCES imagens(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Tabela de backups
-CREATE TABLE IF NOT EXISTS backups (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    nome_arquivo VARCHAR(255) NOT NULL,
-    tamanho BIGINT NOT NULL,
-    tipo ENUM('completo', 'incremental', 'imagens', 'textos') DEFAULT 'completo',
-    data_backup DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    url_arquivo VARCHAR(500) NOT NULL,
-    status ENUM('ativo', 'inativo', 'corrompido') DEFAULT 'ativo',
-    descricao TEXT,
-    hash_md5 CHAR(32),
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    
-    INDEX idx_data_backup (data_backup),
-    INDEX idx_tipo (tipo),
-    INDEX idx_status (status),
-    INDEX idx_hash (hash_md5)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 -- Tabela de logs do sistema
 CREATE TABLE IF NOT EXISTS system_logs (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,

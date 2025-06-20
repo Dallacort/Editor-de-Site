@@ -8,7 +8,7 @@ Este sistema implementa um novo método de armazenamento para o HARDEM Editor us
 
 - **Armazenamento Otimizado**: Imagens e textos salvos no banco de dados
 - **Gestão de Imagens**: Sistema automático de otimização e thumbnails
-- **Backup Inteligente**: Sistema de backup incremental
+- **Backup do Banco**: Sistema de backup real do banco de dados MariaDB
 - **Painel de Administração**: Interface web para gerenciar conteúdo
 - **Escalabilidade**: Suporte para milhares de imagens e textos
 
@@ -84,10 +84,9 @@ fetch('save-database.php', {
 ### 3. Usando o Painel de Administração
 
 O painel permite:
-- 📊 **Estatísticas**: Visualizar total de imagens, textos e backups
+- 📊 **Estatísticas**: Visualizar total de imagens e textos
 - 🖼️ **Gerenciar Imagens**: Ver, organizar e excluir imagens
 - 📝 **Gerenciar Textos**: Editar e organizar conteúdo textual
-- 💾 **Backups**: Criar e gerenciar backups do sistema
 - ⚙️ **Configurações**: Monitorar status do sistema
 
 ## 📊 Estrutura do Banco de Dados
@@ -122,12 +121,7 @@ O painel permite:
 - Permite propriedades personalizadas (JSON)
 ```
 
-### Tabela `backups`
-```sql
-- Registra todos os backups criados
-- Tipos: completo, incremental, imagens, textos
-- Controle de status e integridade
-```
+
 
 ## 🔧 Configurações Avançadas
 
@@ -172,6 +166,62 @@ SET GLOBAL max_allowed_packet = 200M;
 2. Use conexões SSL entre PHP e MariaDB
 3. Implemente autenticação no painel admin
 4. Configure backup automático do banco
+
+## 💾 Sistema de Backup
+
+### Backup do Banco de Dados
+
+O sistema agora utiliza backup **real do banco de dados MariaDB** em vez de arquivos JSON redundantes.
+
+#### Scripts de Backup Incluídos
+
+**1. Backup Automático** (`backup-database.sh`)
+```bash
+# Torna o script executável
+chmod +x backup-database.sh
+
+# Executa backup
+./backup-database.sh
+```
+
+**2. Restauração** (`restore-database.sh`)
+```bash
+# Torna o script executável  
+chmod +x restore-database.sh
+
+# Executa restauração
+./restore-database.sh
+```
+
+#### Funcionalidades do Backup
+
+- ✅ **Backup Completo**: Todos os dados, estrutura, triggers e rotinas
+- ✅ **Compressão Automática**: Arquivos .sql.gz para economizar espaço
+- ✅ **Limpeza Automática**: Mantém apenas os últimos 7 backups
+- ✅ **Verificação de Integridade**: Confirma se backup foi criado com sucesso
+- ✅ **Restore Interativo**: Escolha qual backup restaurar
+
+#### Configuração de Backup Automático
+
+Para backup automático diário, adicione ao crontab:
+
+```bash
+# Editar crontab
+crontab -e
+
+# Adicionar linha para backup diário às 2:00 AM
+0 2 * * * /caminho/para/backup-database.sh >> /var/log/hardem-backup.log 2>&1
+```
+
+#### Estrutura de Backup
+
+```
+📁 database_backups/
+├── hardem_backup_20241201_020000.sql.gz
+├── hardem_backup_20241202_020000.sql.gz
+├── hardem_backup_20241203_020000.sql.gz
+└── ...
+```
 
 ## 🔍 Troubleshooting
 

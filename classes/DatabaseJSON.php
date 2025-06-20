@@ -8,7 +8,7 @@
 class DatabaseJSON {
     private static $instance = null;
     private $dataDir;
-    private $tables = ['imagens', 'textos', 'pagina_imagens', 'backups', 'system_logs'];
+    private $tables = ['imagens', 'textos', 'pagina_imagens', 'system_logs'];
     
     private function __construct() {
         $this->dataDir = __DIR__ . '/../data/';

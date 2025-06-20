@@ -333,7 +333,9 @@ class HardemImageEditor {
                         this.core.contentMap[dataKey].src = resizedSrc;
                         this.core.contentMap[dataKey].type = 'image';
                         this.core.contentMap[dataKey].elementInfo = this.core.utils.collectElementInfo(imgElement);
+                        this.core.contentMap[dataKey].isHeaderContent = imgElement.closest('header') !== null;
                         this.core.contentMap[dataKey].processedAt = Date.now();
+                        this.core.contentMap[dataKey].timestamp = new Date().toISOString();
                         
                         // Preservar alt se existir
                         if (imgElement.alt) {
@@ -472,7 +474,9 @@ class HardemImageEditor {
                         this.core.contentMap[dataKey].type = 'slide-image';
                         this.core.contentMap[dataKey].slideIndex = slideIndex;
                         this.core.contentMap[dataKey].elementInfo = this.core.utils.collectElementInfo(imgElement);
+                        this.core.contentMap[dataKey].isHeaderContent = imgElement.closest('header') !== null;
                         this.core.contentMap[dataKey].processedAt = Date.now();
+                        this.core.contentMap[dataKey].timestamp = new Date().toISOString();
                         
                         if (imgElement.alt) {
                             this.core.contentMap[dataKey].alt = imgElement.alt;
@@ -540,7 +544,9 @@ class HardemImageEditor {
                         this.core.contentMap[dataKey].format = 'svg';
                         this.core.contentMap[dataKey].originalSize = file.size;
                         this.core.contentMap[dataKey].elementInfo = this.core.utils.collectElementInfo(element);
+                        this.core.contentMap[dataKey].isHeaderContent = element.closest('header') !== null;
                         this.core.contentMap[dataKey].processedAt = Date.now();
+                        this.core.contentMap[dataKey].timestamp = new Date().toISOString();
                         
                         if (type === 'slide-image') {
                             this.core.contentMap[dataKey].slideIndex = element.slideIndex || 0;
@@ -865,11 +871,13 @@ class HardemImageEditor {
         this.core.contentMap[dataKey].backgroundImage = backgroundImage;
         this.core.contentMap[dataKey].type = 'background';
         this.core.contentMap[dataKey].elementInfo = this.core.utils.collectElementInfo(element);
+        this.core.contentMap[dataKey].isHeaderContent = element.closest('header') !== null;
+        this.core.contentMap[dataKey].timestamp = new Date().toISOString();
         
         // Adicionar dados extras se fornecidos
         Object.assign(this.core.contentMap[dataKey], additionalData);
         
-        console.log(`Background salvo: ${dataKey}`, this.core.contentMap[dataKey]);
+        console.log(`Background salvo: ${dataKey} (header: ${this.core.contentMap[dataKey].isHeaderContent})`, this.core.contentMap[dataKey]);
     }
 
     /**

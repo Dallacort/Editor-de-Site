@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Sistema Híbrido - HARDEM</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #007cba;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #005a87;
+        }
+        .result {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9f9f9;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Teste Sistema Híbrido - HARDEM</h1>
+        <p>Este teste verifica se o sistema híbrido está salvando imagens corretamente.</p>
+        
+        <div style="text-align: center; margin: 20px 0;">
+            <button class="btn" onclick="testarSalvamento()">💾 Testar Salvamento Híbrido</button>
+            <button class="btn" onclick="verificarBanco()">🔍 Verificar Banco</button>
+            <button class="btn" onclick="limparResultados()">🧹 Limpar</button>
+        </div>
+
+        <div class="result" id="resultado" style="display: none;"></div>
+    </div>
+
+    <script>
+        let logOutput = '';
+
+        function log(message) {
+            logOutput += new Date().toLocaleTimeString() + ' - ' + message + '\n';
+            document.getElementById('resultado').style.display = 'block';
+            document.getElementById('resultado').textContent = logOutput;
+            console.log(message);
+        }
+
+        async function testarSalvamento() {
+            log('🧪 Iniciando teste do sistema híbrido...');
+            
+            try {
+                // Simular dados de imagem
+                const imagemTeste = {
+                    src: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+                    type: 'slide-image',
+                    alt: 'Imagem de teste',
+                    elementInfo: {
+                        tagName: 'IMG',
+                        className: 'test-image'
+                    }
+                };
+
+                // Simular dados de background
+                const backgroundTeste = {
+                    backgroundImage: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+                    type: 'background',
+                    elementInfo: {
+                        tagName: 'DIV',
+                        className: 'test-background'
+                    }
+                };
+
+                // Simular contentMap
+                const contentMapTeste = {
+                    'img_teste_1': imagemTeste,
+                    'div_background_teste_1': backgroundTeste,
+                    'text_teste_1': {
+                        text: 'Texto de teste',
+                        type: 'text'
+                    }
+                };
+
+                log(`📊 ContentMap de teste criado: ${Object.keys(contentMapTeste).length} elementos`);
+
+                // Simular dados de exportação
+                const exportData = {
+                    contentMap: contentMapTeste,
+                    content: contentMapTeste,
+                    url: window.location.href,
+                    timestamp: new Date().toISOString(),
+                    metadata: {
+                        totalElements: Object.keys(contentMapTeste).length,
+                        test: true
+                    }
+                };
+
+                // Testar separação (mesma lógica do saveContentInParts)
+                const entries = Object.entries(contentMapTeste);
+                const images = entries.filter(([key, value]) => value.src && value.src.startsWith('data:'));
+                const backgrounds = entries.filter(([key, value]) => value.backgroundImage && value.backgroundImage.startsWith('data:'));
+                const texts = entries.filter(([key, value]) => value.text || value.title || value.description);
+
+                log(`📊 Separação: ${images.length} imagens, ${backgrounds.length} backgrounds, ${texts.length} textos`);
+
+                // Testar salvamento de imagem na API
+                if (images.length > 0) {
+                    const [dataKey, imageData] = images[0];
+                    log(`🖼️ Testando salvamento de imagem: ${dataKey}`);
+                    
+                    const result = await testarSalvamentoImagem(dataKey, imageData);
+                    if (result.success) {
+                        log(`✅ Imagem salva com sucesso: ID ${result.image_id}`);
+                    } else {
+                        log(`❌ Erro ao salvar imagem: ${result.message}`);
+                    }
+                }
+
+                // Testar salvamento de background
+                if (backgrounds.length > 0) {
+                    const [dataKey, backgroundData] = backgrounds[0];
+                    log(`🎨 Testando salvamento de background: ${dataKey}`);
+                    
+                    const result = await testarSalvamentoTexto({[dataKey]: backgroundData});
+                    if (result.success) {
+                        log(`✅ Background salvo com sucesso`);
+                    } else {
+                        log(`❌ Erro ao salvar background: ${result.message}`);
+                    }
+                }
+
+            } catch (error) {
+                log(`❌ Erro no teste: ${error.message}`);
+                console.error('Erro completo:', error);
+            }
+        }
+
+        async function testarSalvamentoImagem(dataKey, imageData) {
+            const base64Data = imageData.src;
+            const mimeMatch = base64Data.match(/data:([^;]+);base64,/);
+            const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+            const base64Content = base64Data.replace(/^data:[^;]+;base64,/, '');
+            const estimatedSize = Math.round((base64Content.length * 3) / 4);
+            
+            const imagePayload = {
+                action: 'upload_image_database_only',
+                nome_original: `teste_${Date.now()}.png`,
+                tipo_mime: mimeType,
+                tamanho: estimatedSize,
+                dados_base64: base64Content,
+                alt_text: imageData.alt || '',
+                descricao: `Teste - ${dataKey}`,
+                data_key: dataKey,
+                pagina: 'siteContent_test.html',
+                element_info: JSON.stringify(imageData.elementInfo || {}),
+                is_header_content: false,
+                timestamp: new Date().toISOString()
+            };
+
+            const response = await fetch('api-admin.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams(imagePayload).toString()
+            });
+
+            return await response.json();
+        }
+
+        async function testarSalvamentoTexto(textData) {
+            const requestData = {
+                contentMap: textData,
+                url: window.location.href,
+                timestamp: new Date().toISOString(),
+                metadata: {
+                    test: true
+                }
+            };
+
+            const formData = new FormData();
+            formData.append('data', JSON.stringify(requestData));
+
+            const response = await fetch('save-database.php', {
+                method: 'POST',
+                body: formData
+            });
+
+            return await response.json();
+        }
+
+        async function verificarBanco() {
+            log('🔍 Verificando dados no banco...');
+            
+            try {
+                // Verificar imagens
+                const imagesResponse = await fetch('api-admin.php?action=get_images&limit=5');
+                const imagesData = await imagesResponse.json();
+                
+                if (imagesData.success) {
+                    log(`📊 Imagens no banco: ${imagesData.data.length}`);
+                    imagesData.data.forEach((img, index) => {
+                        log(`  ${index + 1}. ID: ${img.id}, Nome: ${img.nome_original}, Tamanho: ${formatBytes(img.tamanho)}`);
+                    });
+                } else {
+                    log(`❌ Erro ao buscar imagens: ${imagesData.message}`);
+                }
+
+                // Verificar textos
+                const textsResponse = await fetch('load-database.php?page=siteContent_test.html');
+                const textsData = await textsResponse.json();
+                
+                if (textsData.success) {
+                    const textCount = Object.keys(textsData.data || {}).length;
+                    log(`📊 Textos/Backgrounds no banco: ${textCount}`);
+                    Object.keys(textsData.data || {}).forEach((key, index) => {
+                        log(`  ${index + 1}. Key: ${key}`);
+                    });
+                } else {
+                    log(`❌ Erro ao buscar textos: ${textsData.message}`);
+                }
+
+            } catch (error) {
+                log(`❌ Erro ao verificar banco: ${error.message}`);
+            }
+        }
+
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        function limparResultados() {
+            logOutput = '';
+            document.getElementById('resultado').style.display = 'none';
+            document.getElementById('resultado').textContent = '';
+        }
+    </script>
+</body>
+</html> 

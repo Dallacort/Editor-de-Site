@@ -1,7 +1,0 @@
-# Proteger pasta de backups
-Order deny,allow
-Deny from all
-# Permitir apenas acesso local para desenvolvimento
-Allow from 127.0.0.1
-Allow from ::1
-Allow from localhost

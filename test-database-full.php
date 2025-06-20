@@ -56,7 +56,7 @@ echo "</div>";
 echo "<div class='section'>";
 echo "<h2>2. 📋 Verificação da Estrutura das Tabelas</h2>";
 
-$tabelas = ['imagens', 'textos', 'pagina_imagens', 'backups', 'system_logs'];
+$tabelas = ['imagens', 'textos', 'pagina_imagens', 'system_logs'];
 
 foreach ($tabelas as $tabela) {
     try {

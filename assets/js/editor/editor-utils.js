@@ -338,12 +338,18 @@ class HardemEditorUtils {
             }
         }
 
+        // Informações específicas para mapeamento entre páginas
+        const headerInfo = this.getHeaderMappingInfo(element);
+
         return {
             tagName: element.tagName.toLowerCase(),
+            className: element.className,
+            id: element.id,
             textContent: this.getDirectTextContent(element),
             attributes: allAttributes, // Todos os atributos, não apenas data-*
             cssSelector: this.generateCSSSelector(element),
             xpath: this.generateXPath(element), // Usar a nova função generateXPath
+            pathFromBody: this.getElementPath(element),
             position: {
                 x: element.getBoundingClientRect().left,
                 y: element.getBoundingClientRect().top
@@ -354,12 +360,106 @@ class HardemEditorUtils {
                 className: element.parentElement?.className,
                 id: element.parentElement?.id
             },
+            // Informações específicas para header
+            headerMappingInfo: headerInfo,
+            isInHeader: element.closest('header') !== null,
+            childIndex: Array.from(element.parentElement?.children || []).indexOf(element),
+            siblingCount: element.parentElement?.children.length || 0,
             hasBackground: this.hasBackgroundImage(element),
             computedStyles: {
                 display: getComputedStyle(element).display,
-                position: getComputedStyle(element).position
+                position: getComputedStyle(element).position,
+                fontSize: getComputedStyle(element).fontSize,
+                fontWeight: getComputedStyle(element).fontWeight,
+                color: getComputedStyle(element).color
             }
         };
+    }
+
+    /**
+     * Obter informações específicas para mapeamento de header
+     */
+    getHeaderMappingInfo(element) {
+        if (!element.closest('header')) {
+            return null;
+        }
+
+        const headerContainer = element.closest('header');
+        const headerClasses = headerContainer.className.split(/\s+/).filter(c => c);
+        
+        // Identificar tipo de header
+        let headerType = 'unknown';
+        if (headerClasses.includes('header-four')) {
+            headerType = 'header-four'; // Home
+        } else if (headerClasses.includes('heder-one')) {
+            headerType = 'heder-one'; // Outras páginas
+        }
+
+        // Identificar seção dentro do header
+        let headerSection = 'main';
+        if (element.closest('.header-top')) {
+            headerSection = 'top';
+        } else if (element.closest('.header-bottom')) {
+            headerSection = 'bottom';
+        } else if (element.closest('.nav-area')) {
+            headerSection = 'navigation';
+        } else if (element.closest('.logo-area')) {
+            headerSection = 'logo';
+        }
+
+        // Identificar tipo de conteúdo
+        let contentType = 'text';
+        if (element.tagName.toLowerCase() === 'img') {
+            contentType = 'image';
+        } else if (element.tagName.toLowerCase() === 'a') {
+            contentType = 'link';
+        } else if (element.closest('.logo')) {
+            contentType = 'logo';
+        } else if (element.closest('.nav, .menu')) {
+            contentType = 'navigation';
+        }
+
+        return {
+            headerType,
+            headerSection,
+            contentType,
+            headerClasses,
+            nearbyText: this.getNearbyText(element),
+            hierarchyLevel: this.getHeaderHierarchyLevel(element)
+        };
+    }
+
+    /**
+     * Obter texto próximo ao elemento (para contexto)
+     */
+    getNearbyText(element) {
+        const parent = element.parentElement;
+        if (!parent) return '';
+
+        // Coletar texto de elementos irmãos
+        const siblings = Array.from(parent.children);
+        const texts = siblings
+            .map(sibling => sibling.textContent ? sibling.textContent.trim() : '')
+            .filter(text => text.length > 0 && text.length < 50) // Textos curtos relevantes
+            .slice(0, 3); // Máximo 3 textos
+
+        return texts.join(' | ');
+    }
+
+    /**
+     * Obter nível hierárquico no header
+     */
+    getHeaderHierarchyLevel(element) {
+        let level = 0;
+        let current = element;
+        const header = element.closest('header');
+
+        while (current && current !== header) {
+            level++;
+            current = current.parentElement;
+        }
+
+        return level;
     }
 
     /**

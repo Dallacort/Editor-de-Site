@@ -20,12 +20,7 @@ try {
         echo "ID: {$i['id']}, Nome: {$i['nome_arquivo']}, Hash: {$i['hash_md5']}\n";
     }
     
-    // Verificar backups
-    echo "\n--- BACKUPS ---\n";
-    $backups = $db->query('SELECT * FROM backups ORDER BY id DESC LIMIT 3');
-    foreach($backups as $b) {
-        echo "ID: {$b['id']}, Arquivo: {$b['nome_arquivo']}, Tamanho: {$b['tamanho']} bytes\n";
-    }
+
     
 } catch (Exception $e) {
     echo "Erro: " . $e->getMessage() . "\n";

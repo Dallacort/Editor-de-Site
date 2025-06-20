@@ -139,6 +139,44 @@ class HardemEditorStorage {
             // Mostrar progresso de validação
             this.core.ui.showSaveProgressAlert('validating', `${Object.keys(filteredContent).length} elementos`);
             
+            // **SISTEMA HÍBRIDO: Sempre usar salvamento por partes para separar imagens normais**
+            console.log('🔄 Usando sistema híbrido (backgrounds em textos, imagens normais em tabela imagens)...');
+            this.core.ui.showSaveProgressAlert('hybrid-save', 'Sistema híbrido...');
+            
+            try {
+                // SEMPRE usar salvamento híbrido por partes
+                const partResult = await this.saveContentInParts(exportData);
+                if (partResult) {
+                    console.log('✅ Sistema híbrido bem-sucedido! Não salvando no localStorage.');
+                    this.core.ui.showSaveProgressAlert('complete', `${Object.keys(filteredContent).length} elementos salvos (sistema híbrido)`);
+                    
+                    // Recarregar conteúdo após salvamento para garantir que está aplicado
+                    this.reloadAfterSave();
+                    return exportData;
+                }
+            } catch (hybridError) {
+                console.warn('❌ Erro no sistema híbrido, tentando salvamento tradicional como fallback:', hybridError);
+                
+                // Fallback: tentar salvamento tradicional
+                try {
+                    const serverSuccess = await this.exportToServerAsync(exportData);
+                    
+                    if (serverSuccess) {
+                        console.log('✅ Salvamento tradicional bem-sucedido como fallback!');
+                        this.core.ui.showSaveProgressAlert('complete', `${Object.keys(filteredContent).length} elementos salvos (fallback tradicional)`);
+                        
+                        // Recarregar conteúdo após salvamento para garantir que está aplicado
+                        this.reloadAfterSave();
+                        return exportData;
+                    }
+                } catch (serverError) {
+                    console.warn('❌ Erro no salvamento tradicional também, tentando localStorage como último recurso:', serverError);
+                }
+            }
+            
+            // **FALLBACK: Se servidor falhar, salvar no localStorage**
+            console.log('🔄 Servidor falhou, usando localStorage como fallback...');
+            
             // Verificar tamanho total dos dados
             const dataSize = JSON.stringify(filteredContent).length;
             const maxLocalStorageSize = 5 * 1024 * 1024; // 5MB para localStorage
@@ -157,28 +195,26 @@ class HardemEditorStorage {
                     localStorage.setItem(pageKey, JSON.stringify(essentialData));
                     console.log(`💾 Dados essenciais salvos localmente: ${pageKey}`);
                 } catch (localError) {
-                    console.warn('Impossível salvar localmente, apenas no servidor');
+                    console.warn('Impossível salvar localmente, dados perdidos');
                     this.core.ui.showDetailedErrorAlert(
-                        'Storage Local Cheio',
-                        `Não foi possível salvar localmente. Tamanho dos dados: ${this.formatBytes(dataSize)}`,
+                        'Storage Cheio - Dados Muito Grandes',
+                        `Não foi possível salvar nem no servidor nem localmente. Tamanho dos dados: ${this.formatBytes(dataSize)}`,
                         [
-                            'Os dados serão salvos apenas no servidor',
-                            'Considere usar imagens menores',
-                            'Limpe dados antigos se necessário'
+                            'Reduza o tamanho das imagens',
+                            'Configure o servidor PHP adequadamente',
+                            'Use imagens menores (JPEG com qualidade 70-80%)',
+                            'Salve em partes menores'
                         ]
                     );
+                    throw localError;
                 }
             } else {
-            // Salvar no localStorage com chave específica da página
+                // Salvar no localStorage com chave específica da página
                 this.core.ui.showSaveProgressAlert('local-save', this.formatBytes(dataSize));
-            const pageKey = this.getPageKey();
-            localStorage.setItem(pageKey, JSON.stringify(filteredContent));
-                console.log(`💾 Conteúdo salvo para página: ${pageKey} (${this.formatBytes(dataSize)})`);
+                const pageKey = this.getPageKey();
+                localStorage.setItem(pageKey, JSON.stringify(filteredContent));
+                console.log(`💾 Conteúdo salvo localmente como fallback: ${pageKey} (${this.formatBytes(dataSize)})`);
             }
-            
-            // Tentar enviar para servidor
-            this.core.ui.showSaveProgressAlert('server-save');
-            this.exportToServer(exportData);
             
             this.core.ui.showSaveProgressAlert('complete', `${Object.keys(filteredContent).length} elementos`);
             
@@ -350,6 +386,547 @@ class HardemEditorStorage {
     }
 
     /**
+     * Carregar conteúdo de header compartilhado da página home
+     */
+    async loadSharedHeaderContent() {
+        const currentPageKey = this.getPageKey();
+        const homePageKey = 'siteContent_index.html';
+        
+        // Se já estou na página home, não preciso carregar nada extra
+        if (currentPageKey === homePageKey) {
+            return;
+        }
+        
+        console.log(`🏠 Carregando conteúdo de header compartilhado da home...`);
+        
+        try {
+            // Tentar carregar do banco de dados primeiro
+            try {
+                const response = await fetch(`load-database.php?page=${encodeURIComponent(homePageKey)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    
+                    if (result.success && result.data) {
+                        this.mergeSharedHeaderContent(result.data);
+                        console.log(`🏠 Header compartilhado carregado do banco`);
+                        return;
+                    }
+                }
+            } catch (dbError) {
+                console.warn('❌ Erro ao carregar header do banco, tentando localStorage:', dbError);
+            }
+            
+            // Fallback para localStorage se banco falhar
+            const homeContentSaved = localStorage.getItem(homePageKey);
+            
+            if (homeContentSaved) {
+                const homeContent = JSON.parse(homeContentSaved);
+                this.mergeSharedHeaderContent(homeContent);
+                console.log(`🏠 Header compartilhado carregado do localStorage`);
+            } else {
+                console.log(`🏠 Nenhum conteúdo de header encontrado na home para compartilhar`);
+            }
+            
+        } catch (error) {
+            console.error('❌ Erro ao carregar header compartilhado:', error);
+        }
+    }
+
+    /**
+     * Mesclar conteúdo de header da home com o conteúdo atual
+     */
+    mergeSharedHeaderContent(homeContent) {
+        if (!homeContent || typeof homeContent !== 'object') {
+            return;
+        }
+        
+        let mergedCount = 0;
+        
+        // FASE 1: Mapear conteúdo de header baseado na estrutura
+        Object.entries(homeContent).forEach(([dataKey, content]) => {
+            // Verificar se é conteúdo de header
+            const isHeaderContent = this.isHeaderContent(dataKey, content);
+            
+            if (isHeaderContent) {
+                // Mapear para elemento similar na página atual
+                const mappedContent = this.mapHeaderContentToCurrentPage(dataKey, content);
+                
+                if (mappedContent) {
+                    // Adicionar ao contentMap atual se não existir ou se for mais recente
+                    if (!this.core.contentMap[mappedContent.newDataKey] || 
+                        this.isContentNewer(content, this.core.contentMap[mappedContent.newDataKey])) {
+                        
+                        this.core.contentMap[mappedContent.newDataKey] = {
+                            ...content,
+                            originalKey: dataKey,
+                            sharedFromHome: true
+                        };
+                        
+                        mergedCount++;
+                        console.log(`🔗 Header compartilhado: ${dataKey} → ${mappedContent.newDataKey}`);
+                    }
+                }
+            }
+        });
+        
+        // FASE 2: Sincronização forçada por similaridade (para casos onde mapeamento direto falha)
+        if (mergedCount === 0) {
+            console.log(`🔍 Nenhum mapeamento direto encontrado. Tentando sincronização forçada...`);
+            mergedCount += this.forceSyncSimilarHeaders(homeContent);
+        }
+        
+        if (mergedCount > 0) {
+            console.log(`✅ ${mergedCount} elementos de header compartilhados da home`);
+        } else {
+            console.log(`⚠️ Nenhum elemento de header compatível encontrado para sincronização`);
+        }
+    }
+
+    /**
+     * Verificar se um item é conteúdo de header
+     */
+    isHeaderContent(dataKey, content) {
+        // Verificar se contém 'header' no dataKey
+        if (dataKey.toLowerCase().includes('header')) {
+            return true;
+        }
+        
+        // Verificar se tem flag isHeaderContent
+        if (content.isHeaderContent === true) {
+            return true;
+        }
+        
+        // Verificar se é conteúdo de navegação comum (links de menu)
+        if (dataKey.match(/^(text_|link_)[1-9]$/) && content.text) {
+            const text = content.text.toLowerCase();
+            // Palavras comuns em menus de navegação
+            const navWords = ['home', 'about', 'services', 'contact', 'portfolio', 'blog', 'serviços', 'sobre', 'contato', 'portfólio', 'início', 'nossos serviços', 'nossos', 'nossa empresa', 'empresa'];
+            return navWords.some(word => text.includes(word));
+        }
+        
+        // Verificar se tem elementInfo indicando que está no header
+        if (content.elementInfo && content.elementInfo.pathFromBody) {
+            return content.elementInfo.pathFromBody.toLowerCase().includes('header');
+        }
+        
+        // Verificar textos típicos de header (logo, título principal, etc.)
+        if (content.text) {
+            const text = content.text.toLowerCase().trim();
+            
+            // Textos comuns em headers
+            const headerTexts = [
+                'hardem', 'logo', 'brand', 'marca', 'empresa',
+                'menu', 'navigation', 'nav', 'navegação',
+                'call', 'phone', 'email', 'contact', 'contato',
+                'get quote', 'orçamento', 'cotação'
+            ];
+            
+            if (headerTexts.some(word => text.includes(word))) {
+                return true;
+            }
+        }
+        
+        // Verificar se é imagem típica de header (logo, etc.)
+        if (content.src || content.backgroundImage) {
+            const imageUrl = (content.src || content.backgroundImage).toLowerCase();
+            
+            const headerImageWords = ['logo', 'brand', 'header', 'nav', 'menu'];
+            if (headerImageWords.some(word => imageUrl.includes(word))) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    /**
+     * Mapear conteúdo de header da home para elemento similar na página atual
+     */
+    mapHeaderContentToCurrentPage(homeDataKey, content) {
+        // Se a página atual tem um elemento com o mesmo data-key, usar esse
+        if (document.querySelector(`[data-key="${homeDataKey}"]`)) {
+            return { newDataKey: homeDataKey };
+        }
+        
+        // Tentar encontrar elemento similar no header da página atual
+        const headers = document.querySelectorAll('header');
+        
+        for (let header of headers) {
+            // Procurar por texto similar
+            if (content.text) {
+                const elementsWithSimilarText = header.querySelectorAll('*');
+                for (let element of elementsWithSimilarText) {
+                    if (element.textContent && element.textContent.trim() === content.text.trim()) {
+                        let dataKey = element.getAttribute('data-key');
+                        if (!dataKey) {
+                            // Gerar data-key se não existir
+                            dataKey = this.core.utils.generateDataKey(element);
+                            element.setAttribute('data-key', dataKey);
+                        }
+                        return { newDataKey: dataKey };
+                    }
+                }
+            }
+            
+            // Procurar por elementos similares estruturalmente
+            if (content.elementInfo) {
+                const similarElements = header.querySelectorAll(content.elementInfo.tagName || '*');
+                for (let element of similarElements) {
+                    if (this.isElementStructurallySimilar(element, content.elementInfo)) {
+                        let dataKey = element.getAttribute('data-key');
+                        if (!dataKey) {
+                            dataKey = this.core.utils.generateDataKey(element);
+                            element.setAttribute('data-key', dataKey);
+                        }
+                        return { newDataKey: dataKey };
+                    }
+                }
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * Verificar se um elemento é estruturalmente similar às informações de outro elemento
+     */
+    isElementStructurallySimilar(element, elementInfo) {
+        // Verificar tag
+        if (element.tagName.toLowerCase() !== elementInfo.tagName) {
+            return false;
+        }
+        
+        // Verificar classes em comum
+        if (elementInfo.className) {
+            const infoClasses = elementInfo.className.split(/\s+/).filter(c => c);
+            const elClasses = element.className.split(/\s+/).filter(c => c);
+            
+            const commonClasses = infoClasses.filter(cls => elClasses.includes(cls));
+            if (commonClasses.length === 0 && infoClasses.length > 0) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    /**
+     * Verificar se um conteúdo é mais recente que outro
+     */
+    isContentNewer(content1, content2) {
+        if (!content1.timestamp || !content2.timestamp) {
+            return true; // Se não tem timestamp, considerar como mais recente
+        }
+        
+        return new Date(content1.timestamp) > new Date(content2.timestamp);
+    }
+
+    /**
+     * Sincronização forçada de headers similares
+     * Para casos onde cada página tem header diferente mas com conteúdo similar
+     */
+    forceSyncSimilarHeaders(homeContent) {
+        console.log(`🚀 Iniciando sincronização forçada de headers similares...`);
+        
+        let syncedCount = 0;
+        const currentPageHeaders = document.querySelectorAll('header');
+        
+        if (currentPageHeaders.length === 0) {
+            console.log(`❌ Nenhum header encontrado na página atual`);
+            return 0;
+        }
+        
+        // Extrair conteúdo de header da home
+        const homeHeaderContent = this.extractHeaderContentFromHome(homeContent);
+        
+        if (homeHeaderContent.length === 0) {
+            console.log(`❌ Nenhum conteúdo de header identificado na home`);
+            return 0;
+        }
+        
+        console.log(`📋 Encontrados ${homeHeaderContent.length} itens de header da home para sincronizar`);
+        
+        // Para cada header da página atual
+        currentPageHeaders.forEach((header, headerIndex) => {
+            console.log(`🔍 Analisando header ${headerIndex + 1}...`);
+            
+            // Sincronizar cada item de conteúdo da home
+            homeHeaderContent.forEach(homeItem => {
+                const syncResult = this.syncHeaderItem(header, homeItem);
+                if (syncResult) {
+                    syncedCount++;
+                    console.log(`✅ Sincronizado: "${homeItem.text || homeItem.src || 'conteúdo'}" → ${syncResult.targetKey}`);
+                }
+            });
+        });
+        
+        return syncedCount;
+    }
+
+    /**
+     * Extrair conteúdo de header da home
+     */
+    extractHeaderContentFromHome(homeContent) {
+        const headerItems = [];
+        
+        Object.entries(homeContent).forEach(([dataKey, content]) => {
+            if (this.isHeaderContent(dataKey, content)) {
+                headerItems.push({
+                    originalKey: dataKey,
+                    content: content,
+                    text: content.text,
+                    src: content.src,
+                    backgroundImage: content.backgroundImage,
+                    type: content.type,
+                    elementInfo: content.elementInfo
+                });
+            }
+        });
+        
+        return headerItems;
+    }
+
+    /**
+     * Sincronizar um item específico de header
+     */
+    syncHeaderItem(targetHeader, homeItem) {
+        // Estratégia 1: Procurar por texto idêntico
+        if (homeItem.text) {
+            const textMatch = this.findElementByText(targetHeader, homeItem.text);
+            if (textMatch) {
+                return this.applySyncToElement(textMatch, homeItem, 'text-match');
+            }
+        }
+        
+        // Estratégia 2: Procurar por imagem similar (src)
+        if (homeItem.src) {
+            const imageMatch = this.findElementByImageSrc(targetHeader, homeItem.src);
+            if (imageMatch) {
+                return this.applySyncToElement(imageMatch, homeItem, 'image-match');
+            }
+        }
+        
+        // Estratégia 3: Procurar por background similar
+        if (homeItem.backgroundImage) {
+            const bgMatch = this.findElementByBackground(targetHeader, homeItem.backgroundImage);
+            if (bgMatch) {
+                return this.applySyncToElement(bgMatch, homeItem, 'background-match');
+            }
+        }
+        
+        // Estratégia 4: Procurar por posição e estrutura similar
+        if (homeItem.elementInfo) {
+            const structuralMatch = this.findElementByStructure(targetHeader, homeItem.elementInfo);
+            if (structuralMatch) {
+                return this.applySyncToElement(structuralMatch, homeItem, 'structural-match');
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * Encontrar elemento por texto
+     */
+    findElementByText(container, searchText) {
+        const elements = container.querySelectorAll('*');
+        
+        for (let element of elements) {
+            const elementText = element.textContent ? element.textContent.trim() : '';
+            if (elementText === searchText.trim() && elementText.length > 0) {
+                // Evitar elementos que são apenas containers
+                if (element.children.length === 0 || 
+                    (element.children.length === 1 && element.children[0].tagName === 'BR')) {
+                    return element;
+                }
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * Encontrar elemento por src de imagem
+     */
+    findElementByImageSrc(container, searchSrc) {
+        const images = container.querySelectorAll('img');
+        
+        for (let img of images) {
+            // Comparar apenas o nome do arquivo para ser mais flexível
+            const currentSrcName = this.extractFileName(img.src);
+            const searchSrcName = this.extractFileName(searchSrc);
+            
+            if (currentSrcName === searchSrcName) {
+                return img;
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * Encontrar elemento por background
+     */
+    findElementByBackground(container, searchBackground) {
+        const elements = container.querySelectorAll('*');
+        
+        for (let element of elements) {
+            const bgImage = getComputedStyle(element).backgroundImage;
+            if (bgImage && bgImage !== 'none') {
+                const currentBgName = this.extractFileName(bgImage);
+                const searchBgName = this.extractFileName(searchBackground);
+                
+                if (currentBgName === searchBgName) {
+                    return element;
+                }
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * Encontrar elemento por estrutura similar
+     */
+    findElementByStructure(container, elementInfo) {
+        if (!elementInfo.tagName) return null;
+        
+        const candidates = container.querySelectorAll(elementInfo.tagName);
+        
+        for (let candidate of candidates) {
+            // Verificar classes em comum
+            if (elementInfo.className) {
+                const infoClasses = elementInfo.className.split(/\s+/).filter(c => c);
+                const candidateClasses = candidate.className.split(/\s+/).filter(c => c);
+                
+                const commonClasses = infoClasses.filter(cls => candidateClasses.includes(cls));
+                
+                // Se tem pelo menos uma classe em comum, é um bom candidato
+                if (commonClasses.length > 0) {
+                    return candidate;
+                }
+            }
+            
+            // Se não tem classes, verificar por posição relativa
+            if (!elementInfo.className || elementInfo.className.trim() === '') {
+                const candidateIndex = Array.from(candidate.parentElement.children).indexOf(candidate);
+                const originalIndex = elementInfo.childIndex || 0;
+                
+                // Se está na posição similar, considerar
+                if (Math.abs(candidateIndex - originalIndex) <= 1) {
+                    return candidate;
+                }
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * Aplicar sincronização a um elemento específico
+     */
+    applySyncToElement(element, homeItem, matchType) {
+        // Garantir que o elemento tenha data-key
+        let dataKey = element.getAttribute('data-key');
+        if (!dataKey) {
+            dataKey = this.core.utils.generateDataKey(element);
+            element.setAttribute('data-key', dataKey);
+        }
+        
+        // Aplicar o conteúdo
+        const syncedContent = {
+            ...homeItem.content,
+            originalKey: homeItem.originalKey,
+            sharedFromHome: true,
+            syncMethod: matchType,
+            syncedAt: new Date().toISOString()
+        };
+        
+        this.core.contentMap[dataKey] = syncedContent;
+        
+        return {
+            targetKey: dataKey,
+            matchType: matchType,
+            element: element
+        };
+    }
+
+    /**
+     * Extrair nome do arquivo de uma URL
+     */
+    extractFileName(url) {
+        if (!url) return '';
+        
+        // Remover data: URLs e pegar apenas o nome
+        if (url.startsWith('data:')) {
+            return url.substring(0, 50); // Usar primeiros caracteres como identificação
+        }
+        
+        // Extrair nome do arquivo de URL normal
+        const urlObj = new URL(url, window.location.origin);
+        const pathname = urlObj.pathname;
+        const fileName = pathname.split('/').pop();
+        
+        return fileName || '';
+    }
+
+    /**
+     * Filtrar elementos órfãos que são de header
+     */
+    filterHeaderOrphans(orphanedKeys) {
+        return orphanedKeys.filter(key => {
+            const content = this.core.contentMap[key];
+            return content && this.isHeaderContent(key, content);
+        });
+    }
+
+    /**
+     * Aplicar conteúdo órfão de header usando sincronização inteligente
+     */
+    applyOrphanedHeaderContent(headerOrphanKeys) {
+        let appliedCount = 0;
+        const headers = document.querySelectorAll('header');
+        
+        if (headers.length === 0) {
+            return 0;
+        }
+        
+        headerOrphanKeys.forEach(orphanKey => {
+            const orphanContent = this.core.contentMap[orphanKey];
+            if (!orphanContent) return;
+            
+            const homeItem = {
+                originalKey: orphanKey,
+                content: orphanContent,
+                text: orphanContent.text,
+                src: orphanContent.src,
+                backgroundImage: orphanContent.backgroundImage,
+                type: orphanContent.type,
+                elementInfo: orphanContent.elementInfo
+            };
+            
+            // Tentar aplicar em cada header da página
+            for (let header of headers) {
+                const syncResult = this.syncHeaderItem(header, homeItem);
+                if (syncResult) {
+                    appliedCount++;
+                    console.log(`🔗 Órfão aplicado: ${orphanKey} → ${syncResult.targetKey} (${syncResult.matchType})`);
+                    break; // Aplicou com sucesso, não precisar tentar outros headers
+                }
+            }
+        });
+        
+        return appliedCount;
+    }
+
+    /**
      * Carregar conteúdo
      */
     async loadContent(forceReload = false) {
@@ -380,6 +957,9 @@ class HardemEditorStorage {
                             console.warn('⚠️ Dados carregados do JSON (banco indisponível)');
                         }
                         
+                        // Carregar conteúdo de header compartilhado se não for página home
+                        await this.loadSharedHeaderContent();
+                        
                         if (forceReload) {
                             console.log('🔄 Carregamento forçado - aplicando imediatamente');
                             this.applyLoadedContent();
@@ -398,11 +978,16 @@ class HardemEditorStorage {
             
             if (!saved) {
                 console.log(`📄 Nenhum conteúdo encontrado para: ${pageKey} (banco e localStorage vazios)`);
+                // Ainda assim, tentar carregar header compartilhado
+                await this.loadSharedHeaderContent();
                 return;
             }
 
             this.core.contentMap = JSON.parse(saved);
             console.log(`📥 Conteúdo carregado do localStorage para ${pageKey}:`, this.core.contentMap);
+            
+            // Carregar conteúdo de header compartilhado se não for página home
+            await this.loadSharedHeaderContent();
             
             if (forceReload) {
                 console.log('🔄 Carregamento forçado - aplicando imediatamente');
@@ -514,9 +1099,30 @@ class HardemEditorStorage {
             }, 500);
         }
 
-        // Limpar conteúdo órfão
+        // Tentar aplicar conteúdo órfão de header usando sincronização forçada
         if (orphanedKeys.length > 0) {
-            this.cleanOrphanedContent(orphanedKeys);
+            const headerOrphans = this.filterHeaderOrphans(orphanedKeys);
+            
+            if (headerOrphans.length > 0) {
+                console.log(`🔍 Tentando aplicar ${headerOrphans.length} elementos órfãos de header...`);
+                const appliedOrphans = this.applyOrphanedHeaderContent(headerOrphans);
+                
+                if (appliedOrphans > 0) {
+                    console.log(`✅ ${appliedOrphans} elementos órfãos de header aplicados com sucesso!`);
+                    appliedCount += appliedOrphans;
+                    
+                    // Remover órfãos que foram aplicados com sucesso
+                    const remainingOrphans = orphanedKeys.filter(key => 
+                        !headerOrphans.includes(key) || !document.querySelector(`[data-key="${key}"]`)
+                    );
+                    
+                    this.cleanOrphanedContent(remainingOrphans);
+                } else {
+                    this.cleanOrphanedContent(orphanedKeys);
+                }
+            } else {
+                this.cleanOrphanedContent(orphanedKeys);
+            }
         }
 
         console.log(`✅ ${appliedCount} elementos aplicados, ${orphanedKeys.length} órfãos removidos`);
@@ -1029,6 +1635,75 @@ class HardemEditorStorage {
     /**
      * Exportar para servidor
      */
+    async exportToServerAsync(exportData) {
+        return new Promise((resolve, reject) => {
+            try {
+                // Verificar se estamos em ambiente local (file://) - apenas file:// força download
+                const isLocalFile = window.location.protocol === 'file:';
+                
+                if (isLocalFile) {
+                    console.log('🏠 Ambiente local detectado (file://). Gerando download...');
+                    this.core.ui.showAlert('Ambiente local detectado. Gerando arquivo para download...', 'info');
+                    this.generateJSONDownload(exportData);
+                    resolve(true);
+                    return;
+                }
+
+                // Preparar dados para envio
+                const requestData = {
+                    contentMap: exportData.contentMap,
+                    url: exportData.url,
+                    timestamp: exportData.timestamp,
+                    metadata: exportData.metadata
+                };
+
+                // Enviar para save-database.php
+                const formData = new FormData();
+                formData.append('data', JSON.stringify(requestData));
+                
+                fetch('save-database.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    console.log('📡 Resposta do servidor:', response.status, response.statusText);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    // Verificar se o content-type é JSON
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        console.warn('⚠️ Servidor não retornou JSON. Content-Type:', contentType);
+                        throw new Error('Servidor retornou resposta não-JSON');
+                    }
+                    
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('📥 Resposta processada:', data);
+                    
+                    if (data.success) {
+                        console.log('📁 Arquivo salvo em:', data.file_path || data.filename || 'servidor');
+                        resolve(true);
+                    } else {
+                        console.error('❌ Erro do servidor:', data.message);
+                        reject(new Error(data.message || 'Erro desconhecido do servidor'));
+                    }
+                })
+                .catch(error => {
+                    console.warn('❌ Erro na comunicação com save-database.php:', error);
+                    reject(error);
+                });
+                
+            } catch (error) {
+                console.error('❌ Erro crítico no exportToServerAsync:', error);
+                reject(error);
+            }
+        });
+    }
+
     exportToServer(exportData) {
         try {
             // Verificar se estamos em ambiente local (file://) - apenas file:// força download
@@ -1310,74 +1985,7 @@ class HardemEditorStorage {
         });
     }
 
-    /**
-     * Backup do conteúdo
-     */
-    createBackup() {
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const backupData = {
-            timestamp,
-            url: window.location.href,
-            content: this.core.contentMap
-        };
-        
-        const backupKey = `siteContent-backup-${timestamp}`;
-        localStorage.setItem(backupKey, JSON.stringify(backupData));
-        
-        console.log('Backup criado:', backupKey);
-        return backupKey;
-    }
 
-    /**
-     * Restaurar backup
-     */
-    restoreBackup(backupKey) {
-        try {
-            const backupData = localStorage.getItem(backupKey);
-            if (!backupData) {
-                throw new Error('Backup não encontrado');
-            }
-            
-            const parsed = JSON.parse(backupData);
-            this.core.contentMap = parsed.content;
-            
-            localStorage.setItem('siteContent', JSON.stringify(this.core.contentMap));
-            
-            this.applyLoadedContent();
-            this.core.ui.showAlert('Backup restaurado com sucesso!', 'success');
-            
-            console.log('Backup restaurado:', backupKey);
-        } catch (error) {
-            console.error('Erro ao restaurar backup:', error);
-            this.core.ui.showAlert('Erro ao restaurar backup!', 'error');
-        }
-    }
-
-    /**
-     * Listar backups disponíveis
-     */
-    listBackups() {
-        const backups = [];
-        
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key.startsWith('siteContent-backup-')) {
-                try {
-                    const data = JSON.parse(localStorage.getItem(key));
-                    backups.push({
-                        key,
-                        timestamp: data.timestamp,
-                        url: data.url,
-                        elementCount: Object.keys(data.content).length
-                    });
-                } catch (e) {
-                    console.warn('Backup corrompido:', key);
-                }
-            }
-        }
-        
-        return backups.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-    }
 
     /**
      * Otimização agressiva para reduzir tamanho dos dados
@@ -1560,6 +2168,36 @@ class HardemEditorStorage {
         
         console.log(`📊 Dividindo salvamento: ${images.length} imagens, ${backgrounds.length} backgrounds, ${texts.length} textos, ${others.length} outros`);
         
+        // Debug detalhado das imagens
+        if (images.length > 0) {
+            console.log('🖼️ Imagens detectadas:', images.map(([key, value]) => ({
+                key,
+                type: value.type,
+                hasData: !!value.src,
+                dataSize: value.src ? Math.round(value.src.length / 1024) + 'KB' : '0KB'
+            })));
+        }
+        
+        // Debug detalhado dos backgrounds
+        if (backgrounds.length > 0) {
+            console.log('🎨 Backgrounds detectados:', backgrounds.map(([key, value]) => ({
+                key,
+                type: value.type,
+                hasData: !!value.backgroundImage,
+                dataSize: value.backgroundImage ? Math.round(value.backgroundImage.length / 1024) + 'KB' : '0KB'
+            })));
+        }
+        
+        // Debug de outros elementos que podem ser imagens
+        console.log('🔍 Todos os elementos no contentMap:', entries.map(([key, value]) => ({
+            key,
+            type: value.type,
+            properties: Object.keys(value),
+            hasSrc: !!value.src,
+            hasBackgroundImage: !!value.backgroundImage,
+            hasText: !!(value.text || value.title || value.description)
+        })));
+        
         const results = [];
         let partNumber = 1;
         
@@ -1571,21 +2209,20 @@ class HardemEditorStorage {
                 if (textResult) results.push(textResult);
             }
             
-            // 2. Salvar imagens individualmente
+            // 2. Salvar imagens normais na tabela 'imagens' (database-only)
             for (let i = 0; i < images.length; i++) {
                 const [key, value] = images[i];
-                const imageData = { [key]: value };
                 
                 this.core.ui.showSaveProgressAlert('processing', `Salvando imagem ${i + 1}/${images.length}`);
                 
-                const imageResult = await this.saveDataPart(imageData, partNumber++, `imagem-${i + 1}`);
+                const imageResult = await this.saveImageToDatabase(key, value, i + 1);
                 if (imageResult) results.push(imageResult);
                 
                 // Pequena pausa para não sobrecarregar o servidor
                 await new Promise(resolve => setTimeout(resolve, 100));
             }
             
-            // 3. Salvar backgrounds individualmente
+            // 3. Salvar backgrounds na tabela 'textos' (como antes)
             for (let i = 0; i < backgrounds.length; i++) {
                 const [key, value] = backgrounds[i];
                 const bgData = { [key]: value };
@@ -1650,6 +2287,110 @@ class HardemEditorStorage {
         return null;
     }
     
+    /**
+     * Salvar imagem na tabela 'imagens' (database-only)
+     */
+    async saveImageToDatabase(dataKey, imageData, imageNumber) {
+        console.log(`🖼️ Salvando imagem ${imageNumber} na tabela 'imagens': ${dataKey}`, imageData);
+        
+        try {
+            // Verificar se temos dados de imagem válidos
+            if (!imageData.src || !imageData.src.startsWith('data:')) {
+                throw new Error(`Dados de imagem inválidos para ${dataKey}`);
+            }
+            
+            // Extrair informações da imagem
+            const base64Data = imageData.src;
+            const mimeMatch = base64Data.match(/data:([^;]+);base64,/);
+            const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+            const base64Content = base64Data.replace(/^data:[^;]+;base64,/, '');
+            
+            // Validar base64
+            if (!base64Content || base64Content.length < 100) {
+                throw new Error(`Base64 inválido ou muito pequeno para ${dataKey}`);
+            }
+            
+            // Estimar tamanho (base64 é ~33% maior que binário)
+            const estimatedSize = Math.round((base64Content.length * 3) / 4);
+            
+            // Gerar nome único
+            const timestamp = Date.now();
+            const extension = mimeType.split('/')[1] || 'jpg';
+            const fileName = `img_${timestamp}_${imageNumber}.${extension}`;
+            
+            console.log(`📊 Preparando upload: ${fileName}, ${this.formatBytes(estimatedSize)}, tipo: ${mimeType}`);
+            
+            // Preparar dados para API
+            const imagePayload = {
+                action: 'upload_image_database_only',
+                nome_original: fileName,
+                tipo_mime: mimeType,
+                tamanho: estimatedSize,
+                dados_base64: base64Content,
+                alt_text: imageData.alt || '',
+                descricao: `Imagem ${imageNumber} - ${dataKey} - ${imageData.type || 'unknown'}`,
+                data_key: dataKey,
+                pagina: this.getPageKey(),
+                element_info: JSON.stringify(imageData.elementInfo || {}),
+                is_header_content: imageData.isHeaderContent || false,
+                timestamp: new Date().toISOString()
+            };
+            
+            console.log(`📡 Enviando para API: ${Object.keys(imagePayload).join(', ')}`);
+            
+            // Enviar para API
+            const apiUrl = 'api-admin.php';
+            console.log(`📡 URL da API: ${apiUrl}`);
+            
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams(imagePayload).toString()
+            });
+            
+            console.log(`📡 Resposta da API: ${response.status} ${response.statusText}`);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error(`❌ Erro HTTP ${response.status}:`, errorText);
+                console.error(`📋 Detalhes completos do erro:`, {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: Object.fromEntries(response.headers.entries()),
+                    body: errorText
+                });
+                throw new Error(`HTTP ${response.status}: ${response.statusText}\n\nDetalhes: ${errorText}`);
+            }
+            
+            const result = await response.json();
+            console.log(`📥 Resultado da API:`, result);
+            
+            if (result.success) {
+                console.log(`✅ Imagem ${imageNumber} salva na tabela 'imagens': ID ${result.image_id}`);
+                return {
+                    partNumber: imageNumber,
+                    description: `imagem-database-${imageNumber}`,
+                    imageId: result.image_id,
+                    dataKey: dataKey,
+                    size: estimatedSize,
+                    type: 'database-image'
+                };
+            } else {
+                throw new Error(result.message || 'Erro ao salvar imagem na base de dados');
+            }
+            
+        } catch (error) {
+            console.error(`❌ Erro ao salvar imagem ${imageNumber} na base:`, error);
+            
+            // Fallback: salvar como texto (método antigo)
+            console.log(`🔄 Fallback: salvando imagem ${imageNumber} como texto...`);
+            const imageDataFallback = { [dataKey]: imageData };
+            return await this.saveDataPart(imageDataFallback, 1000 + imageNumber, `imagem-fallback-${imageNumber}`);
+        }
+    }
+
     /**
      * Salvar uma parte específica dos dados
      */

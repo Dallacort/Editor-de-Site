@@ -256,10 +256,7 @@
                 <div class="stat-number" id="total-texts">-</div>
                 <div class="stat-label">Textos</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-number" id="total-backups">-</div>
-                <div class="stat-label">Backups</div>
-            </div>
+            
             <div class="stat-card">
                 <div class="stat-number" id="total-size">-</div>
                 <div class="stat-label">Tamanho Total</div>
@@ -270,7 +267,7 @@
         <div class="tabs">
             <button class="tab active" onclick="showTab('images')">🖼️ Imagens</button>
             <button class="tab" onclick="showTab('texts')">📝 Textos</button>
-            <button class="tab" onclick="showTab('backups')">💾 Backups</button>
+
             <button class="tab" onclick="showTab('config')">⚙️ Configurações</button>
         </div>
         
@@ -338,34 +335,7 @@
             </div>
         </div>
         
-        <!-- Aba Backups -->
-        <div id="backups-tab" class="tab-content">
-            <h2>Gerenciar Backups</h2>
-            <button class="btn btn-success" onclick="createBackup()">➕ Criar Backup</button>
-            
-            <div class="table-container">
-                <table id="backups-table">
-                    <thead>
-                        <tr>
-                            <th>Nome</th>
-                            <th>Tipo</th>
-                            <th>Tamanho</th>
-                            <th>Data</th>
-                            <th>Status</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="backups-tbody">
-                        <tr>
-                            <td colspan="6" class="loading">
-                                <div class="spinner"></div>
-                                <p>Carregando backups...</p>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+
         
         <!-- Aba Configurações -->
         <div id="config-tab" class="tab-content">
@@ -386,7 +356,7 @@
             
             <div style="background: #fff3cd; padding: 20px; border-radius: 8px; border-left: 4px solid #ffc107;">
                 <h3>⚠️ Ações Perigosas</h3>
-                <button class="btn btn-danger" onclick="cleanupOldBackups()">🗑️ Limpar Backups Antigos</button>
+
                 <button class="btn btn-danger" onclick="optimizeDatabase()">🔧 Otimizar Banco</button>
             </div>
         </div>
@@ -498,9 +468,7 @@
                         case 'texts':
                             renderTexts(data.data);
                             break;
-                        case 'backups':
-                            renderBackups(data.data);
-                            break;
+
                     }
                 } else {
                     showError('Erro ao carregar dados: ' + data.message);
@@ -569,29 +537,7 @@
             `).join('');
         }
         
-        // Função para renderizar backups
-        function renderBackups(backups) {
-            const tbody = document.getElementById('backups-tbody');
-            
-            if (backups.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;">Nenhum backup encontrado</td></tr>';
-                return;
-            }
-            
-            tbody.innerHTML = backups.map(backup => `
-                <tr>
-                    <td>${backup.nome_arquivo}</td>
-                    <td>${backup.tipo}</td>
-                    <td>${formatFileSize(backup.tamanho)}</td>
-                    <td>${formatDate(backup.data_backup)}</td>
-                    <td><span class="status ${backup.status === 'ativo' ? 'active' : 'inactive'}">${backup.status}</span></td>
-                    <td>
-                        <button class="btn btn-primary" onclick="downloadBackup('${backup.nome_arquivo}')">⬇️</button>
-                        <button class="btn btn-danger" onclick="deleteBackup('${backup.nome_arquivo}')">🗑️</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
+
         
         // Funções auxiliares
         function formatFileSize(bytes) {
@@ -629,7 +575,7 @@
                 if (data.success) {
                     document.getElementById('total-images').textContent = data.data.total_images;
                     document.getElementById('total-texts').textContent = data.data.total_texts;
-                    document.getElementById('total-backups').textContent = data.data.total_backups;
+
                     document.getElementById('total-size').textContent = formatFileSize(data.data.total_size);
                 }
             } catch (error) {
@@ -789,25 +735,7 @@
             }
         }
         
-        function downloadBackup(filename) {
-            window.open('/backups/' + filename, '_blank');
-        }
-        
-        function deleteBackup(id) {
-            if (confirm('Tem certeza que deseja excluir este backup?')) {
-                console.log('Excluir backup:', id);
-            }
-        }
-        
-        function createBackup() {
-            console.log('Criar backup');
-        }
-        
-        function cleanupOldBackups() {
-            if (confirm('Esta ação irá remover backups antigos. Continuar?')) {
-                console.log('Limpar backups antigos');
-            }
-        }
+
         
         function optimizeDatabase() {
             if (confirm('Esta ação irá otimizar o banco de dados. Continuar?')) {
@@ -945,58 +873,7 @@
             }
         }
         
-        // Implementar backup funcional
-        async function createBackup() {
-            const type = prompt('Tipo de backup (full, images, texts):', 'full');
-            if (!type) return;
-            
-            try {
-                const formData = new FormData();
-                formData.append('type', type);
-                
-                const response = await fetch('api-admin.php?action=create_backup', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    showSuccess(`Backup criado: ${data.filename}`);
-                    loadTabData('backups'); // Recarregar lista
-                } else {
-                    showError(data.message);
-                }
-            } catch (error) {
-                showError('Erro ao criar backup: ' + error.message);
-            }
-        }
-        
-        // Implementar exclusão de backup
-        async function deleteBackup(filename) {
-            if (confirm('Tem certeza que deseja excluir este backup?')) {
-                try {
-                    const formData = new FormData();
-                    formData.append('filename', filename);
-                    
-                    const response = await fetch('api-admin.php?action=delete_backup', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        showSuccess(data.message);
-                        loadTabData('backups'); // Recarregar lista
-                    } else {
-                        showError(data.message);
-                    }
-                } catch (error) {
-                    showError('Erro ao excluir backup: ' + error.message);
-                }
-            }
-        }
+
     </script>
 </body>
 </html> 

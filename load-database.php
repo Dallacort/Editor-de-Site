@@ -81,13 +81,13 @@ try {
         'imagens_carregadas' => 0
     ];
     
-    // Carregar textos da página
+    // Carregar textos da página (incluindo backgrounds)
     $textos = $db->query("
         SELECT chave, conteudo, tipo
         FROM textos
         WHERE pagina = ? AND status = 'ativo'
         ORDER BY data_modificacao DESC
-    ", [$pageId]);
+    ", ["siteContent_{$pageId}.html"]);
     
     foreach ($textos as $texto) {
         $key = $texto['chave'];
@@ -105,25 +105,40 @@ try {
         $stats['textos_carregados']++;
     }
     
-    // Carregar imagens da página
+    // Carregar imagens normais da tabela 'imagens' (database-only)
     $imagens = $db->query("
-        SELECT pi.contexto as chave, i.url_arquivo as url_original, i.url_otimizada, i.alt_text, i.largura, i.altura, i.hash_md5
+        SELECT pi.contexto as chave, i.id as image_id, i.tipo_mime, i.alt_text, i.descricao, i.largura, i.altura, i.hash_md5, pi.propriedades
         FROM pagina_imagens pi
         JOIN imagens i ON pi.imagem_id = i.id
         WHERE pi.pagina_id = ? AND pi.status = 'ativo' AND i.status = 'ativo'
         ORDER BY pi.created_at DESC
-    ", [$pageId]);
+    ", ["siteContent_{$pageId}.html"]);
     
     foreach ($imagens as $imagem) {
         $key = $imagem['chave'];
         
+        // Criar URL para servir imagem do banco
+        $imageUrl = "serve-image.php?id={$imagem['image_id']}&type=original";
+        
         $imageData = [
-            'src' => $imagem['url_otimizada'] ?: $imagem['url_original'],
+            'src' => $imageUrl,
             'alt' => $imagem['alt_text'] ?: '',
+            'type' => 'image',
             'width' => $imagem['largura'],
             'height' => $imagem['altura'],
-            'hash' => $imagem['hash_md5']
+            'hash' => $imagem['hash_md5'],
+            'image_id' => $imagem['image_id'],
+            'storage_type' => 'database',
+            'isHeaderContent' => (bool)$imagem['is_header_content']
         ];
+        
+        // Adicionar informações do elemento se disponíveis
+        if (!empty($imagem['propriedades'])) {
+            $elementInfo = json_decode($imagem['propriedades'], true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $imageData['elementInfo'] = $elementInfo;
+            }
+        }
         
         $contentMap[$key] = $imageData;
         $stats['imagens_carregadas']++;

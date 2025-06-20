@@ -33,7 +33,7 @@ function findHtmlFiles(dir) {
             
             if (stat.isDirectory()) {
                 // Ignorar diretórios específicos
-                if (!['node_modules', '.git', 'backups'].includes(item)) {
+                if (!['node_modules', '.git'].includes(item)) {
                     scanDirectory(fullPath);
                 }
             } else if (stat.isFile() && item.endsWith('.html')) {

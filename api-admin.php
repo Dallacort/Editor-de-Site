@@ -36,7 +36,10 @@ function sendJsonResponse($data, $httpCode = 200) {
 
 // Verificar método de requisição
 $method = $_SERVER['REQUEST_METHOD'];
-$action = $_GET['action'] ?? '';
+$action = $_GET['action'] ?? $_POST['action'] ?? '';
+
+// Log para debug
+safeLog("Método: {$method}, Ação: {$action}");
 
 try {
     // Inicializar classes
@@ -67,6 +70,19 @@ try {
             handleReplaceImage($imageManager);
             break;
             
+        // NOVAS FUNCIONALIDADES
+        case 'put_image':
+            handlePutImage($imageManager, $db);
+            break;
+            
+        case 'delete_all_related':
+            handleDeleteAllRelated($db, $imageManager);
+            break;
+            
+        case 'upload_image_database_only':
+            handleUploadImageDatabaseOnly($imageManager, $db);
+            break;
+            
         // TEXTOS
         case 'get_texts':
             handleGetTexts($db);
@@ -78,19 +94,6 @@ try {
             
         case 'delete_text':
             handleDeleteText($db);
-            break;
-            
-        // BACKUPS
-        case 'get_backups':
-            handleGetBackups();
-            break;
-            
-        case 'delete_backup':
-            handleDeleteBackup();
-            break;
-            
-        case 'create_backup':
-            handleCreateBackup($db);
             break;
             
         default:
@@ -122,26 +125,12 @@ function handleGetStats($db) {
         $textStats = $db->query("SELECT COUNT(*) as total FROM textos WHERE status = 'ativo'");
         $totalTexts = $textStats[0]['total'] ?? 0;
         
-        // Estatísticas de backups
-        $backupsDir = __DIR__ . '/backups';
-        $backupFiles = is_dir($backupsDir) ? glob($backupsDir . '/*.json') : [];
-        $totalBackups = count($backupFiles);
-        
-        // Tamanho total dos backups
-        $totalBackupsSize = 0;
-        foreach ($backupFiles as $file) {
-            if (is_file($file)) {
-                $totalBackupsSize += filesize($file);
-            }
-        }
-        
         sendJsonResponse([
             'success' => true,
             'data' => [
                 'total_images' => $totalImages,
                 'total_texts' => $totalTexts,
-                'total_backups' => $totalBackups,
-                'total_size' => $totalImagesSize + $totalBackupsSize
+                'total_size' => $totalImagesSize
             ]
         ]);
         
@@ -157,7 +146,8 @@ function handleGetImages($db) {
         $limit = (int)($_GET['limit'] ?? 50);
         $offset = (int)($_GET['offset'] ?? 0);
         
-        $sql = "SELECT * FROM imagens WHERE status = 'ativo'";
+        // Selecionar apenas campos necessários (sem dados base64 para performance)
+        $sql = "SELECT id, nome_arquivo, nome_original, tipo_mime, tamanho, largura, altura, alt_text, descricao, hash_md5, status, created_at, updated_at FROM imagens WHERE status = 'ativo'";
         $params = [];
         
         // Se ID específico foi fornecido, buscar apenas por ele
@@ -171,16 +161,24 @@ function handleGetImages($db) {
         }
         
         if (!$id) {
-            $sql .= " ORDER BY data_upload DESC LIMIT ? OFFSET ?";
+            $sql .= " ORDER BY created_at DESC LIMIT ? OFFSET ?";
             $params[] = $limit;
             $params[] = $offset;
         }
         
         $images = $db->query($sql, $params);
         
+        // Adicionar URLs das imagens para cada resultado
+        foreach ($images as &$image) {
+            $image['url_original'] = "serve-image.php?id={$image['id']}&type=original";
+            $image['url_thumbnail'] = "serve-image.php?id={$image['id']}&type=thumbnail";
+            $image['url_download'] = "serve-image.php?id={$image['id']}&download=1";
+        }
+        
         sendJsonResponse([
             'success' => true,
-            'data' => $images
+            'data' => $images,
+            'storage_type' => 'database'
         ]);
         
     } catch (Exception $e) {
@@ -369,136 +367,283 @@ function handleDeleteText($db) {
     }
 }
 
-function handleGetBackups() {
+function handlePutImage($imageManager, $db) {
     try {
-        $backupsDir = __DIR__ . '/backups';
+        $imageId = $_POST['id'] ?? null;
         
-        if (!is_dir($backupsDir)) {
-            sendJsonResponse([
-                'success' => true,
-                'data' => []
-            ]);
-            return;
+        if (!$imageId) {
+            throw new Exception("ID da imagem é obrigatório");
         }
         
-        $files = glob($backupsDir . '/*.json');
-        $backups = [];
+        // Verificar se a imagem existe
+        $existingImage = $imageManager->getImageById($imageId);
+        if (!$existingImage) {
+            throw new Exception("Imagem não encontrada: ID {$imageId}");
+        }
         
-        foreach ($files as $file) {
-            if (is_file($file)) {
-                $filename = basename($file);
-                $backups[] = [
-                    'nome_arquivo' => $filename,
-                    'tipo' => 'JSON',
-                    'tamanho' => filesize($file),
-                    'data_backup' => date('Y-m-d H:i:s', filemtime($file)),
-                    'status' => 'ativo'
-                ];
+        // Se há nova imagem para substituir
+        if (isset($_POST['new_image_data']) && !empty($_POST['new_image_data'])) {
+            $newImageData = json_decode($_POST['new_image_data'], true);
+            if (!$newImageData || !isset($newImageData['src'])) {
+                throw new Exception("Dados da nova imagem inválidos");
+            }
+            
+            // Substituir completamente a imagem
+            $newImageId = $imageManager->replaceImage($imageId, $newImageData);
+            
+            safeLog("Imagem completamente substituída: ID {$imageId} -> {$newImageId}");
+            
+            sendJsonResponse([
+                'success' => true,
+                'message' => 'Imagem substituída com sucesso!',
+                'old_image_id' => $imageId,
+                'new_image_id' => $newImageId
+            ]);
+            
+        } else {
+            // Apenas atualizar metadados
+            $updateData = [];
+            
+            if (isset($_POST['nome_original'])) {
+                $updateData['nome_original'] = $_POST['nome_original'];
+            }
+            if (isset($_POST['alt_text'])) {
+                $updateData['alt_text'] = $_POST['alt_text'];
+            }
+            if (isset($_POST['descricao'])) {
+                $updateData['descricao'] = $_POST['descricao'];
+            }
+            
+            if (empty($updateData)) {
+                throw new Exception("Nenhum dado para atualizar fornecido");
+            }
+            
+            $imageManager->updateImage($imageId, $updateData);
+            
+            safeLog("Metadados da imagem atualizados: ID {$imageId}");
+            
+            sendJsonResponse([
+                'success' => true,
+                'message' => 'Imagem atualizada com sucesso!',
+                'image_id' => $imageId
+            ]);
+        }
+        
+    } catch (Exception $e) {
+        throw new Exception("Erro ao atualizar imagem: " . $e->getMessage());
+    }
+}
+
+function handleDeleteAllRelated($db, $imageManager) {
+    try {
+        $pageId = $_POST['page_id'] ?? null;
+        $confirmDelete = $_POST['confirm_delete'] ?? false;
+        
+        // Verificação de segurança obrigatória
+        if (!$confirmDelete || $confirmDelete !== 'DELETE_ALL_CONFIRMED') {
+            throw new Exception("Confirmação de exclusão obrigatória. Use confirm_delete='DELETE_ALL_CONFIRMED'");
+        }
+        
+        $db->beginTransaction();
+        
+        $deletedImages = 0;
+        $deletedTexts = 0;
+        $deletedRelations = 0;
+        
+        try {
+            if ($pageId) {
+                // Deletar tudo relacionado a uma página específica
+                safeLog("Iniciando exclusão completa para página: {$pageId}");
+                
+                // 1. Obter todas as imagens da página
+                $pageImages = $db->query("
+                    SELECT DISTINCT i.id 
+                    FROM imagens i 
+                    JOIN pagina_imagens pi ON i.id = pi.imagem_id 
+                    WHERE pi.pagina_id = ? AND i.status = 'ativo'
+                ", [$pageId]);
+                
+                // 2. Marcar imagens como excluídas
+                foreach ($pageImages as $img) {
+                    $imageManager->deleteImage($img['id']);
+                    $deletedImages++;
+                }
+                
+                // 3. Deletar textos da página
+                $pageTexts = $db->query("SELECT id FROM textos WHERE pagina = ? AND status = 'ativo'", [$pageId]);
+                foreach ($pageTexts as $text) {
+                    $db->update('textos', [
+                        'status' => 'excluido',
+                        'data_modificacao' => date('Y-m-d H:i:s')
+                    ], 'id = ?', [$text['id']]);
+                    $deletedTexts++;
+                }
+                
+                // 4. Deletar relacionamentos da página
+                $deletedRelations = $db->query("UPDATE pagina_imagens SET status = 'inativo' WHERE pagina_id = ?", [$pageId]);
+                
+            } else {
+                // Deletar TUDO (cuidado!)
+                safeLog("ATENÇÃO: Iniciando exclusão completa de TODOS os dados!");
+                
+                // 1. Marcar todas as imagens como excluídas
+                $allImages = $db->query("SELECT id FROM imagens WHERE status = 'ativo'");
+                foreach ($allImages as $img) {
+                    $imageManager->deleteImage($img['id']);
+                    $deletedImages++;
+                }
+                
+                // 2. Marcar todos os textos como excluídos
+                $allTexts = $db->query("SELECT id FROM textos WHERE status = 'ativo'");
+                foreach ($allTexts as $text) {
+                    $db->update('textos', [
+                        'status' => 'excluido',
+                        'data_modificacao' => date('Y-m-d H:i:s')
+                    ], 'id = ?', [$text['id']]);
+                    $deletedTexts++;
+                }
+                
+                // 3. Desativar todos os relacionamentos
+                $deletedRelations = $db->query("UPDATE pagina_imagens SET status = 'inativo' WHERE status = 'ativo'");
+            }
+            
+            $db->commit();
+            
+            $message = $pageId 
+                ? "Dados da página '{$pageId}' excluídos com sucesso!"
+                : "TODOS os dados excluídos com sucesso!";
+            
+            safeLog("Exclusão completa finalizada - Imagens: {$deletedImages}, Textos: {$deletedTexts}, Relacionamentos: {$deletedRelations}");
+            
+            sendJsonResponse([
+                'success' => true,
+                'message' => $message,
+                'deleted_images' => $deletedImages,
+                'deleted_texts' => $deletedTexts,
+                'deleted_relations' => $deletedRelations,
+                'page_id' => $pageId
+            ]);
+            
+        } catch (Exception $e) {
+            $db->rollback();
+            throw $e;
+        }
+        
+    } catch (Exception $e) {
+        throw new Exception("Erro ao excluir dados relacionados: " . $e->getMessage());
+    }
+}
+
+function handleUploadImageDatabaseOnly($imageManager, $db) {
+    try {
+        // Validar dados obrigatórios
+        $requiredFields = ['nome_original', 'tipo_mime', 'tamanho', 'dados_base64', 'data_key', 'pagina'];
+        foreach ($requiredFields as $field) {
+            if (!isset($_POST[$field]) || empty($_POST[$field])) {
+                throw new Exception("Campo obrigatório ausente: {$field}");
             }
         }
         
-        // Ordenar por data de modificação (mais recente primeiro)
-        usort($backups, function($a, $b) {
-            return strtotime($b['data_backup']) - strtotime($a['data_backup']);
-        });
+        $nomeOriginal = $_POST['nome_original'];
+        $tipoMime = $_POST['tipo_mime'];
+        $tamanho = (int)$_POST['tamanho'];
+        $dadosBase64 = $_POST['dados_base64'];
+        $dataKey = $_POST['data_key'];
+        $pagina = $_POST['pagina'];
+        $altText = $_POST['alt_text'] ?? '';
+        $descricao = $_POST['descricao'] ?? '';
+        $elementInfo = $_POST['element_info'] ?? '{}';
+        $isHeaderContent = isset($_POST['is_header_content']) ? (bool)$_POST['is_header_content'] : false;
         
-        sendJsonResponse([
-            'success' => true,
-            'data' => $backups
-        ]);
+        // Validar base64
+        if (!base64_decode($dadosBase64, true)) {
+            throw new Exception("Dados base64 inválidos");
+        }
+        
+        // Gerar thumbnail automaticamente
+        $thumbnailBase64 = $imageManager->generateThumbnailBase64($dadosBase64, $tipoMime);
+        
+        // Detectar dimensões da imagem
+        $imageInfo = $imageManager->getImageDimensionsFromBase64($dadosBase64, $tipoMime);
+        $largura = $imageInfo['width'] ?? null;
+        $altura = $imageInfo['height'] ?? null;
+        
+        // Gerar hash MD5 para verificação de integridade
+        $hashMd5 = md5($dadosBase64);
+        
+        $db->beginTransaction();
+        
+        try {
+            // Verificar se imagem já existe (mesmo hash + status ativo)
+            $existingImage = $db->query(
+                "SELECT id FROM imagens WHERE hash_md5 = ? AND status = 'ativo' LIMIT 1",
+                [$hashMd5]
+            );
+            
+            if (!empty($existingImage)) {
+                // Imagem já existe, usar a existente
+                $imageId = $existingImage[0]['id'];
+                safeLog("Imagem já existe no banco, reutilizando ID: {$imageId}");
+            } else {
+                // Imagem não existe, inserir nova
+                $imageId = $db->insert('imagens', [
+                    'nome_arquivo' => $nomeOriginal,
+                    'nome_original' => $nomeOriginal,
+                    'tipo_mime' => $tipoMime,
+                    'tamanho' => $tamanho,
+                    'largura' => $largura,
+                    'altura' => $altura,
+                    'dados_base64' => $dadosBase64,
+                    'thumbnail_base64' => $thumbnailBase64,
+                    'hash_md5' => $hashMd5,
+                    'alt_text' => $altText,
+                    'descricao' => $descricao,
+                    'status' => 'ativo',
+                    'data_upload' => date('Y-m-d H:i:s'),
+                    'created_at' => date('Y-m-d H:i:s'),
+                    'updated_at' => date('Y-m-d H:i:s')
+                ]);
+                
+                safeLog("Nova imagem inserida no banco - ID: {$imageId}");
+            }
+            
+            // 2. Criar relacionamento na tabela 'pagina_imagens'
+            $relationId = $db->insert('pagina_imagens', [
+                'pagina_id' => $pagina,
+                'imagem_id' => $imageId,
+                'contexto' => $dataKey,
+                'posicao' => 1,
+                'propriedades' => $elementInfo,
+                'status' => 'ativo',
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s')
+            ]);
+            
+            $db->commit();
+            
+            safeLog("Imagem database-only salva - ID: {$imageId}, Página: {$pagina}, DataKey: {$dataKey}");
+            
+            sendJsonResponse([
+                'success' => true,
+                'message' => 'Imagem salva com sucesso na base de dados!',
+                'image_id' => $imageId,
+                'relation_id' => $relationId,
+                'data_key' => $dataKey,
+                'pagina' => $pagina,
+                'url_original' => "serve-image.php?id={$imageId}&type=original",
+                'url_thumbnail' => "serve-image.php?id={$imageId}&type=thumbnail",
+                'storage_type' => 'database-only'
+            ]);
+            
+        } catch (Exception $e) {
+            $db->rollback();
+            throw $e;
+        }
         
     } catch (Exception $e) {
-        throw new Exception("Erro ao obter backups: " . $e->getMessage());
+        safeLog("Erro ao salvar imagem database-only: " . $e->getMessage());
+        throw new Exception("Erro ao salvar imagem na base de dados: " . $e->getMessage());
     }
 }
 
-function handleDeleteBackup() {
-    try {
-        $filename = $_POST['filename'] ?? '';
-        
-        if (!$filename) {
-            throw new Exception("Nome do arquivo é obrigatório");
-        }
-        
-        $backupsDir = __DIR__ . '/backups';
-        $filepath = $backupsDir . '/' . basename($filename);
-        
-        if (!file_exists($filepath)) {
-            throw new Exception("Arquivo não encontrado");
-        }
-        
-        if (!unlink($filepath)) {
-            throw new Exception("Erro ao excluir arquivo");
-        }
-        
-        safeLog("Backup excluído: {$filename}");
-        
-        sendJsonResponse([
-            'success' => true,
-            'message' => 'Backup excluído com sucesso!'
-        ]);
-        
-    } catch (Exception $e) {
-        throw new Exception("Erro ao excluir backup: " . $e->getMessage());
-    }
-}
-
-function handleCreateBackup($db) {
-    try {
-        $type = $_POST['type'] ?? 'full'; // full, images, texts
-        
-        $backupData = [];
-        
-        // Incluir imagens se solicitado
-        if ($type === 'full' || $type === 'images') {
-            $images = $db->query("SELECT * FROM imagens WHERE status = 'ativo'");
-            $backupData['images'] = $images;
-        }
-        
-        // Incluir textos se solicitado
-        if ($type === 'full' || $type === 'texts') {
-            $texts = $db->query("SELECT * FROM textos WHERE status = 'ativo'");
-            $backupData['texts'] = $texts;
-        }
-        
-        // Incluir relacionamentos se backup completo
-        if ($type === 'full') {
-            $relations = $db->query("SELECT * FROM pagina_imagens WHERE status = 'ativo'");
-            $backupData['page_images'] = $relations;
-        }
-        
-        // Adicionar metadados
-        $backupData['metadata'] = [
-            'type' => $type,
-            'created_at' => date('Y-m-d H:i:s'),
-            'version' => '1.0.0'
-        ];
-        
-        // Salvar backup
-        $timestamp = date('Y-m-d_H-i-s');
-        $filename = "backup-{$type}-{$timestamp}.json";
-        
-        $backupsDir = __DIR__ . '/backups';
-        if (!is_dir($backupsDir)) {
-            mkdir($backupsDir, 0755, true);
-        }
-        
-        $filepath = $backupsDir . '/' . $filename;
-        
-        if (!file_put_contents($filepath, json_encode($backupData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE))) {
-            throw new Exception("Erro ao salvar backup");
-        }
-        
-        safeLog("Backup criado: {$filename}");
-        
-        sendJsonResponse([
-            'success' => true,
-            'message' => 'Backup criado com sucesso!',
-            'filename' => $filename
-        ]);
-        
-    } catch (Exception $e) {
-        throw new Exception("Erro ao criar backup: " . $e->getMessage());
-    }
-}
 ?> 
