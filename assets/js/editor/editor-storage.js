@@ -941,6 +941,9 @@ class HardemEditorStorage {
             const pageKey = this.getPageKey();
             console.log(`📡 Carregando conteúdo do banco para: ${pageKey}`);
             
+            // NOVO: O loading instantâneo já está ativo via CSS
+            // Não precisamos criar overlay aqui, apenas garantir que está ativo
+            
             // Tentar carregar do banco de dados primeiro
             try {
                 const response = await fetch(`load-database.php?page=${encodeURIComponent(pageKey)}`, {
@@ -956,9 +959,13 @@ class HardemEditorStorage {
                     
                     if (result.success && result.data) {
                         this.core.contentMap = result.data;
+                        this.contentLoaded = true;
                         
                         console.log(`📥 Conteúdo carregado do ${result.source} para ${pageKey}:`, this.core.contentMap);
                         console.log(`📊 Stats: ${result.stats?.textos_carregados || 0} textos, ${result.stats?.imagens_carregadas || 0} imagens`);
+                        
+                        // NOVO: Aplicar cache instantâneo para visitantes normais
+                        this.applyInstantCache();
                         
                         if (result.source === 'json_fallback') {
                             console.warn('⚠️ Dados carregados do JSON (banco indisponível)');
@@ -1006,6 +1013,10 @@ class HardemEditorStorage {
         } catch (error) {
             console.error('❌ Erro crítico ao carregar conteúdo:', error);
             this.core.ui.showAlert('Erro ao carregar conteúdo salvo!', 'error');
+            
+            // NOVO: Remover loading em caso de erro
+            this.removeLoadingOverlay();
+            this.showContentAfterLoad();
         }
     }
 
@@ -1119,6 +1130,11 @@ class HardemEditorStorage {
         const event = new Event('hardem-editor-content-loaded');
         document.dispatchEvent(event);
         console.log('✅ Evento hardem-editor-content-loaded disparado.');
+
+        // NOVO: Remover loading instantâneo e mostrar conteúdo
+        setTimeout(() => {
+            this.removeInstantLoading();
+        }, 200); // Pequeno delay para garantir que tudo foi aplicado
 
         this.forceRerender();
     }
@@ -2701,6 +2717,215 @@ class HardemEditorStorage {
             this.core.ui.showAlert('❌ Erro no salvamento por partes', 'error');
             return null;
         }
+    }
+
+    /**
+     * NOVO: Criar overlay de carregamento
+     */
+    createLoadingOverlay() {
+        // Remover overlay existente se houver
+        const existing = document.getElementById('hardem-loading-overlay');
+        if (existing) existing.remove();
+        
+        const overlay = document.createElement('div');
+        overlay.id = 'hardem-loading-overlay';
+        overlay.innerHTML = `
+            <div style="
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: white;
+                z-index: 99999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-direction: column;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            ">
+                <div style="
+                    width: 60px;
+                    height: 60px;
+                    border: 4px solid #f3f3f3;
+                    border-top: 4px solid #007bff;
+                    border-radius: 50%;
+                    animation: hardem-spin 1s linear infinite;
+                    margin-bottom: 20px;
+                "></div>
+                <div style="
+                    font-size: 18px;
+                    font-weight: 600;
+                    color: #333;
+                    margin-bottom: 10px;
+                ">Carregando conteúdo...</div>
+                <div style="
+                    font-size: 14px;
+                    color: #666;
+                ">Aguarde enquanto restauramos suas edições</div>
+            </div>
+            <style>
+                @keyframes hardem-spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            </style>
+        `;
+        
+        document.body.appendChild(overlay);
+        console.log('🔄 Overlay de carregamento criado');
+    }
+
+    /**
+     * NOVO: Remover overlay de carregamento
+     */
+    removeLoadingOverlay() {
+        const overlay = document.getElementById('hardem-loading-overlay');
+        if (overlay) {
+            // Fade out suave
+            overlay.style.transition = 'opacity 0.3s ease-out';
+            overlay.style.opacity = '0';
+            
+            setTimeout(() => {
+                overlay.remove();
+                console.log('✅ Overlay de carregamento removido');
+            }, 300);
+        }
+    }
+
+    /**
+     * NOVO: Esconder conteúdo durante carregamento
+     */
+    hideContentDuringLoad() {
+        // Esconder apenas elementos que podem ter conteúdo editado
+        const elementsToHide = document.querySelectorAll('img, [style*="background-image"], .hardem-editable-element');
+        
+        elementsToHide.forEach(element => {
+            element.style.transition = 'opacity 0.1s';
+            element.style.opacity = '0.1';
+            element.setAttribute('data-hardem-hidden', 'true');
+        });
+        
+        console.log(`🫥 ${elementsToHide.length} elementos escondidos durante carregamento`);
+    }
+
+    /**
+     * NOVO: Mostrar conteúdo após carregamento
+     */
+    showContentAfterLoad() {
+        const hiddenElements = document.querySelectorAll('[data-hardem-hidden="true"]');
+        
+        hiddenElements.forEach(element => {
+            element.style.transition = 'opacity 0.3s ease-in';
+            element.style.opacity = '1';
+            element.removeAttribute('data-hardem-hidden');
+        });
+        
+        console.log(`👁️ ${hiddenElements.length} elementos mostrados após carregamento`);
+    }
+
+    /**
+     * NOVO: Criar cache CSS para aplicação instantânea
+     */
+    createInstantStyleCache() {
+        if (!this.core.contentMap) return;
+        
+        let cssRules = [];
+        let appliedCount = 0;
+        
+        Object.keys(this.core.contentMap).forEach(key => {
+            const content = this.core.contentMap[key];
+            
+            // Aplicar estilos de normalização instantaneamente
+            if (content && content.normalization && content.normalization.normalized) {
+                const selector = `[data-key="${key}"]`;
+                const width = content.normalization.target_width;
+                const height = content.normalization.target_height;
+                
+                cssRules.push(`
+                    ${selector} {
+                        width: ${width}px !important;
+                        height: ${height}px !important;
+                        object-fit: cover !important;
+                        object-position: center !important;
+                        background-size: cover !important;
+                        background-position: center !important;
+                        background-repeat: no-repeat !important;
+                    }
+                `);
+                appliedCount++;
+            }
+            
+            // Aplicar backgrounds instantaneamente
+            if (content && content.backgroundImage) {
+                const selector = `[data-key="${key}"]`;
+                cssRules.push(`
+                    ${selector} {
+                        background-image: url("${content.backgroundImage}") !important;
+                        background-size: cover !important;
+                        background-position: center !important;
+                        background-repeat: no-repeat !important;
+                    }
+                `);
+                appliedCount++;
+            }
+            
+            // Aplicar imagens instantaneamente
+            if (content && content.src && content.type === 'image') {
+                const selector = `[data-key="${key}"]`;
+                cssRules.push(`
+                    ${selector} {
+                        content: url("${content.src}") !important;
+                    }
+                `);
+                appliedCount++;
+            }
+        });
+        
+        if (cssRules.length > 0) {
+            // Remover cache anterior se existir
+            const existingCache = document.getElementById('hardem-instant-cache');
+            if (existingCache) existingCache.remove();
+            
+            // Criar novo cache CSS
+            const styleElement = document.createElement('style');
+            styleElement.id = 'hardem-instant-cache';
+            styleElement.textContent = cssRules.join('\n');
+            document.head.appendChild(styleElement);
+            
+            console.log(`⚡ Cache CSS criado: ${appliedCount} estilos aplicados instantaneamente`);
+        }
+    }
+
+    /**
+     * NOVO: Aplicar cache CSS instantâneo no carregamento da página
+     */
+    applyInstantCache() {
+        // Aplicar apenas se não estivermos em modo de edição
+        const isEditMode = window.location.search.includes('edit=true');
+        if (isEditMode) return;
+        
+        console.log('⚡ Aplicando cache instantâneo...');
+        this.createInstantStyleCache();
+    }
+
+    /**
+     * NOVO: Remover loading instantâneo e mostrar conteúdo
+     */
+    removeInstantLoading() {
+        // Adicionar classe para mostrar conteúdo
+        document.body.classList.add('hardem-content-loaded');
+        document.body.classList.remove('hardem-loading-active');
+        
+        // Remover loading após transição
+        setTimeout(() => {
+            const loadingElement = document.getElementById('hardem-instant-loading');
+            if (loadingElement) {
+                loadingElement.classList.add('hardem-loading-hidden');
+            }
+        }, 300);
+        
+        console.log('✅ Loading instantâneo removido - conteúdo visível');
     }
 }
 

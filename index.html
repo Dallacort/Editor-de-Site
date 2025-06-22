@@ -16,9 +16,21 @@
     <link rel="stylesheet" preload="" href="assets/css/vendor/bootstrap.min.css">
     <!-- custom css here -->
     <link rel="stylesheet" preload="" href="assets/css/style.css">
+    <!-- NOVO: Loading instantâneo -->
+    <link rel="stylesheet" href="assets/css/instant-loading.css">
 </head>
 
-<body class="bg-home-4">
+<body class="bg-home-4 hardem-loading-active">
+
+    <!-- NOVO: Loading screen instantâneo -->
+    <div id="hardem-instant-loading">
+        <div class="hardem-loading-spinner"></div>
+        <div class="hardem-loading-text">Carregando conteúdo...</div>
+        <div class="hardem-loading-subtitle">Aguarde enquanto restauramos suas edições</div>
+    </div>
+
+    <!-- Wrapper para todo o conteúdo -->
+    <div class="hardem-content">
 
     <header class="header-four header--sticky">
         <div class="header-top">
@@ -1446,6 +1458,9 @@
         </div>
     </div>
     <!-- footer area four end -->
+
+    </div>
+    <!-- Fim do wrapper hardem-content -->
 
     
     <!-- progress area start -->

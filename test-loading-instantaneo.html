@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Loading Instantâneo - HARDEM</title>
+    <link href="assets/css/vendor/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/css/style.css" rel="stylesheet">
+    <!-- Loading instantâneo -->
+    <link rel="stylesheet" href="assets/css/instant-loading.css">
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .test-container { max-width: 1200px; margin: 0 auto; padding: 30px; }
+        .demo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 20px 0; }
+        .demo-item { border: 2px solid #ddd; border-radius: 8px; padding: 15px; background: #f8f9fa; }
+        .demo-image { width: 100%; height: 200px; border-radius: 4px; margin-bottom: 10px; object-fit: cover; }
+        .demo-background { width: 100%; height: 200px; border-radius: 4px; background-size: cover; background-position: center; margin-bottom: 10px; }
+        .controls { position: fixed; top: 20px; right: 20px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 9999; }
+        .btn { display: block; width: 100%; margin: 5px 0; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; text-align: center; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+        .highlight { background: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107; margin: 15px 0; }
+        .performance-log { background: #2c3e50; color: white; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 11px; max-height: 300px; overflow-y: auto; margin-top: 20px; }
+    </style>
+</head>
+
+<body class="hardem-loading-active">
+    <!-- Loading screen instantâneo -->
+    <div id="hardem-instant-loading">
+        <div class="hardem-loading-spinner"></div>
+        <div class="hardem-loading-text">Carregando conteúdo...</div>
+        <div class="hardem-loading-subtitle">Testando loading instantâneo</div>
+    </div>
+
+    <!-- Wrapper para todo o conteúdo -->
+    <div class="hardem-content">
+        <!-- Controles -->
+        <div class="controls">
+            <h4>⚡ Teste Loading Instantâneo</h4>
+            <a href="test-loading-instantaneo.html" class="btn btn-primary">🔄 Recarregar</a>
+            <a href="test-loading-instantaneo.html?edit=true" class="btn btn-warning">✏️ Modo Edição</a>
+            <button class="btn btn-success" onclick="simulateSlowLoad()">🐌 Simular Carregamento Lento</button>
+            <button class="btn btn-primary" onclick="removeLoadingNow()">✅ Remover Loading</button>
+            <hr>
+            <div id="status">
+                <div><strong>Status:</strong></div>
+                <div id="loading-status">🔄 Loading ativo</div>
+                <div id="content-status">👁️ Conteúdo escondido</div>
+            </div>
+        </div>
+
+        <div class="test-container">
+            <h1>⚡ Teste de Loading Instantâneo</h1>
+            
+            <div class="highlight">
+                <strong>🎯 Objetivo:</strong> O loading deve aparecer <strong>imediatamente</strong> ao clicar em recarregar, antes mesmo do JavaScript executar.
+            </div>
+            
+            <h2>📋 Como Funciona</h2>
+            <ol>
+                <li><strong>CSS Instantâneo:</strong> Loading definido via CSS puro no HTML</li>
+                <li><strong>Classe no Body:</strong> <code>hardem-loading-active</code> ativa o loading</li>
+                <li><strong>Conteúdo Escondido:</strong> <code>.hardem-content</code> com opacity baixa</li>
+                <li><strong>JavaScript Remove:</strong> Após carregar, JS remove as classes</li>
+                <li><strong>Transição Suave:</strong> CSS transitions para efeito profissional</li>
+            </ol>
+            
+            <h2>🧪 Teste Manual</h2>
+            <p><strong>Clique em "🔄 Recarregar" e observe:</strong></p>
+            <ul>
+                <li>✅ Loading deve aparecer <strong>instantaneamente</strong></li>
+                <li>✅ Não deve haver "flash" do conteúdo original</li>
+                <li>✅ Transição deve ser suave ao remover loading</li>
+                <li>✅ Conteúdo deve aparecer gradualmente</li>
+            </ul>
+            
+            <h2>🖼️ Conteúdo de Teste</h2>
+            <div class="demo-grid">
+                <div class="demo-item">
+                    <img src="assets/images/about/01.webp" data-key="test_loading_img_1" alt="Imagem Teste 1" class="demo-image">
+                    <div><strong>Imagem 1</strong><br><span data-key="test_loading_text_1">Texto editável 1</span></div>
+                </div>
+                
+                <div class="demo-item">
+                    <img src="assets/images/about/02.webp" data-key="test_loading_img_2" alt="Imagem Teste 2" class="demo-image">
+                    <div><strong>Imagem 2</strong><br><span data-key="test_loading_text_2">Texto editável 2</span></div>
+                </div>
+                
+                <div class="demo-item">
+                    <div data-key="test_loading_bg_1" class="demo-background" style="background-image: url('assets/images/about/03.webp');"></div>
+                    <div><strong>Background 1</strong><br><span data-key="test_loading_text_3">Texto editável 3</span></div>
+                </div>
+                
+                <div class="demo-item">
+                    <div data-key="test_loading_bg_2" class="demo-background" style="background-image: url('assets/images/about/04.webp');"></div>
+                    <div><strong>Background 2</strong><br><span data-key="test_loading_text_4">Texto editável 4</span></div>
+                </div>
+            </div>
+            
+            <h2>🔧 Implementação Técnica</h2>
+            <div class="demo-grid">
+                <div class="demo-item">
+                    <h4>📄 HTML</h4>
+                    <p>Loading screen no HTML, antes do conteúdo</p>
+                    <code>&lt;div id="hardem-instant-loading"&gt;</code>
+                </div>
+                
+                <div class="demo-item">
+                    <h4>🎨 CSS</h4>
+                    <p>Estilos instantâneos via arquivo CSS separado</p>
+                    <code>assets/css/instant-loading.css</code>
+                </div>
+                
+                <div class="demo-item">
+                    <h4>⚡ JavaScript</h4>
+                    <p>Remove loading após carregar conteúdo</p>
+                    <code>removeInstantLoading()</code>
+                </div>
+                
+                <div class="demo-item">
+                    <h4>🔄 Classes CSS</h4>
+                    <p>Controle via classes do body</p>
+                    <code>.hardem-loading-active</code><br>
+                    <code>.hardem-content-loaded</code>
+                </div>
+            </div>
+            
+            <div class="performance-log" id="performanceLog">
+                <div><strong>📊 Log de Performance:</strong></div>
+                <div id="logContent">Aguardando eventos...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/vendor/jquery.min.js"></script>
+    <script src="assets/js/editor-manager.js"></script>
+    
+    <script>
+        let startTime = performance.now();
+        
+        function log(message) {
+            const logContent = document.getElementById('logContent');
+            const timestamp = new Date().toLocaleTimeString();
+            logContent.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            logContent.scrollTop = logContent.scrollHeight;
+            console.log(message);
+        }
+        
+        function updateStatus() {
+            const loadingElement = document.getElementById('hardem-instant-loading');
+            const isLoadingActive = document.body.classList.contains('hardem-loading-active');
+            const isContentLoaded = document.body.classList.contains('hardem-content-loaded');
+            
+            document.getElementById('loading-status').textContent = 
+                isLoadingActive ? '🔄 Loading ativo' : '✅ Loading removido';
+            
+            document.getElementById('content-status').textContent = 
+                isContentLoaded ? '👁️ Conteúdo visível' : '🫥 Conteúdo escondido';
+        }
+        
+        function simulateSlowLoad() {
+            log('🐌 Simulando carregamento lento...');
+            
+            // Reativar loading
+            document.body.classList.add('hardem-loading-active');
+            document.body.classList.remove('hardem-content-loaded');
+            
+            const loadingElement = document.getElementById('hardem-instant-loading');
+            if (loadingElement) {
+                loadingElement.classList.remove('hardem-loading-hidden');
+                loadingElement.style.opacity = '1';
+            }
+            
+            updateStatus();
+            
+            // Simular delay de 3 segundos
+            setTimeout(() => {
+                removeLoadingNow();
+                log('✅ Carregamento lento concluído');
+            }, 3000);
+        }
+        
+        function removeLoadingNow() {
+            log('🚀 Removendo loading instantâneo...');
+            
+            // Usar a função do editor-manager se disponível
+            if (window.editorManager && window.editorManager.removeInstantLoading) {
+                window.editorManager.removeInstantLoading();
+            } else {
+                // Fallback manual
+                document.body.classList.add('hardem-content-loaded');
+                document.body.classList.remove('hardem-loading-active');
+                
+                setTimeout(() => {
+                    const loadingElement = document.getElementById('hardem-instant-loading');
+                    if (loadingElement) {
+                        loadingElement.classList.add('hardem-loading-hidden');
+                    }
+                }, 300);
+            }
+            
+            updateStatus();
+            log('✅ Loading removido - conteúdo visível');
+        }
+        
+        // Detectar mudanças nas classes do body
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    updateStatus();
+                    
+                    if (document.body.classList.contains('hardem-content-loaded')) {
+                        const loadTime = (performance.now() - startTime).toFixed(2);
+                        log(`⚡ Conteúdo carregado em ${loadTime}ms`);
+                    }
+                }
+            });
+        });
+        
+        observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+        
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            log('🧪 Página de teste carregada');
+            log(`🔗 Modo: ${window.location.search.includes('edit=true') ? 'Edição' : 'Visitante'}`);
+            updateStatus();
+            
+            // Atualizar status a cada segundo
+            setInterval(updateStatus, 1000);
+            
+            // Remover loading automaticamente após 2 segundos (simulação)
+            setTimeout(() => {
+                if (document.body.classList.contains('hardem-loading-active')) {
+                    log('⏰ Removendo loading automaticamente após 2s');
+                    removeLoadingNow();
+                }
+            }, 2000);
+        });
+        
+        // Log inicial
+        log('🚀 Sistema de loading instantâneo inicializado');
+        log('⚡ Loading deve estar visível AGORA');
+    </script>
+</body>
+</html> 

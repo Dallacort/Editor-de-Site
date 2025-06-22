@@ -1,0 +1,127 @@
+/**
+ * HARDEM Instant Loading Screen
+ * Aparece imediatamente ao carregar a página, antes do JavaScript
+ */
+
+/* Loading overlay que aparece instantaneamente */
+#hardem-instant-loading {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #ffffff;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    opacity: 1;
+    transition: opacity 0.3s ease-out;
+}
+
+/* Spinner animado */
+.hardem-loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #007bff;
+    border-radius: 50%;
+    animation: hardem-spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+/* Texto do loading */
+.hardem-loading-text {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.hardem-loading-subtitle {
+    font-size: 14px;
+    color: #666;
+}
+
+/* Animação do spinner */
+@keyframes hardem-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Esconder conteúdo durante carregamento */
+.hardem-loading-active {
+    overflow: hidden;
+}
+
+.hardem-loading-active .hardem-content {
+    opacity: 0.1;
+    transition: opacity 0.1s;
+}
+
+/* Classe para mostrar conteúdo após carregamento */
+.hardem-content-loaded .hardem-content {
+    opacity: 1;
+    transition: opacity 0.3s ease-in;
+}
+
+/* Esconder loading após carregamento */
+.hardem-content-loaded #hardem-instant-loading {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Remover loading completamente após transição */
+.hardem-loading-hidden {
+    display: none !important;
+}
+
+/* Animação de pulse para indicar atividade */
+.hardem-loading-pulse {
+    animation: hardem-pulse 2s ease-in-out infinite;
+}
+
+@keyframes hardem-pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+/* Responsivo para mobile */
+@media (max-width: 768px) {
+    .hardem-loading-spinner {
+        width: 50px;
+        height: 50px;
+        border-width: 3px;
+    }
+    
+    .hardem-loading-text {
+        font-size: 16px;
+    }
+    
+    .hardem-loading-subtitle {
+        font-size: 12px;
+    }
+}
+
+/* Tema escuro (opcional) */
+@media (prefers-color-scheme: dark) {
+    #hardem-instant-loading {
+        background: #1a1a1a;
+    }
+    
+    .hardem-loading-text {
+        color: #ffffff;
+    }
+    
+    .hardem-loading-subtitle {
+        color: #cccccc;
+    }
+    
+    .hardem-loading-spinner {
+        border-color: #333333;
+        border-top-color: #007bff;
+    }
+} 
