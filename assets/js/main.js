@@ -316,7 +316,7 @@
       };
     },
     odoMeter: function () {
-      $(document).ready(function () {
+      function initOdometer() {
         function isInViewport(element) {
           const rect = element.getBoundingClientRect();
           return (
@@ -328,7 +328,53 @@
         function triggerOdometer(element) {
           const $element = $(element);
           if (!$element.hasClass('odometer-triggered')) {
-            const countNumber = $element.attr('data-count');
+            let countNumber;
+            const currentText = $element.text().trim();
+            const dataKey = $element.attr('data-key');
+
+            console.log(`🔍 Processando contador: ${dataKey}, texto atual: "${currentText}"`);
+
+            // Primeiro, tentar obter valor do contentMap (dados salvos)
+            if (window.hardemEditor && window.hardemEditor.contentMap && dataKey && 
+                window.hardemEditor.contentMap[dataKey] && 
+                window.hardemEditor.contentMap[dataKey].isCounter && 
+                window.hardemEditor.contentMap[dataKey].counterValue !== undefined) {
+              
+              countNumber = window.hardemEditor.contentMap[dataKey].counterValue;
+              console.log(`🔢 Usando valor salvo do contentMap para ${dataKey}: ${countNumber}`);
+              
+            } else if (window.hardemEditor && window.hardemEditor.contentMap && dataKey && 
+                       window.hardemEditor.contentMap[dataKey] && 
+                       window.hardemEditor.contentMap[dataKey].text) {
+              
+              // Se não é contador mas tem texto salvo
+              countNumber = window.hardemEditor.contentMap[dataKey].text;
+              console.log(`📝 Usando texto salvo do contentMap para ${dataKey}: ${countNumber}`);
+              
+            } else if (currentText && currentText !== '00' && currentText !== '0') {
+              // Se não há dados salvos, mas o texto foi alterado, usar o texto atual
+              countNumber = currentText;
+              console.log(`📝 Usando texto atual para ${dataKey}: ${countNumber}`);
+              
+            } else {
+              // Fallback para data-count
+              countNumber = $element.attr('data-count');
+              console.log(`📊 Usando data-count para ${dataKey}: ${countNumber}`);
+            }
+
+            // Odometer.js needs a dot as a decimal separator.
+            if (typeof countNumber === 'string') {
+              countNumber = countNumber.replace(',', '.');
+            }
+
+            // Garantir que é um número válido
+            const numericValue = parseFloat(countNumber);
+            if (!isNaN(numericValue)) {
+              countNumber = numericValue.toString();
+            }
+
+            console.log(`🎯 Valor final para animação ${dataKey}: "${countNumber}"`);
+            
             $element.html(countNumber);
             $element.addClass('odometer-triggered'); // Add a class to prevent re-triggering
           }
@@ -349,9 +395,21 @@
         $(window).on('scroll', function () {
           handleOdometer();
         });
+      }
+
+      // Wait for the editor to finish loading its content
+      document.addEventListener('hardem-editor-content-loaded', function() {
+        console.log('Odometer received content loaded event. Initializing.');
+        initOdometer();
       });
 
-
+      // Fallback in case the editor is not active or the event fails
+      // This will run on standard pages without the editor.
+      if (typeof HardemEditorCore === 'undefined') {
+        $(document).ready(function() {
+            initOdometer();
+        });
+      }
     },
 
     // search popup

@@ -15,6 +15,11 @@ class HardemTextEditor {
     setupEditableElements(container = document) {
         if (!this.core.editMode) return;
         
+        console.log('🔧 Configurando elementos editáveis...');
+        
+        // Detectar automaticamente contadores existentes
+        this.detectAndSetupCounters(container);
+        
         // Marcar container como processado para evitar reprocessamento
         if (container !== document && !container.hasAttribute('data-hardem-processed')) {
             container.setAttribute('data-hardem-processed', 'true');
@@ -44,8 +49,60 @@ class HardemTextEditor {
             
             this.makeTextElementEditable(element);
         });
+    }
+
+    /**
+     * NOVO: Detectar e configurar contadores automaticamente
+     */
+    detectAndSetupCounters(container = document) {
+        console.log('🔍 Detectando contadores automaticamente...');
         
-        // console.log('Elementos de texto configurados para edição');
+        // Encontrar todos os elementos span.odometer com data-key
+        const odometerElements = container.querySelectorAll('span.odometer[data-key]');
+        
+        odometerElements.forEach(odometerSpan => {
+            const dataKey = odometerSpan.getAttribute('data-key');
+            const dataCount = odometerSpan.getAttribute('data-count');
+            const currentText = odometerSpan.textContent.trim();
+            const parentElement = odometerSpan.closest('[data-key]');
+            
+            console.log(`🔢 Contador detectado: ${dataKey} (data-count: ${dataCount}, texto: "${currentText}")`);
+            
+            // Verificar se já existe no contentMap
+            if (!this.core.contentMap[dataKey]) {
+                this.core.contentMap[dataKey] = {};
+            }
+            
+            // Se não tem dados de contador salvos, usar o data-count como valor inicial
+            if (!this.core.contentMap[dataKey].isCounter && !this.core.contentMap[dataKey].text) {
+                const suffix = this.getCounterSuffix(parentElement || odometerSpan.parentElement);
+                const initialValue = parseFloat(dataCount) || 0;
+                
+                this.core.contentMap[dataKey].isCounter = true;
+                this.core.contentMap[dataKey].counterValue = initialValue;
+                this.core.contentMap[dataKey].counterSuffix = suffix;
+                this.core.contentMap[dataKey].elementInfo = this.core.utils.collectElementInfo ? 
+                    this.core.utils.collectElementInfo(parentElement || odometerSpan) : null;
+                this.core.contentMap[dataKey].timestamp = new Date().toISOString();
+                
+                console.log(`📝 Contador inicializado: ${dataKey} = ${initialValue}${suffix}`);
+            } else if (this.core.contentMap[dataKey].text && !this.core.contentMap[dataKey].isCounter) {
+                // Se já tem texto salvo, converter para contador
+                const numericValue = parseFloat(this.core.contentMap[dataKey].text) || 0;
+                const suffix = this.getCounterSuffix(parentElement || odometerSpan.parentElement);
+                
+                this.core.contentMap[dataKey].isCounter = true;
+                this.core.contentMap[dataKey].counterValue = numericValue;
+                this.core.contentMap[dataKey].counterSuffix = suffix;
+                
+                console.log(`🔄 Texto convertido para contador: ${dataKey} = ${numericValue}${suffix}`);
+            }
+            
+            // Configurar o elemento pai para edição (se existir)
+            if (parentElement) {
+                this.makeCounterEditable(parentElement);
+            }
+        });
     }
 
     /**

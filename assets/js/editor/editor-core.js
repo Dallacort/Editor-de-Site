@@ -14,6 +14,7 @@ class HardemEditorCore {
         this.currentElement = null;
         this.mutationObserver = null;
         this.isProcessingElements = false;
+        this.contentHasLoaded = false; // Flag para prevenir cargas duplas
         
         this.debouncedSetupEditableElements = this.debounce(() => {
             if (this.editMode && !this.isProcessingElements) {
@@ -119,30 +120,37 @@ class HardemEditorCore {
      * Aguardar DOM estar pronto e carregar conteúdo
      */
     waitForDOMAndLoadContent() {
-        // Se o DOM já estiver carregado
-        if (document.readyState === 'complete') {
-            setTimeout(() => {
-                this.storage.loadContent();
-            }, 300);
-            return;
-        }
-        
-        // Aguardar evento de carregamento completo
-        const loadHandler = () => {
+        const loadContent = () => {
+            if (this.contentHasLoaded) return; // Prevenir cargas duplas
+            
             console.log('📄 DOM completamente carregado, iniciando carregamento de conteúdo...');
-            setTimeout(() => {
-                this.storage.loadContent();
-            }, 300);
-            window.removeEventListener('load', loadHandler);
+            this.storage.loadContent().then(() => {
+                this.contentHasLoaded = true; // Marcar como carregado
+                
+                // NOVO: Detectar contadores automaticamente após carregar conteúdo
+                if (this.textEditor && this.textEditor.detectAndSetupCounters) {
+                    console.log('🔢 Detectando contadores após carregamento...');
+                    this.textEditor.detectAndSetupCounters();
+                }
+                
+                console.log('✅ Conteúdo carregado e contadores configurados');
+            }).catch(error => {
+                console.error('❌ Erro ao carregar conteúdo:', error);
+            });
         };
-        
-        window.addEventListener('load', loadHandler);
-        
-        // Fallback caso o evento load não dispare
+
+        // Aguardar DOM estar pronto
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadContent);
+        } else {
+            loadContent();
+        }
+
+        // Fallback com timeout
         setTimeout(() => {
-            if (document.readyState === 'complete') {
-                console.log('📄 Fallback: Carregando conteúdo após timeout...');
-                this.storage.loadContent();
+            if (!this.contentHasLoaded) {
+                console.log('⏰ Timeout: Forçando carregamento de conteúdo...');
+                loadContent();
             }
         }, 2000);
     }

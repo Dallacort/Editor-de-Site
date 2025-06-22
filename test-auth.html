@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste - Sistema de Autenticação HARDEM</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        .test-section h3 {
+            color: #34495e;
+            margin-top: 0;
+        }
+        .editable-content {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-weight: 500;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .counter-demo {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .counter-item {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #3498db;
+        }
+        .counter-number {
+            font-size: 48px;
+            font-weight: bold;
+            color: #3498db;
+        }
+        .counter-label {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Teste do Sistema de Autenticação HARDEM</h1>
+        
+        <div id="auth-status" class="status info">
+            ⏳ Verificando autenticação...
+        </div>
+        
+        <div class="test-section">
+            <h3>📝 Teste de Edição de Texto</h3>
+            <p>Instruções: Após fazer login, você deve poder editar os textos abaixo clicando duas vezes neles.</p>
+            
+            <div class="editable-content">
+                <h2 data-key="test_title">Título Editável</h2>
+                <p data-key="test_paragraph">Este é um parágrafo que pode ser editado após autenticação. Clique duas vezes para editar.</p>
+                <span data-key="test_span">Texto em span editável</span>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🔢 Teste de Contadores</h3>
+            <p>Os contadores abaixo devem funcionar normalmente e serem editáveis após login:</p>
+            
+            <div class="counter-demo">
+                <div class="counter-item">
+                    <div class="counter-number">
+                        <span class="odometer" data-count="25" data-key="test_counter_1">00</span>+
+                    </div>
+                    <div class="counter-label">Projetos</div>
+                </div>
+                
+                <div class="counter-item">
+                    <div class="counter-number">
+                        <span class="odometer" data-count="150" data-key="test_counter_2">00</span>
+                    </div>
+                    <div class="counter-label">Clientes</div>
+                </div>
+                
+                <div class="counter-item">
+                    <div class="counter-number">
+                        <span class="odometer" data-count="8.5" data-key="test_counter_3">00</span>k
+                    </div>
+                    <div class="counter-label">Horas</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🖼️ Teste de Imagens</h3>
+            <p>As imagens abaixo devem ser editáveis após login:</p>
+            
+            <div style="text-align: center;">
+                <img src="assets/images/logo/01.png" alt="Logo HARDEM" 
+                     data-key="test_image" style="max-width: 200px; height: auto;">
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>📊 Status do Sistema</h3>
+            <div id="system-status">
+                <div id="editor-status" class="status info">📝 Editor: Aguardando autenticação...</div>
+                <div id="storage-status" class="status info">💾 Storage: Aguardando autenticação...</div>
+                <div id="ui-status" class="status info">🎨 Interface: Aguardando autenticação...</div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🔧 Informações de Debug</h3>
+            <div id="debug-info">
+                <pre id="debug-content" style="background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 6px; font-size: 12px; overflow-x: auto;">
+Aguardando informações de debug...
+                </pre>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>📋 Credenciais de Teste</h3>
+            <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 6px;">
+                <strong>Usuário:</strong> Hardem<br>
+                <strong>Senha:</strong> Hardem@321
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts necessários -->
+    <script src="assets/js/plugins/jquery.js"></script>
+    <script src="assets/js/plugins/odometer.js"></script>
+    <script src="assets/js/main.js"></script>
+    
+    <!-- Sistema de Autenticação -->
+    <script src="assets/js/auth.js"></script>
+    
+    <!-- Editor Scripts -->
+    <script src="assets/js/editor/editor-core.js"></script>
+    <script src="assets/js/editor/editor-ui.js"></script>
+    <script src="assets/js/editor/editor-text.js"></script>
+    <script src="assets/js/editor/editor-image.js"></script>
+    <script src="assets/js/editor/editor-carousel.js"></script>
+    <script src="assets/js/editor/editor-storage.js"></script>
+    <script src="assets/js/editor/editor-utils.js"></script>
+    <script src="assets/js/editor-refatorado.js"></script>
+    
+    <script>
+        // Monitorar status do sistema
+        function updateSystemStatus() {
+            const authStatus = document.getElementById('auth-status');
+            const editorStatus = document.getElementById('editor-status');
+            const storageStatus = document.getElementById('storage-status');
+            const uiStatus = document.getElementById('ui-status');
+            const debugContent = document.getElementById('debug-content');
+            
+            // Status de autenticação
+            if (window.hardemAuth) {
+                if (window.hardemAuth.isAuthenticated) {
+                    authStatus.className = 'status success';
+                    authStatus.innerHTML = `✅ Autenticado como: ${window.hardemAuth.userInfo.username}`;
+                } else {
+                    authStatus.className = 'status error';
+                    authStatus.innerHTML = '❌ Não autenticado - Modal de login deve estar visível';
+                }
+            } else {
+                authStatus.className = 'status error';
+                authStatus.innerHTML = '❌ Sistema de autenticação não carregado';
+            }
+            
+            // Status do editor
+            if (window.hardemEditor) {
+                if (window.hardemEditor.editMode) {
+                    editorStatus.className = 'status success';
+                    editorStatus.innerHTML = '✅ Editor: Modo de edição ATIVO';
+                } else {
+                    editorStatus.className = 'status info';
+                    editorStatus.innerHTML = '📝 Editor: Carregado, aguardando ativação';
+                }
+            } else {
+                editorStatus.className = 'status error';
+                editorStatus.innerHTML = '❌ Editor: Não carregado';
+            }
+            
+            // Status do storage
+            if (window.hardemEditor && window.hardemEditor.storage) {
+                storageStatus.className = 'status success';
+                storageStatus.innerHTML = '✅ Storage: Sistema carregado';
+            } else {
+                storageStatus.className = 'status error';
+                storageStatus.innerHTML = '❌ Storage: Não disponível';
+            }
+            
+            // Status da UI
+            if (window.hardemEditor && window.hardemEditor.ui) {
+                uiStatus.className = 'status success';
+                uiStatus.innerHTML = '✅ Interface: Sistema carregado';
+            } else {
+                uiStatus.className = 'status error';
+                uiStatus.innerHTML = '❌ Interface: Não disponível';
+            }
+            
+            // Debug info
+            const debugInfo = {
+                timestamp: new Date().toLocaleString(),
+                auth: {
+                    available: !!window.hardemAuth,
+                    authenticated: window.hardemAuth?.isAuthenticated || false,
+                    user: window.hardemAuth?.userInfo?.username || 'N/A'
+                },
+                editor: {
+                    available: !!window.hardemEditor,
+                    editMode: window.hardemEditor?.editMode || false,
+                    modules: {
+                        ui: !!window.hardemEditor?.ui,
+                        storage: !!window.hardemEditor?.storage,
+                        textEditor: !!window.hardemEditor?.textEditor,
+                        imageEditor: !!window.hardemEditor?.imageEditor
+                    }
+                },
+                page: {
+                    url: window.location.href,
+                    editableElements: document.querySelectorAll('[data-key]').length
+                }
+            };
+            
+            debugContent.textContent = JSON.stringify(debugInfo, null, 2);
+        }
+        
+        // Atualizar status a cada 2 segundos
+        setInterval(updateSystemStatus, 2000);
+        
+        // Primeira verificação imediata
+        setTimeout(updateSystemStatus, 500);
+        
+        // Log para debug
+        console.log('🧪 Página de teste carregada');
+        console.log('🔍 Verificando elementos editáveis:', document.querySelectorAll('[data-key]').length);
+    </script>
+</body>
+</html> 

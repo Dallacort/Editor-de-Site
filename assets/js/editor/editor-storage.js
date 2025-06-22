@@ -25,7 +25,8 @@ class HardemEditorStorage {
             const filteredContent = {};
             Object.entries(this.core.contentMap).forEach(([key, value]) => {
                 if (value && typeof value === 'object' && 
-                    (value.text || value.src || value.backgroundImage || value.title || value.description)) {
+                    (value.text || value.src || value.backgroundImage || value.title || value.description || 
+                     value.isCounter || value.counterValue !== undefined)) {
                     // Limpar dados corrompidos
                     const cleanValue = {};
                     if (value.text && typeof value.text === 'string') cleanValue.text = value.text;
@@ -43,6 +44,12 @@ class HardemEditorStorage {
                     if (value.format) cleanValue.format = value.format;
                     if (value.slideIndex !== undefined) cleanValue.slideIndex = value.slideIndex;
                     if (value.elementInfo) cleanValue.elementInfo = value.elementInfo;
+                    
+                    // NOVO: Incluir dados de contador
+                    if (value.isCounter) cleanValue.isCounter = value.isCounter;
+                    if (value.counterValue !== undefined) cleanValue.counterValue = value.counterValue;
+                    if (value.counterSuffix) cleanValue.counterSuffix = value.counterSuffix;
+                    if (value.timestamp) cleanValue.timestamp = value.timestamp;
                     
                     filteredContent[key] = cleanValue;
                 }
@@ -1051,124 +1058,63 @@ class HardemEditorStorage {
      * Aplicar conteúdo carregado
      */
     applyLoadedContent() {
-        let appliedCount = 0;
-        const orphanedKeys = [];
-        const delayedApplications = [];
+        if (!this.core.contentMap) return;
 
         console.log('🔄 Iniciando aplicação de conteúdo carregado...');
+        let appliedCount = 0;
+        let orphanedKeys = [];
+        let dropdownOrphans = [];
 
-        Object.entries(this.core.contentMap).forEach(([dataKey, content]) => {
-            // Tentar encontrar elemento pelo data-key
-            let element = document.querySelector(`[data-key="${dataKey}"]`);
-            
-            // NOVO: Busca especial para elementos de dropdown
-            if (!element && (dataKey.includes('a-pos') || content.isDropdownContent)) {
-                console.log(`🔽 Procurando elemento de dropdown: ${dataKey}`);
-                element = this.findDropdownElement(dataKey, content);
-            }
-            
-            // Se não encontrar, tentar por informações detalhadas
-            if (!element && content.elementInfo) {
+        for (const [dataKey, content] of Object.entries(this.core.contentMap)) {
+            let element;
+
+            if (content.elementInfo) {
                 element = this.findElementByDetailedInfo(content.elementInfo, dataKey);
+            } else {
+                element = document.querySelector(`[data-key="${dataKey}"]`);
             }
-            
-            // Se ainda não encontrar, marcar como órfão
-            if (!element) {
-                orphanedKeys.push(dataKey);
-                console.warn(`❌ Elemento não encontrado para data-key: ${dataKey}`);
-                return;
-            }
-            
-            // Aplicar conteúdo
-            try {
+
+            if (element) {
                 this.applyContentToElement(element, content, dataKey);
                 appliedCount++;
                 console.log(`✅ Conteúdo aplicado: ${dataKey}`);
-            } catch (error) {
-                console.error(`❌ Erro ao aplicar conteúdo para ${dataKey}:`, error);
-                delayedApplications.push({ dataKey, content, element });
+            } else {
+                if (content.elementInfo && content.elementInfo.isInDropdown) {
+                    dropdownOrphans.push({ [dataKey]: content });
+                } else {
+                    orphanedKeys.push(dataKey);
+                }
+                console.log(`❌ Elemento não encontrado para data-key: ${dataKey}`);
             }
-        });
-
-        // Tentar aplicar elementos que falharam após um delay
-        if (delayedApplications.length > 0) {
-            setTimeout(() => {
-                delayedApplications.forEach(({ dataKey, content, element }) => {
-                    try {
-                        this.applyContentToElement(element, content, dataKey);
-                        appliedCount++;
-                        console.log(`✅ Conteúdo aplicado (segunda tentativa): ${dataKey}`);
-                    } catch (error) {
-                        console.error(`❌ Falha definitiva para ${dataKey}:`, error);
-                    }
-                });
-            }, 500);
         }
 
-        // NOVO: Retry especial para elementos de dropdown órfãos
-        const dropdownOrphans = orphanedKeys.filter(key => 
-            key.includes('a-pos') || this.core.contentMap[key]?.isDropdownContent
-        );
-        
-        if (dropdownOrphans.length > 0) {
-            console.log(`🔽 Tentando recuperar ${dropdownOrphans.length} elementos de dropdown órfãos...`);
-            setTimeout(() => {
-                this.retryDropdownElements(dropdownOrphans);
-            }, 1000); // Delay maior para dropdowns
-        }
-
-        // Tentar aplicar conteúdo órfão de header usando sincronização forçada
+        // Tenta reaplicar órfãos de header
         if (orphanedKeys.length > 0) {
             const headerOrphans = this.filterHeaderOrphans(orphanedKeys);
-            
             if (headerOrphans.length > 0) {
-                console.log(`🔍 Tentando aplicar ${headerOrphans.length} elementos órfãos de header...`);
-                const appliedOrphans = this.applyOrphanedHeaderContent(headerOrphans);
-                
-                if (appliedOrphans > 0) {
-                    console.log(`✅ ${appliedOrphans} elementos órfãos de header aplicados com sucesso!`);
-                    appliedCount += appliedOrphans;
-                    
-                    // Remover órfãos que foram aplicados com sucesso
-                    const remainingOrphans = orphanedKeys.filter(key => 
-                        !headerOrphans.includes(key) || !document.querySelector(`[data-key="${key}"]`)
-                    );
-                    
-                    this.cleanOrphanedContent(remainingOrphans);
-                } else {
-                    this.cleanOrphanedContent(orphanedKeys);
-                }
-            } else {
-                this.cleanOrphanedContent(orphanedKeys);
-            }
-        }
-
-        console.log(`✅ ${appliedCount} elementos aplicados, ${orphanedKeys.length} órfãos removidos`);
-        
-        // NOVO: Aplicar normalizações salvas no banco de dados
-        if (this.core.imageEditor && this.core.imageEditor.applyContentFromDatabase) {
-            try {
-                this.core.imageEditor.applyContentFromDatabase(this.core.contentMap);
-            } catch (error) {
-                console.error('Erro ao aplicar normalizações do banco:', error);
+                this.applyOrphanedHeaderContent(headerOrphans);
             }
         }
         
-        if (appliedCount > 0) {
-            this.core.ui.showAlert(`${appliedCount} elementos restaurados!`, 'success');
-        }
-
-        // Forçar re-renderização após aplicação
-        setTimeout(() => {
-            this.forceRerender();
-        }, 100);
-
-        // Tentar aplicar backgrounds órfãos em elementos similares
+        // Limpa conteúdo que não encontrou correspondência
         if (orphanedKeys.length > 0) {
-            setTimeout(() => {
-                this.tryApplyOrphanedBackgrounds(orphanedKeys);
-            }, 500);
+            this.cleanOrphanedContent(orphanedKeys);
         }
+        
+        // Tenta reaplicar órfãos de dropdown
+        if (dropdownOrphans.length > 0) {
+            this.retryDropdownElements(dropdownOrphans);
+        }
+
+        console.log(`✅ ${appliedCount} elementos aplicados, ${orphanedKeys.length} órfãos processados`);
+        this.core.ui.showAlert(`${appliedCount} elementos restaurados!`, 'success');
+
+        // Disparar evento para notificar que o conteúdo foi carregado
+        const event = new Event('hardem-editor-content-loaded');
+        document.dispatchEvent(event);
+        console.log('✅ Evento hardem-editor-content-loaded disparado.');
+
+        this.forceRerender();
     }
 
     /**
@@ -1327,6 +1273,12 @@ class HardemEditorStorage {
                 console.log(`📝 Texto aplicado: ${dataKey}`);
             }
             
+            // NOVO: Aplicar texto a span odometer diretamente
+            if (content.text && element.classList.contains('odometer')) {
+                element.textContent = content.text;
+                console.log(`🔢 Texto aplicado ao odometer: ${dataKey} = ${content.text}`);
+            }
+            
             // Aplicar imagem
             if (content.src && element.tagName.toLowerCase() === 'img') {
                 element.src = content.src;
@@ -1359,7 +1311,7 @@ class HardemEditorStorage {
                 console.log(`🎨 Background aplicado: ${dataKey}`);
             }
             
-            // Aplicar contador
+            // Aplicar contador (elemento pai que contém odometer)
             if (content.isCounter && content.counterValue !== undefined) {
                 const odometerSpan = element.querySelector('span.odometer');
                 if (odometerSpan) {
@@ -1369,23 +1321,26 @@ class HardemEditorStorage {
                     // Atualizar o texto diretamente primeiro
                     odometerSpan.textContent = content.counterValue.toString();
                     
-                    // Se houver animação odometer, reinicializar com animação
-                    if (typeof jQuery !== 'undefined' && jQuery.fn.counterUp) {
-                        setTimeout(() => {
-                            if (odometerSpan && document.contains(odometerSpan)) {
-                                // Resetar para 0 e animar até o valor correto
-                                odometerSpan.textContent = '0';
-                                jQuery(odometerSpan).counterUp({
-                                    delay: 10,
-                                    time: 1000
-                                });
-                            }
-                        }, 300); // Delay maior para carregamento
-                    }
-                    
                     console.log(`🔢 Contador aplicado: ${dataKey} = ${content.counterValue}${content.counterSuffix || ''}`);
                 } else {
                     console.warn(`⚠️ Elemento odometer não encontrado para contador: ${dataKey}`, element);
+                }
+            }
+            
+            // NOVO: Aplicar contador diretamente ao span odometer
+            if ((content.isCounter && content.counterValue !== undefined) || 
+                (content.text && element.classList.contains('odometer'))) {
+                
+                if (element.classList.contains('odometer')) {
+                    const value = content.counterValue !== undefined ? content.counterValue : content.text;
+                    
+                    // Atualizar o data-count para o novo valor
+                    element.setAttribute('data-count', value.toString());
+                    
+                    // Atualizar o texto diretamente
+                    element.textContent = value.toString();
+                    
+                    console.log(`🎯 Valor aplicado diretamente ao odometer: ${dataKey} = ${value}`);
                 }
             }
             

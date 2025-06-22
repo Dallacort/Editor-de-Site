@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HARDEM - Teste do Novo Sistema</title>
+    <link rel="stylesheet" href="assets/css/vendor/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        .test-container {
+            padding: 50px 0;
+            background: #f8f9fa;
+        }
+        .test-section {
+            background: white;
+            padding: 30px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .status-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 12px;
+            z-index: 9999;
+            max-width: 300px;
+        }
+        .editable-demo {
+            border: 2px dashed #ddd;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <!-- Status Indicator -->
+    <div class="status-indicator" id="status-indicator">
+        <strong>Status do Sistema:</strong><br>
+        <span id="mode-status">Carregando...</span><br>
+        <span id="auth-status">Verificando...</span>
+    </div>
+
+    <!-- Header -->
+    <header class="rts-header">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <nav class="navbar navbar-expand-lg">
+                        <a class="navbar-brand" href="#">
+                            <img src="assets/images/logo/01.png" alt="HARDEM" data-key="header_logo">
+                        </a>
+                        <div class="navbar-nav ms-auto">
+                            <a href="admin.html" class="btn btn-primary">🔧 Painel Admin</a>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="test-container">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="test-section">
+                        <h1 data-key="test_main_title">🏗️ HARDEM Construction</h1>
+                        <p data-key="test_main_description">
+                            Este é um teste do novo sistema de edição. 
+                            Usuários normais veem esta página sem nenhuma funcionalidade de edição.
+                            Apenas administradores autenticados podem editar o conteúdo.
+                        </p>
+                    </div>
+
+                    <div class="test-section">
+                        <h2 data-key="test_section_title">📝 Conteúdo Editável</h2>
+                        
+                        <div class="editable-demo">
+                            <h3 data-key="demo_title">Título Editável</h3>
+                            <p data-key="demo_paragraph">
+                                Este parágrafo pode ser editado quando em modo de edição. 
+                                Clique duas vezes para editar (apenas para administradores autenticados).
+                            </p>
+                            <span data-key="demo_span">Texto em span editável</span>
+                        </div>
+
+                        <div class="editable-demo">
+                            <h4 data-key="services_title">Nossos Serviços</h4>
+                            <ul>
+                                <li data-key="service_1">Construção Residencial</li>
+                                <li data-key="service_2">Construção Comercial</li>
+                                <li data-key="service_3">Reformas e Renovações</li>
+                                <li data-key="service_4">Consultoria em Construção</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="test-section">
+                        <h2 data-key="counter_section_title">🔢 Contadores</h2>
+                        
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <div class="counter-item">
+                                    <h3>
+                                        <span class="odometer" data-count="25" data-key="counter_projects">00</span>+
+                                    </h3>
+                                    <p data-key="counter_projects_label">Projetos</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="counter-item">
+                                    <h3>
+                                        <span class="odometer" data-count="150" data-key="counter_clients">00</span>
+                                    </h3>
+                                    <p data-key="counter_clients_label">Clientes</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="counter-item">
+                                    <h3>
+                                        <span class="odometer" data-count="8.5" data-key="counter_experience">00</span>k
+                                    </h3>
+                                    <p data-key="counter_experience_label">Horas</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="counter-item">
+                                    <h3>
+                                        <span class="odometer" data-count="99" data-key="counter_satisfaction">00</span>%
+                                    </h3>
+                                    <p data-key="counter_satisfaction_label">Satisfação</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="test-section">
+                        <h2 data-key="image_section_title">🖼️ Imagens Editáveis</h2>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <img src="assets/images/about/01.webp" alt="Projeto 1" 
+                                     data-key="demo_image_1" class="img-fluid rounded">
+                            </div>
+                            <div class="col-md-6">
+                                <img src="assets/images/about/02.webp" alt="Projeto 2" 
+                                     data-key="demo_image_2" class="img-fluid rounded">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="test-section">
+                        <h2 data-key="instructions_title">📋 Como Usar</h2>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h4>👥 Para Usuários Finais:</h4>
+                                <ul>
+                                    <li>Acesse normalmente o site</li>
+                                    <li>Veja o conteúdo atualizado</li>
+                                    <li>Nenhuma autenticação necessária</li>
+                                    <li>Experiência limpa e rápida</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h4>🔧 Para Administradores:</h4>
+                                <ol>
+                                    <li>Acesse <code>admin.html</code></li>
+                                    <li>Faça login (Hardem / Hardem@321)</li>
+                                    <li>Clique em "Editar" na página desejada</li>
+                                    <li>Edite o conteúdo clicando duas vezes</li>
+                                    <li>As mudanças ficam visíveis para todos</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="rts-footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-center">
+                    <p data-key="footer_text">
+                        © 2024 HARDEM Construction. Todos os direitos reservados.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts necessários -->
+    <script src="assets/js/plugins/jquery.js"></script>
+    <script src="assets/js/vendor/bootstrap.min.js"></script>
+    <script src="assets/js/plugins/odometer.js"></script>
+    <script src="assets/js/main.js"></script>
+    
+    <!-- Gerenciador de Editor (só carrega scripts em modo de edição) -->
+    <script src="assets/js/editor-manager.js"></script>
+    
+    <script>
+        // Monitorar status do sistema
+        function updateStatus() {
+            const modeStatus = document.getElementById('mode-status');
+            const authStatus = document.getElementById('auth-status');
+            
+            // Verificar modo
+            const urlParams = new URLSearchParams(window.location.search);
+            const editMode = urlParams.get('edit') === 'true';
+            
+            if (editMode) {
+                modeStatus.innerHTML = '🔧 <strong>MODO EDIÇÃO</strong>';
+                modeStatus.style.color = '#e74c3c';
+            } else {
+                modeStatus.innerHTML = '👁️ <strong>MODO VISUALIZAÇÃO</strong>';
+                modeStatus.style.color = '#27ae60';
+            }
+            
+            // Verificar autenticação (apenas se em modo edição)
+            if (editMode && window.editorManager) {
+                if (window.editorManager.isAuthenticated) {
+                    authStatus.innerHTML = '✅ <strong>AUTENTICADO</strong>';
+                    authStatus.style.color = '#27ae60';
+                } else {
+                    authStatus.innerHTML = '❌ <strong>NÃO AUTENTICADO</strong>';
+                    authStatus.style.color = '#e74c3c';
+                }
+            } else {
+                authStatus.innerHTML = '➖ <strong>N/A</strong>';
+                authStatus.style.color = '#95a5a6';
+            }
+        }
+        
+        // Atualizar status a cada 2 segundos
+        setInterval(updateStatus, 2000);
+        
+        // Primeira verificação
+        setTimeout(updateStatus, 500);
+        
+        console.log('🧪 Página de teste do novo sistema carregada');
+        console.log('📍 URL atual:', window.location.href);
+        console.log('🔍 Parâmetros:', new URLSearchParams(window.location.search).toString());
+    </script>
+</body>
+</html> 
