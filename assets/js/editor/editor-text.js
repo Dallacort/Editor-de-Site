@@ -25,10 +25,22 @@ class HardemTextEditor {
             if (this.core.utils.isEditorElement(element)) return;
             
             // Pular elementos já configurados
-            if (element.classList.contains('hardem-editable-element')) return;
+            if (element.classList.contains('hardem-editable-element') || 
+                element.hasAttribute('data-hardem-processed')) return;
             
             // Pular elementos com data-no-edit
             if (element.hasAttribute('data-no-edit')) return;
+            
+            // NOVO: Verificação especial para contadores
+            if (this.isCounterElement(element)) {
+                // Verificar se o contador está em animação
+                const odometerSpan = element.querySelector('span.odometer');
+                if (odometerSpan && (odometerSpan.classList.contains('odometer-animating-up') || 
+                                   odometerSpan.classList.contains('odometer-animating-down'))) {
+                    console.log(`⏳ Contador em animação, aguardando: ${element.textContent?.trim()}`);
+                    return; // Não processar contadores em animação
+                }
+            }
             
             this.makeTextElementEditable(element);
         });
@@ -44,6 +56,12 @@ class HardemTextEditor {
         if (element.closest('.hardem-editor-toolbar') || 
             element.closest('.hardem-editor-sidepanel') ||
             element.classList.contains('hardem-editable-element')) {
+            return;
+        }
+        
+        // Tratamento especial para contadores
+        if (this.isCounterElement(element)) {
+            this.makeCounterEditable(element);
             return;
         }
         
@@ -674,6 +692,273 @@ class HardemTextEditor {
             
             this.core.ui.showAlert('Texto atualizado!', 'success');
         }
+    }
+
+    /**
+     * Verificar se elemento é um contador
+     */
+    isCounterElement(element) {
+        return element.classList.contains('counter') && element.classList.contains('title');
+    }
+
+    /**
+     * Tratar contador como elemento único
+     */
+    makeCounterEditable(element) {
+        // Verificar se já foi processado para evitar duplicação
+        if (element.classList.contains('hardem-counter-element') || 
+            element.hasAttribute('data-hardem-processed')) {
+            return;
+        }
+
+        // NOVO: Verificar se o contador tem animação ativa (odometer)
+        const odometerSpan = element.querySelector('span.odometer');
+        if (odometerSpan && odometerSpan.classList.contains('odometer-animating-up')) {
+            // Aguardar animação terminar antes de processar
+            setTimeout(() => {
+                if (!element.classList.contains('hardem-counter-element')) {
+                    this.makeCounterEditable(element);
+                }
+            }, 1000);
+            return;
+        }
+
+        // Verificar se já tem data-key
+        let dataKey = element.getAttribute('data-key');
+        if (!dataKey) {
+            dataKey = this.core.utils.generateDataKey(element);
+            element.setAttribute('data-key', dataKey);
+        }
+
+        // Adicionar classe de editável
+        element.classList.add('hardem-editable');
+        element.classList.add('hardem-editable-element');
+        element.classList.add('hardem-counter-element');
+        
+        // Marcar como processado para evitar reprocessamento
+        element.setAttribute('data-hardem-processed', 'true');
+        
+        // NOVO: Marcar o odometer também para evitar conflitos
+        if (odometerSpan) {
+            odometerSpan.setAttribute('data-hardem-processed', 'true');
+        }
+        
+        // Tooltip
+        element.title = `Editar contador: ${dataKey}`;
+
+        // Obter o número atual do contador
+        const currentNumber = odometerSpan ? odometerSpan.getAttribute('data-count') : '0';
+        const suffix = this.getCounterSuffix(element);
+
+        // Remover listeners anteriores se existirem
+        if (element._counterListeners) {
+            element.removeEventListener('dblclick', element._counterListeners.doubleClick);
+            element.removeEventListener('click', element._counterListeners.click);
+        }
+
+        // Eventos especiais para contadores
+        const handleDoubleClick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.startCounterEditing(element, currentNumber, suffix);
+        };
+
+        const handleClick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.core.selectElement(element);
+        };
+
+        // Armazenar referências dos listeners para remoção posterior
+        element._counterListeners = {
+            doubleClick: handleDoubleClick,
+            click: handleClick
+        };
+
+        element.addEventListener('dblclick', handleDoubleClick);
+        element.addEventListener('click', handleClick);
+        
+        // Neutralizar efeitos problemáticos
+        this.neutralizeElementEffects(element);
+        
+        console.log(`✅ Contador editável configurado: ${dataKey} (${currentNumber}${suffix})`);
+    }
+
+    /**
+     * Obter sufixo do contador (k+, +, etc.)
+     */
+    getCounterSuffix(counterElement) {
+        const fullText = counterElement.textContent || '';
+        const odometerSpan = counterElement.querySelector('span.odometer');
+        if (odometerSpan) {
+            return fullText.replace(odometerSpan.textContent, '').trim();
+        }
+        return '';
+    }
+
+    /**
+     * Iniciar edição de contador
+     */
+    startCounterEditing(element, currentNumber, suffix) {
+        const dataKey = element.getAttribute('data-key');
+        
+        // Criar input para o número
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.value = currentNumber;
+        input.step = 'any';
+        input.style.cssText = `
+            width: 100px;
+            padding: 8px;
+            border: 2px solid #3498db;
+            font-family: inherit;
+            font-size: inherit;
+            font-weight: inherit;
+            color: inherit;
+            background: white;
+            border-radius: 3px;
+            margin-right: 5px;
+        `;
+
+        // Criar span para mostrar o sufixo
+        const suffixSpan = document.createElement('span');
+        suffixSpan.textContent = suffix;
+        suffixSpan.style.cssText = `
+            font-family: inherit;
+            font-size: inherit;
+            font-weight: inherit;
+            color: inherit;
+        `;
+
+        // Container para input + sufixo
+        const editContainer = document.createElement('div');
+        editContainer.style.cssText = `
+            display: inline-flex;
+            align-items: center;
+            background: rgba(52, 152, 219, 0.1);
+            padding: 4px;
+            border-radius: 3px;
+        `;
+        editContainer.appendChild(input);
+        editContainer.appendChild(suffixSpan);
+
+        const finishEditing = () => {
+            try {
+                const newNumber = parseFloat(input.value) || 0;
+                
+                if (newNumber !== parseFloat(currentNumber)) {
+                    // Atualizar o contador
+                    const odometerSpan = element.querySelector('span.odometer');
+                    if (odometerSpan) {
+                        // Atualizar o data-count para o novo valor
+                        odometerSpan.setAttribute('data-count', newNumber.toString());
+                        
+                        // Atualizar o texto diretamente (não resetar para 00)
+                        odometerSpan.textContent = newNumber.toString();
+                        
+                        // Se houver animação odometer, reinicializar
+                        if (typeof jQuery !== 'undefined' && jQuery.fn.counterUp) {
+                            setTimeout(() => {
+                                if (odometerSpan && document.contains(odometerSpan)) {
+                                    // Resetar para 0 e animar até o novo valor
+                                    odometerSpan.textContent = '0';
+                                    jQuery(odometerSpan).counterUp({
+                                        delay: 10,
+                                        time: 1000
+                                    });
+                                }
+                            }, 200);
+                        }
+                    }
+                    
+                    // Salvar no contentMap
+                    if (!this.core.contentMap[dataKey]) {
+                        this.core.contentMap[dataKey] = {};
+                    }
+                    this.core.contentMap[dataKey].counterValue = newNumber;
+                    this.core.contentMap[dataKey].counterSuffix = suffix;
+                    this.core.contentMap[dataKey].isCounter = true;
+                    this.core.contentMap[dataKey].elementInfo = this.core.utils.collectElementInfo ? 
+                        this.core.utils.collectElementInfo(element) : null;
+                    this.core.contentMap[dataKey].timestamp = new Date().toISOString();
+                    
+                    console.log(`🔢 Contador atualizado: ${dataKey} = ${newNumber}${suffix}`);
+                    
+                    this.core.ui.showAlert(`Contador atualizado para ${newNumber}${suffix}!`, 'success');
+                }
+                
+                // Restaurar elemento original com verificações de segurança
+                if (element && document.contains(element)) {
+                    element.style.display = '';
+                }
+                
+                // Remover container de edição com verificação de segurança
+                if (editContainer && editContainer.parentNode && document.contains(editContainer)) {
+                    editContainer.remove();
+                }
+                
+                // Re-aplicar configurações de edição apenas se o elemento ainda existir
+                if (element && document.contains(element)) {
+                    // Aguardar um momento antes de reconfigurar para evitar conflitos
+                    setTimeout(() => {
+                        if (element && document.contains(element) && !element.classList.contains('hardem-counter-element')) {
+                            this.makeCounterEditable(element);
+                        }
+                    }, 100);
+                }
+                
+            } catch (error) {
+                console.warn('Erro ao finalizar edição do contador:', error);
+                
+                // Fallback: tentar restaurar estado básico
+                try {
+                    if (element && document.contains(element)) {
+                        element.style.display = '';
+                    }
+                    if (editContainer && editContainer.parentNode && document.contains(editContainer)) {
+                        editContainer.remove();
+                    }
+                } catch (fallbackError) {
+                    console.warn('Erro no fallback de limpeza:', fallbackError);
+                }
+            }
+        };
+
+        // Esconder elemento original e mostrar input
+        element.style.display = 'none';
+        element.parentNode.insertBefore(editContainer, element.nextSibling);
+        
+        // Eventos do input
+        input.addEventListener('blur', finishEditing);
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                finishEditing();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                try {
+                    if (element && document.contains(element)) {
+                        element.style.display = '';
+                    }
+                    if (editContainer && editContainer.parentNode && document.contains(editContainer)) {
+                        editContainer.remove();
+                    }
+                    if (element && document.contains(element)) {
+                        setTimeout(() => {
+                            if (!element.classList.contains('hardem-counter-element')) {
+                                this.makeCounterEditable(element);
+                            }
+                        }, 100);
+                    }
+                } catch (error) {
+                    console.warn('Erro ao cancelar edição do contador:', error);
+                }
+            }
+        });
+
+        // Focar no input
+        input.focus();
+        input.select();
     }
 }
 

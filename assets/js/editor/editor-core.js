@@ -30,55 +30,56 @@ class HardemEditorCore {
         this.editableSelectors = [
             '[data-key]',
             // Contadores - devem ser reconhecidos como um elemento único
-            'h1.counter.title:not([data-no-edit])',
-            'h2.counter.title:not([data-no-edit])',
-            'h3.counter.title:not([data-no-edit])',
-            'h4.counter.title:not([data-no-edit])',
-            'h5.counter.title:not([data-no-edit])',
-            'h6.counter.title:not([data-no-edit])',
+            'h1.counter.title:not([data-no-edit]):not(.hardem-counter-element):not([data-hardem-processed])',
+            'h2.counter.title:not([data-no-edit]):not(.hardem-counter-element):not([data-hardem-processed])',
+            'h3.counter.title:not([data-no-edit]):not(.hardem-counter-element):not([data-hardem-processed])',
+            'h4.counter.title:not([data-no-edit]):not(.hardem-counter-element):not([data-hardem-processed])',
+            'h5.counter.title:not([data-no-edit]):not(.hardem-counter-element):not([data-hardem-processed])',
+            'h6.counter.title:not([data-no-edit]):not(.hardem-counter-element):not([data-hardem-processed])',
             // Headers tradicionais
-            'h1:not([data-no-edit]):not(.counter)',
-            'h2:not([data-no-edit]):not(.counter)',
-            'h3:not([data-no-edit]):not(.counter)',
-            'h4:not([data-no-edit]):not(.counter)',
-            'h5:not([data-no-edit]):not(.counter)',
-            'h6:not([data-no-edit]):not(.counter)',
+            'h1:not([data-no-edit]):not(.counter):not([data-hardem-processed])',
+            'h2:not([data-no-edit]):not(.counter):not([data-hardem-processed])',
+            'h3:not([data-no-edit]):not(.counter):not([data-hardem-processed])',
+            'h4:not([data-no-edit]):not(.counter):not([data-hardem-processed])',
+            'h5:not([data-no-edit]):not(.counter):not([data-hardem-processed])',
+            'h6:not([data-no-edit]):not(.counter):not([data-hardem-processed])',
             // Textos
-            'p:not([data-no-edit])',
-            'span:not([data-no-edit]):not(.odometer)',
-            'a:not([data-no-edit])',
-            'button:not([data-no-edit])',
+            'p:not([data-no-edit]):not([data-hardem-processed])',
+            'span:not([data-no-edit]):not(.odometer):not([data-hardem-processed])',
+            'a:not([data-no-edit]):not([data-hardem-processed])',
+            'button:not([data-no-edit]):not([data-hardem-processed])',
             // Classes específicas de texto
-            'div.title:not([data-no-edit]):not(.counter)',
-            'div.subtitle:not([data-no-edit])',
-            'div.description:not([data-no-edit])',
-            'div.content:not([data-no-edit])',
-            'div.text:not([data-no-edit])',
-            'div.disc:not([data-no-edit])',
-            'div.details:not([data-no-edit])',
+            'div.title:not([data-no-edit]):not(.counter):not([data-hardem-processed])',
+            'div.subtitle:not([data-no-edit]):not([data-hardem-processed])',
+            'div.description:not([data-no-edit]):not([data-hardem-processed])',
+            'div.content:not([data-no-edit]):not([data-hardem-processed])',
+            'div.text:not([data-no-edit]):not([data-hardem-processed])',
+            'div.disc:not([data-no-edit]):not([data-hardem-processed])',
+            'div.details:not([data-no-edit]):not([data-hardem-processed])',
+            'div.inner-content:not([data-no-edit]):not([data-hardem-processed])',
             // Elementos de footer com background
-            'footer:not([data-no-edit])',
-            'footer *:not([data-no-edit])',
-            '.footer:not([data-no-edit])',
-            '.footer *:not([data-no-edit])',
-            '.rts-footer:not([data-no-edit])',
-            '.rts-footer *:not([data-no-edit])',
+            'footer:not([data-no-edit]):not([data-hardem-processed])',
+            'footer *:not([data-no-edit]):not([data-hardem-processed])',
+            '.footer:not([data-no-edit]):not([data-hardem-processed])',
+            '.footer *:not([data-no-edit]):not([data-hardem-processed])',
+            '.rts-footer:not([data-no-edit]):not([data-hardem-processed])',
+            '.rts-footer *:not([data-no-edit]):not([data-hardem-processed])',
             // Elementos com background
-            '[style*="background"]:not([data-no-edit])',
-            '[class*="bg"]:not([data-no-edit])',
-            '.bg_image:not([data-no-edit])',
+            '[style*="background"]:not([data-no-edit]):not([data-hardem-processed])',
+            '[class*="bg"]:not([data-no-edit]):not([data-hardem-processed])',
+            '.bg_image:not([data-no-edit]):not([data-hardem-processed])',
             // Outros elementos
-            'li:not([data-no-edit])',
-            'td:not([data-no-edit])',
-            'th:not([data-no-edit])',
-            'label:not([data-no-edit])',
-            'figcaption:not([data-no-edit])',
-            '.editable:not([data-no-edit])',
+            'li:not([data-no-edit]):not([data-hardem-processed])',
+            'td:not([data-no-edit]):not([data-hardem-processed])',
+            'th:not([data-no-edit]):not([data-hardem-processed])',
+            'label:not([data-no-edit]):not([data-hardem-processed])',
+            'figcaption:not([data-no-edit]):not([data-hardem-processed])',
+            '.editable:not([data-no-edit]):not([data-hardem-processed])',
             // Estatísticas e números
-            '.ss:not([data-no-edit])',
-            '.statistics:not([data-no-edit])',
-            '.number:not([data-no-edit])',
-            '.count:not([data-no-edit])'
+            '.ss:not([data-no-edit]):not([data-hardem-processed])',
+            '.statistics:not([data-no-edit]):not([data-hardem-processed])',
+            '.number:not([data-no-edit]):not([data-hardem-processed])',
+            '.count:not([data-no-edit]):not([data-hardem-processed])'
         ];
 
         this.init();
@@ -376,10 +377,31 @@ class HardemEditorCore {
                         if (node.nodeType === Node.ELEMENT_NODE && 
                             !this.utils.isEditorElement(node) &&
                             !node.classList.contains('hardem-editable-element') &&
-                            !node.hasAttribute('data-hardem-processed')) {
+                            !node.classList.contains('hardem-counter-element') &&
+                            !node.hasAttribute('data-hardem-processed') &&
+                            !node.closest('.hardem-editor-toolbar') &&
+                            !node.closest('.hardem-editor-sidepanel') &&
+                            // NOVO: Ignorar mudanças em contadores (animação odometer)
+                            !node.closest('.counter.title') &&
+                            !node.classList.contains('odometer') &&
+                            !node.closest('.odometer') &&
+                            // NOVO: Ignorar mudanças em elementos com animação
+                            !node.closest('[data-aos]') &&
+                            !node.classList.contains('aos-animate')) {
                             shouldSetupElements = true;
                         }
                     });
+                }
+                
+                // NOVO: Ignorar mudanças de atributos em contadores
+                if (mutation.type === 'attributes') {
+                    const target = mutation.target;
+                    if (target.classList.contains('odometer') || 
+                        target.closest('.counter.title') ||
+                        target.hasAttribute('data-aos') ||
+                        target.classList.contains('hardem-counter-element')) {
+                        return; // Ignorar mudanças de atributos em contadores
+                    }
                 }
             });
 
@@ -391,7 +413,8 @@ class HardemEditorCore {
         this.mutationObserver.observe(document.body, {
             childList: true,
             subtree: true,
-            attributes: false,
+            attributes: true, // Monitorar atributos mas com filtros
+            attributeFilter: ['class', 'data-key', 'data-hardem-processed'], // Apenas atributos relevantes
             characterData: false
         });
     }

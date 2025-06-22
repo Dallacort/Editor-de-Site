@@ -1359,6 +1359,36 @@ class HardemEditorStorage {
                 console.log(`🎨 Background aplicado: ${dataKey}`);
             }
             
+            // Aplicar contador
+            if (content.isCounter && content.counterValue !== undefined) {
+                const odometerSpan = element.querySelector('span.odometer');
+                if (odometerSpan) {
+                    // Atualizar o data-count para o novo valor
+                    odometerSpan.setAttribute('data-count', content.counterValue.toString());
+                    
+                    // Atualizar o texto diretamente primeiro
+                    odometerSpan.textContent = content.counterValue.toString();
+                    
+                    // Se houver animação odometer, reinicializar com animação
+                    if (typeof jQuery !== 'undefined' && jQuery.fn.counterUp) {
+                        setTimeout(() => {
+                            if (odometerSpan && document.contains(odometerSpan)) {
+                                // Resetar para 0 e animar até o valor correto
+                                odometerSpan.textContent = '0';
+                                jQuery(odometerSpan).counterUp({
+                                    delay: 10,
+                                    time: 1000
+                                });
+                            }
+                        }, 300); // Delay maior para carregamento
+                    }
+                    
+                    console.log(`🔢 Contador aplicado: ${dataKey} = ${content.counterValue}${content.counterSuffix || ''}`);
+                } else {
+                    console.warn(`⚠️ Elemento odometer não encontrado para contador: ${dataKey}`, element);
+                }
+            }
+            
             // Aplicar título e descrição para carrosséis
             if (content.title) {
                 const titleElement = element.querySelector('.title, h1, h2, h3, h4, h5, h6');
@@ -2330,13 +2360,15 @@ class HardemEditorStorage {
         const images = entries.filter(([key, value]) => value.src && value.src.startsWith('data:'));
         const backgrounds = entries.filter(([key, value]) => value.backgroundImage && value.backgroundImage.startsWith('data:'));
         const texts = entries.filter(([key, value]) => value.text || value.title || value.description);
+        const counters = entries.filter(([key, value]) => value.isCounter && value.counterValue !== undefined);
         const others = entries.filter(([key, value]) => 
             !value.src?.startsWith('data:') && 
             !value.backgroundImage?.startsWith('data:') && 
-            !value.text && !value.title && !value.description
+            !value.text && !value.title && !value.description &&
+            !value.isCounter
         );
         
-        console.log(`📊 Dividindo salvamento: ${images.length} imagens, ${backgrounds.length} backgrounds, ${texts.length} textos, ${others.length} outros`);
+        console.log(`📊 Dividindo salvamento: ${images.length} imagens, ${backgrounds.length} backgrounds, ${texts.length} textos, ${counters.length} contadores, ${others.length} outros`);
         
         // Debug detalhado das imagens
         if (images.length > 0) {
@@ -2358,6 +2390,16 @@ class HardemEditorStorage {
             })));
         }
         
+        // Debug detalhado dos contadores
+        if (counters.length > 0) {
+            console.log('🔢 Contadores detectados:', counters.map(([key, value]) => ({
+                key,
+                counterValue: value.counterValue,
+                counterSuffix: value.counterSuffix,
+                isCounter: value.isCounter
+            })));
+        }
+        
         // Debug de outros elementos que podem ser imagens
         console.log('🔍 Todos os elementos no contentMap:', entries.map(([key, value]) => ({
             key,
@@ -2365,16 +2407,17 @@ class HardemEditorStorage {
             properties: Object.keys(value),
             hasSrc: !!value.src,
             hasBackgroundImage: !!value.backgroundImage,
-            hasText: !!(value.text || value.title || value.description)
+            hasText: !!(value.text || value.title || value.description),
+            isCounter: !!value.isCounter
         })));
         
         const results = [];
         let partNumber = 1;
         
         try {
-            // 1. Salvar textos e outros dados primeiro (mais leve)
-            if (texts.length > 0 || others.length > 0) {
-                const textData = Object.fromEntries([...texts, ...others]);
+            // 1. Salvar textos, contadores e outros dados primeiro (mais leve)
+            if (texts.length > 0 || counters.length > 0 || others.length > 0) {
+                const textData = Object.fromEntries([...texts, ...counters, ...others]);
                 const textResult = await this.saveDataPart(textData, partNumber++, 'textos');
                 if (textResult) results.push(textResult);
             }
@@ -2419,6 +2462,7 @@ class HardemEditorStorage {
                     totalImages: images.length,
                     totalBackgrounds: backgrounds.length,
                     totalTexts: texts.length,
+                    totalCounters: counters.length,
                     totalOthers: others.length
                 }
             };
