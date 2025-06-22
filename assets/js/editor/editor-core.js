@@ -112,8 +112,21 @@ class HardemEditorCore {
         
         console.log('HARDEM Editor iniciado com sucesso!');
         
+        // Inicializar com edição desativada
+        this.editMode = false;
+        
         // Aguardar DOM estar completamente carregado antes de carregar conteúdo
         this.waitForDOMAndLoadContent();
+        
+        // Habilitar botão de editar após inicialização completa
+        setTimeout(() => {
+            const toggleBtn = document.getElementById('hardem-toggle-edit');
+            if (toggleBtn) {
+                toggleBtn.disabled = false;
+                toggleBtn.title = 'Ativar Modo de Edição';
+                console.log('✅ Botão de edição habilitado');
+            }
+        }, 1000);
     }
 
     /**
@@ -450,9 +463,14 @@ class HardemEditorCore {
             this.storage.saveContent();
         });
 
-        // Reset de emergência
-        document.getElementById('hardem-emergency-reset').addEventListener('click', () => {
-            this.emergencyReset();
+        // Visualizar página
+        document.getElementById('hardem-preview-mode').addEventListener('click', () => {
+            this.togglePreviewMode();
+        });
+
+        // Publicar alterações
+        document.getElementById('hardem-publish-changes').addEventListener('click', () => {
+            this.publishChanges();
         });
 
         // Scroll inteligente no painel
@@ -480,7 +498,7 @@ class HardemEditorCore {
         if (this.editMode) {
             toggleBtn.classList.add('active');
             toggleBtn.innerHTML = '🔒';
-            toggleBtn.title = 'Desativar';
+            toggleBtn.title = 'Desativar Edição';
             statusEl.textContent = 'ON';
             
             this.textEditor.setupEditableElements();
@@ -488,14 +506,126 @@ class HardemEditorCore {
             this.carouselEditor.setupCarouselEditing();
         } else {
             toggleBtn.classList.remove('active');
-            toggleBtn.innerHTML = '✏';
-            toggleBtn.title = 'Editar';
+            toggleBtn.innerHTML = '✏️';
+            toggleBtn.title = 'Alternar Modo de Edição';
             statusEl.textContent = 'OFF';
             
             this.ui.disableEditing();
         }
         
         console.log(`Modo de edição: ${this.editMode ? 'ATIVO' : 'INATIVO'}`);
+    }
+
+    /**
+     * Sair da edição e voltar para página normal
+     */
+    togglePreviewMode() {
+        const confirmed = confirm(
+            '🚪 Sair da Edição\n\n' +
+            'Isso irá:\n' +
+            '• Fechar o modo de edição\n' +
+            '• Voltar para a página normal\n' +
+            '• Alterações não salvas serão perdidas\n\n' +
+            'Deseja continuar?'
+        );
+        
+        if (confirmed) {
+            // Remover parâmetro ?edit=true da URL
+            const url = new URL(window.location);
+            url.searchParams.delete('edit');
+            
+            // Redirecionar para página normal
+            window.location.href = url.toString();
+        }
+    }
+
+    /**
+     * Publicar alterações (salva e aplica para usuários finais)
+     */
+    async publishChanges() {
+        const publishBtn = document.getElementById('hardem-publish-changes');
+        const originalContent = publishBtn.innerHTML;
+        
+        // Verificar se há alterações para publicar
+        if (Object.keys(this.contentMap).length === 0) {
+            this.ui.showAlert('⚠️ Nenhuma alteração encontrada para publicar', 'warning');
+            return;
+        }
+        
+        // Confirmar publicação
+        const confirmed = confirm(
+            '🚀 PUBLICAR ALTERAÇÕES\n\n' +
+            'Isso irá:\n' +
+            '• Salvar todas as alterações no servidor\n' +
+            '• Aplicar mudanças para todos os usuários\n' +
+            '• Tornar o conteúdo visível no site público\n\n' +
+            'Deseja continuar?'
+        );
+        
+        if (!confirmed) return;
+        
+        try {
+            // Indicar processamento
+            publishBtn.innerHTML = '⏳';
+            publishBtn.disabled = true;
+            
+            this.ui.showProcessingMessage('📤 Publicando alterações...');
+            
+            // Salvar as alterações no servidor
+            const saveResult = await this.storage.saveContent();
+            
+            if (saveResult) {
+                // Aguardar um pouco para garantir que o servidor processou
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Forçar limpeza de cache do navegador
+                const cacheKey = this.storage.getPageKey();
+                localStorage.removeItem(cacheKey);
+                
+                // Forçar recarregamento completo da página sem cache
+                const currentUrl = new URL(window.location);
+                currentUrl.searchParams.set('_t', Date.now()); // Cache buster
+                
+                // Sucesso
+                publishBtn.innerHTML = '✅';
+                publishBtn.classList.add('success');
+                
+                this.ui.showAlert(
+                    '🚀 Alterações publicadas com sucesso!\n' +
+                    'O conteúdo foi atualizado e está visível para todos os usuários.\n' +
+                    'A página será recarregada para aplicar as mudanças.',
+                    'success',
+                    3000
+                );
+                
+                // Recarregar página após 3 segundos para aplicar mudanças
+                setTimeout(() => {
+                    window.location.reload(true);
+                }, 3000);
+                
+            } else {
+                throw new Error('Falha ao salvar alterações no servidor');
+            }
+            
+        } catch (error) {
+            console.error('Erro ao publicar:', error);
+            
+            publishBtn.innerHTML = '❌';
+            publishBtn.classList.add('error');
+            
+            this.ui.showAlert(
+                '❌ Erro ao publicar alterações.\n' +
+                'Verifique a conexão com o servidor e tente novamente.',
+                'error'
+            );
+            
+            // Resetar botão após 3 segundos
+            setTimeout(() => {
+                publishBtn.innerHTML = originalContent;
+                publishBtn.classList.remove('error');
+                publishBtn.disabled = false;
+            }, 3000);
+        }
     }
 
     /**

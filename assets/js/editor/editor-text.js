@@ -98,8 +98,8 @@ class HardemTextEditor {
                 console.log(`🔄 Texto convertido para contador: ${dataKey} = ${numericValue}${suffix}`);
             }
             
-            // Configurar o elemento pai para edição (se existir)
-            if (parentElement) {
+            // Configurar o elemento pai para edição apenas se o modo de edição estiver ativo
+            if (parentElement && this.core.editMode) {
                 this.makeCounterEditable(parentElement);
             }
         });

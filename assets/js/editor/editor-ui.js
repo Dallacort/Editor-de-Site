@@ -102,6 +102,16 @@ class HardemEditorUI {
                     border-color: #e76500;
                 }
 
+                .hardem-editor-btn.error {
+                    background: #dc3545;
+                    border-color: #dc3545;
+                }
+
+                .hardem-editor-btn.error:hover {
+                    background: #c82333;
+                    border-color: #c82333;
+                }
+
                 .hardem-editor-status {
                     background: #2d2d2d;
                     padding: 4px 8px;
@@ -520,43 +530,25 @@ class HardemEditorUI {
         this.core.toolbar.className = 'hardem-editor-toolbar';
         this.core.toolbar.innerHTML = `
             <div class="hardem-editor-controls">
-                <button class="hardem-editor-btn" id="hardem-toggle-edit" title="Editar">
-                    ✏
+                <button class="hardem-editor-btn" id="hardem-toggle-edit" title="Ativar Modo de Edição" disabled>
+                    ✏️
                 </button>
-                <button class="hardem-editor-btn" id="hardem-open-panel" title="Painel">
-                    ⚙
+                <button class="hardem-editor-btn" id="hardem-open-panel" title="Abrir Painel de Edição">
+                    ⚙️
                 </button>
-                <button class="hardem-editor-btn success" id="hardem-save-content" title="Salvar">
+                <button class="hardem-editor-btn success" id="hardem-save-content" title="Salvar Alterações">
                     💾
                 </button>
-                <button class="hardem-editor-btn" id="hardem-reload-content" onclick="window.hardemEditor.storage.loadContent(true)" title="Recarregar">
+                <button class="hardem-editor-btn" id="hardem-preview-mode" title="Sair da Edição">
+                    🚪
+                </button>
+                <button class="hardem-editor-btn warning" id="hardem-publish-changes" title="Publicar Alterações">
+                    🚀
+                </button>
+                <button class="hardem-editor-btn" id="hardem-reload-content" onclick="window.hardemEditor.storage.loadContent(true)" title="Recarregar Conteúdo">
                     ↻
                 </button>
-                <button class="hardem-editor-btn" id="hardem-test-content" onclick="window.hardemEditor.storage.showPageDebugInfo()" title="Debug">
-                    🔍
-                </button>
-                <button class="hardem-editor-btn" id="hardem-clear-overlays" onclick="window.hardemEditor.clearStuckOverlays()" title="Limpar">
-                    🧹
-                </button>
-                <button class="hardem-editor-btn" id="hardem-reset-images" onclick="window.hardemEditor.resetImageProcessing()" title="Reset Imagens">
-                    🖼️
-                </button>
-                <button class="hardem-editor-btn" id="hardem-test-server" onclick="window.hardemEditor.storage.testServerConnection().then(success => alert(success ? 'Servidor conectado!' : 'Servidor indisponível'))" title="Testar Servidor">
-                    🔗
-                </button>
-                <button class="hardem-editor-btn" id="hardem-test-php" onclick="window.hardemEditor.testPHPEnvironment()" title="Testar PHP">
-                    🔧
-                </button>
-                <button class="hardem-editor-btn warning" id="hardem-emergency-reset" title="Reset">
-                    ⚠
-                </button>
-                <button class="hardem-editor-btn warning" id="hardem-clear-all" onclick="window.hardemEditor.storage.clearAllPagesData()" title="Excluir Tudo">
-                    🗑
-                </button>
-                <button class="hardem-editor-btn info" id="hardem-save-parts" onclick="window.hardemEditor.ui.startSaveInParts()" title="Salvar por Partes" style="display: none;">
-                    📦
-                </button>
-                <div class="hardem-editor-status" title="Status">
+                <div class="hardem-editor-status" title="Status do Editor">
                     OFF
                 </div>
             </div>

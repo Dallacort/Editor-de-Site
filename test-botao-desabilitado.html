@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Botão Desabilitado - HARDEM</title>
+    <link href="assets/css/vendor/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/css/style.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 100px 20px;
+            font-family: Arial, sans-serif;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .status-monitor {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            max-width: 300px;
+            z-index: 9999;
+        }
+        
+        .status-item {
+            margin: 8px 0;
+            padding: 8px;
+            border-radius: 4px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .status-ok { border-left-color: #27ae60; background: rgba(39, 174, 96, 0.1); }
+        .status-error { border-left-color: #e74c3c; background: rgba(231, 76, 60, 0.1); }
+        .status-warning { border-left-color: #f39c12; background: rgba(243, 156, 18, 0.1); }
+        
+        .big-button {
+            display: inline-block;
+            padding: 15px 30px;
+            background: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px;
+            font-weight: bold;
+        }
+        
+        .big-button:hover {
+            background: #2980b9;
+            color: white;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Monitor de Status -->
+    <div class="status-monitor" id="statusMonitor">
+        <h4>🔍 Monitor do Botão</h4>
+        <div id="statusList">
+            <div class="status-item status-warning">⏳ Aguardando...</div>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h1 data-key="test_title">🧪 Teste do Botão Desabilitado</h1>
+        <p data-key="test_description">Esta página testa se o botão ✏️ de editar inicia DESABILITADO.</p>
+        
+        <h2>🎯 O que deve acontecer:</h2>
+        <ol>
+            <li><strong>Botão ✏️ inicia DESABILITADO</strong> (cinza, não clicável)</li>
+            <li>Após ~1 segundo, botão é <strong>habilitado</strong></li>
+            <li>Usuário pode então clicar para ativar edição</li>
+            <li>Elementos NÃO ficam editáveis automaticamente</li>
+        </ol>
+        
+        <h2>🔗 Links de Teste:</h2>
+        <a href="test-botao-desabilitado.html" class="big-button">📄 Modo Normal</a>
+        <a href="test-botao-desabilitado.html?edit=true" class="big-button">✏️ Modo de Edição</a>
+        
+        <h2 data-key="test_section">📝 Elementos de Teste</h2>
+        <p data-key="test_paragraph">Este parágrafo deve ser editável apenas após ativar o botão ✏️.</p>
+        <div class="description" data-key="test_div">Esta div também deve aguardar ativação manual.</div>
+        
+        <h3 class="counter title" data-key="test_counter" data-count="42">
+            <span class="odometer" data-key="test_counter_value" data-count="42">42</span>
+        </h3>
+        <span>Contador de Teste</span>
+    </div>
+
+    <!-- Scripts necessários -->
+    <script src="assets/js/vendor/jquery.min.js"></script>
+    <script src="assets/js/plugins/odometer.js"></script>
+    <script src="assets/js/editor-manager.js"></script>
+    
+    <script>
+        // Monitor em tempo real do estado do botão
+        class ButtonMonitor {
+            constructor() {
+                this.statusList = document.getElementById('statusList');
+                this.startTime = Date.now();
+                this.buttonFoundTime = null;
+                this.buttonEnabledTime = null;
+                this.startMonitoring();
+            }
+            
+            updateStatus() {
+                const elapsed = ((Date.now() - this.startTime) / 1000).toFixed(1);
+                this.statusList.innerHTML = '';
+                
+                // Tempo decorrido
+                this.addStatus(`⏱️ Tempo: ${elapsed}s`, 'info');
+                
+                // URL atual
+                const hasEditParam = new URLSearchParams(window.location.search).has('edit');
+                this.addStatus(`🌐 URL: ${hasEditParam ? 'Modo Edição' : 'Modo Normal'}`, hasEditParam ? 'warning' : 'ok');
+                
+                // Editor Manager
+                const hasManager = !!window.editorManager;
+                this.addStatus(`🎛️ Manager: ${hasManager ? 'Carregado' : 'Não encontrado'}`, hasManager ? 'ok' : 'error');
+                
+                // Editor Core
+                const hasEditor = !!window.hardemEditor;
+                this.addStatus(`⚙️ Editor: ${hasEditor ? 'Carregado' : 'Não encontrado'}`, hasEditor ? 'ok' : 'warning');
+                
+                // Botão de editar
+                const button = document.getElementById('hardem-toggle-edit');
+                if (button) {
+                    if (!this.buttonFoundTime) {
+                        this.buttonFoundTime = Date.now();
+                    }
+                    
+                    const isDisabled = button.disabled;
+                    const timeSinceFound = ((Date.now() - this.buttonFoundTime) / 1000).toFixed(1);
+                    
+                    this.addStatus(`✏️ Botão: ${isDisabled ? 'DESABILITADO' : 'HABILITADO'}`, isDisabled ? 'ok' : 'warning');
+                    this.addStatus(`📍 Encontrado há: ${timeSinceFound}s`, 'info');
+                    
+                    if (!isDisabled && !this.buttonEnabledTime) {
+                        this.buttonEnabledTime = Date.now();
+                        const enableTime = ((this.buttonEnabledTime - this.buttonFoundTime) / 1000).toFixed(1);
+                        console.log(`🎯 Botão habilitado após ${enableTime}s`);
+                    }
+                    
+                    if (this.buttonEnabledTime) {
+                        const enableTime = ((this.buttonEnabledTime - this.buttonFoundTime) / 1000).toFixed(1);
+                        this.addStatus(`🎯 Habilitado em: ${enableTime}s`, enableTime < 2 ? 'ok' : 'warning');
+                    }
+                } else {
+                    this.addStatus('✏️ Botão: NÃO ENCONTRADO', 'error');
+                }
+                
+                // Modo de edição
+                if (window.hardemEditor) {
+                    const editMode = window.hardemEditor.editMode;
+                    this.addStatus(`🔓 Edição: ${editMode ? 'ATIVA' : 'INATIVA'}`, editMode ? 'warning' : 'ok');
+                }
+                
+                // Elementos editáveis
+                const editableElements = document.querySelectorAll('.hardem-editable-element');
+                this.addStatus(`📝 Editáveis: ${editableElements.length}`, editableElements.length === 0 ? 'ok' : 'warning');
+            }
+            
+            addStatus(text, type) {
+                const div = document.createElement('div');
+                div.className = `status-item status-${type}`;
+                div.textContent = text;
+                this.statusList.appendChild(div);
+            }
+            
+            startMonitoring() {
+                setInterval(() => this.updateStatus(), 100);
+                this.updateStatus();
+            }
+        }
+        
+        // Inicializar monitor quando DOM estiver pronto
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🧪 Iniciando teste do botão desabilitado');
+            new ButtonMonitor();
+        });
+        
+        // Log de eventos importantes
+        document.addEventListener('hardem-editor-content-loaded', () => {
+            console.log('📥 Evento: Conteúdo carregado');
+        });
+        
+        // Interceptar cliques no botão quando ele existir
+        document.addEventListener('click', (e) => {
+            if (e.target.id === 'hardem-toggle-edit') {
+                console.log('🖱️ Clique no botão de editar detectado');
+                console.log('🔍 Estado do botão:', {
+                    disabled: e.target.disabled,
+                    editMode: window.hardemEditor?.editMode
+                });
+            }
+        });
+    </script>
+</body>
+</html> 

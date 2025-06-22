@@ -80,12 +80,11 @@ class HardemEditorManager {
         this.loadEditorScripts().then(() => {
             console.log('📝 Editor carregado com sucesso!');
             
-            // Aguardar um pouco e inicializar o editor
+            // Aguardar um pouco e verificar se editor foi carregado
             setTimeout(() => {
                 if (window.hardemEditor) {
-                    if (!window.hardemEditor.editMode) {
-                        window.hardemEditor.toggleEditMode();
-                    }
+                    console.log('✅ Editor carregado - aguardando ativação manual');
+                    // NÃO ativar automaticamente - usuário deve clicar no botão ✏️
                 } else {
                     console.log('⏳ Aguardando editor estar disponível...');
                     this.waitForEditor();
@@ -98,10 +97,8 @@ class HardemEditorManager {
         const checkEditor = setInterval(() => {
             if (window.hardemEditor) {
                 clearInterval(checkEditor);
-                console.log('✅ Editor disponível - ativando modo de edição');
-                if (!window.hardemEditor.editMode) {
-                    window.hardemEditor.toggleEditMode();
-                }
+                console.log('✅ Editor disponível - pronto para ativação manual');
+                // NÃO ativar automaticamente - aguardar usuário clicar no botão ✏️
             }
         }, 500);
         
@@ -158,48 +155,8 @@ class HardemEditorManager {
     }
     
     createEditModeIndicator() {
-        // Remover indicador existente
-        const existing = document.getElementById('edit-mode-indicator');
-        if (existing) existing.remove();
-        
-        const indicator = document.createElement('div');
-        indicator.id = 'edit-mode-indicator';
-        indicator.innerHTML = `
-            <div style="
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                background: linear-gradient(135deg, #e74c3c, #c0392b);
-                color: white;
-                padding: 10px;
-                text-align: center;
-                font-weight: 600;
-                font-size: 14px;
-                z-index: 10000;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            ">
-                🔧 MODO DE EDIÇÃO ATIVO - Clique duas vezes nos elementos para editar
-                <button onclick="exitEditMode()" style="
-                    background: rgba(255,255,255,0.2);
-                    border: 1px solid rgba(255,255,255,0.3);
-                    color: white;
-                    padding: 5px 15px;
-                    border-radius: 15px;
-                    margin-left: 20px;
-                    cursor: pointer;
-                    font-size: 12px;
-                ">
-                    ❌ Sair do Modo de Edição
-                </button>
-            </div>
-        `;
-        
-        document.body.appendChild(indicator);
-        
-        // Ajustar padding do body para não sobrepor o indicador
-        document.body.style.paddingTop = '50px';
+        // Não criar mais o indicador vermelho - a toolbar já tem o controle
+        console.log('📝 Modo de edição gerenciado pela toolbar principal');
     }
     
     disableEditMode() {
