@@ -102,7 +102,7 @@
                     height: Math.max(rect.height, 200),
                     element: bg
                 };
-                
+
                 imageEditor.normalizeIndividualImage(bg, targetDims);
                 processedCount++;
             }
@@ -190,16 +190,16 @@
                     imageEditor.removeIndividualNormalization(el);
                 } else {
                     // Fallback para método antigo
-                    el.removeAttribute('data-normalized');
-                    el.removeAttribute('data-target-width');
-                    el.removeAttribute('data-target-height');
+                el.removeAttribute('data-normalized');
+                el.removeAttribute('data-target-width');
+                el.removeAttribute('data-target-height');
                     el.removeAttribute('data-normalize-id');
-                    
-                    if (el.tagName.toLowerCase() === 'img') {
-                        el.style.width = '';
-                        el.style.height = '';
-                        el.style.objectFit = '';
-                        el.style.objectPosition = '';
+                
+                if (el.tagName.toLowerCase() === 'img') {
+                    el.style.width = '';
+                    el.style.height = '';
+                    el.style.objectFit = '';
+                    el.style.objectPosition = '';
                     }
                 }
             });

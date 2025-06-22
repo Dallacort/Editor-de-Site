@@ -29,27 +29,56 @@ class HardemEditorCore {
         // Seletores de elementos editáveis
         this.editableSelectors = [
             '[data-key]',
-            'h1:not([data-no-edit])',
-            'h2:not([data-no-edit])',
-            'h3:not([data-no-edit])',
-            'h4:not([data-no-edit])',
-            'h5:not([data-no-edit])',
-            'h6:not([data-no-edit])',
+            // Contadores - devem ser reconhecidos como um elemento único
+            'h1.counter.title:not([data-no-edit])',
+            'h2.counter.title:not([data-no-edit])',
+            'h3.counter.title:not([data-no-edit])',
+            'h4.counter.title:not([data-no-edit])',
+            'h5.counter.title:not([data-no-edit])',
+            'h6.counter.title:not([data-no-edit])',
+            // Headers tradicionais
+            'h1:not([data-no-edit]):not(.counter)',
+            'h2:not([data-no-edit]):not(.counter)',
+            'h3:not([data-no-edit]):not(.counter)',
+            'h4:not([data-no-edit]):not(.counter)',
+            'h5:not([data-no-edit]):not(.counter)',
+            'h6:not([data-no-edit]):not(.counter)',
+            // Textos
             'p:not([data-no-edit])',
-            'span:not([data-no-edit])',
+            'span:not([data-no-edit]):not(.odometer)',
             'a:not([data-no-edit])',
             'button:not([data-no-edit])',
-            'div.title:not([data-no-edit])',
+            // Classes específicas de texto
+            'div.title:not([data-no-edit]):not(.counter)',
             'div.subtitle:not([data-no-edit])',
             'div.description:not([data-no-edit])',
             'div.content:not([data-no-edit])',
             'div.text:not([data-no-edit])',
+            'div.disc:not([data-no-edit])',
+            'div.details:not([data-no-edit])',
+            // Elementos de footer com background
+            'footer:not([data-no-edit])',
+            'footer *:not([data-no-edit])',
+            '.footer:not([data-no-edit])',
+            '.footer *:not([data-no-edit])',
+            '.rts-footer:not([data-no-edit])',
+            '.rts-footer *:not([data-no-edit])',
+            // Elementos com background
+            '[style*="background"]:not([data-no-edit])',
+            '[class*="bg"]:not([data-no-edit])',
+            '.bg_image:not([data-no-edit])',
+            // Outros elementos
             'li:not([data-no-edit])',
             'td:not([data-no-edit])',
             'th:not([data-no-edit])',
             'label:not([data-no-edit])',
             'figcaption:not([data-no-edit])',
-            '.editable:not([data-no-edit])'
+            '.editable:not([data-no-edit])',
+            // Estatísticas e números
+            '.ss:not([data-no-edit])',
+            '.statistics:not([data-no-edit])',
+            '.number:not([data-no-edit])',
+            '.count:not([data-no-edit])'
         ];
 
         this.init();
