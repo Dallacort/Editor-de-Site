@@ -137,6 +137,11 @@ try {
             $elementInfo = json_decode($imagem['propriedades'], true);
             if (json_last_error() === JSON_ERROR_NONE) {
                 $imageData['elementInfo'] = $elementInfo;
+                
+                // Incluir dados de normalização se existirem
+                if (isset($elementInfo['normalization']) && $elementInfo['normalization']['normalized']) {
+                    $imageData['normalization'] = $elementInfo['normalization'];
+                }
             }
         }
         

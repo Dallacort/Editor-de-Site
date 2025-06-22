@@ -341,6 +341,9 @@ class HardemEditorUtils {
         // Informações específicas para mapeamento entre páginas
         const headerInfo = this.getHeaderMappingInfo(element);
 
+        // NOVO: Informações específicas para elementos de dropdown
+        const dropdownInfo = this.getDropdownInfo(element);
+
         return {
             tagName: element.tagName.toLowerCase(),
             className: element.className,
@@ -363,6 +366,11 @@ class HardemEditorUtils {
             // Informações específicas para header
             headerMappingInfo: headerInfo,
             isInHeader: element.closest('header') !== null,
+            
+            // NOVO: Informações específicas para dropdown
+            dropdownInfo: dropdownInfo,
+            isInDropdown: dropdownInfo.isInDropdown,
+            
             childIndex: Array.from(element.parentElement?.children || []).indexOf(element),
             siblingCount: element.parentElement?.children.length || 0,
             hasBackground: this.hasBackgroundImage(element),
@@ -723,6 +731,101 @@ class HardemEditorUtils {
         }
 
         return parts.length > 0 ? '//' + parts.join('/') : '';
+    }
+
+    /**
+     * NOVO: Obter informações específicas para elementos de dropdown
+     */
+    getDropdownInfo(element) {
+        const dropdownContainer = element.closest('.has-dropdown, .submenu, .rts-mega-menu, .dropdown, .nav-item');
+        
+        if (!dropdownContainer) {
+            return { isInDropdown: false };
+        }
+
+        // Identificar tipo de dropdown
+        let dropdownType = 'unknown';
+        if (dropdownContainer.classList.contains('has-dropdown')) {
+            dropdownType = 'has-dropdown';
+        } else if (dropdownContainer.classList.contains('submenu')) {
+            dropdownType = 'submenu';
+        } else if (dropdownContainer.classList.contains('rts-mega-menu')) {
+            dropdownType = 'mega-menu';
+        } else if (dropdownContainer.classList.contains('dropdown')) {
+            dropdownType = 'dropdown';
+        }
+
+        // Encontrar o menu pai
+        const parentMenu = element.closest('.main-nav, .nav, .menu');
+        const menuLevel = this.getDropdownLevel(element);
+
+        // Identificar posição no dropdown
+        const dropdownItems = Array.from(dropdownContainer.querySelectorAll('a, span, p, li'));
+        const itemIndex = dropdownItems.indexOf(element);
+
+        // Coletar texto de elementos próximos para contexto
+        const siblingTexts = dropdownItems
+            .slice(Math.max(0, itemIndex - 1), itemIndex + 2)
+            .map(item => item.textContent?.trim())
+            .filter(text => text && text.length > 0);
+
+        return {
+            isInDropdown: true,
+            dropdownType,
+            dropdownContainer: {
+                className: dropdownContainer.className,
+                tagName: dropdownContainer.tagName.toLowerCase()
+            },
+            parentMenu: parentMenu ? {
+                className: parentMenu.className,
+                tagName: parentMenu.tagName.toLowerCase()
+            } : null,
+            menuLevel,
+            itemIndex,
+            totalItems: dropdownItems.length,
+            siblingTexts,
+            isVisible: getComputedStyle(dropdownContainer).display !== 'none',
+            dropdownPath: this.getDropdownPath(element)
+        };
+    }
+
+    /**
+     * NOVO: Obter nível do dropdown (quantos níveis de menu)
+     */
+    getDropdownLevel(element) {
+        let level = 0;
+        let current = element;
+        
+        while (current) {
+            if (current.classList?.contains('submenu') || 
+                current.classList?.contains('has-dropdown') ||
+                current.classList?.contains('dropdown')) {
+                level++;
+            }
+            current = current.parentElement;
+        }
+        
+        return level;
+    }
+
+    /**
+     * NOVO: Obter caminho específico do dropdown
+     */
+    getDropdownPath(element) {
+        const path = [];
+        let current = element;
+        
+        while (current && !current.classList?.contains('main-nav')) {
+            if (current.classList?.contains('submenu') || 
+                current.classList?.contains('has-dropdown')) {
+                
+                const text = current.textContent?.trim().substring(0, 20) || current.className;
+                path.unshift(text);
+            }
+            current = current.parentElement;
+        }
+        
+        return path.join(' > ');
     }
 }
 

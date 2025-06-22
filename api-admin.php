@@ -83,6 +83,11 @@ try {
             handleUploadImageDatabaseOnly($imageManager, $db);
             break;
             
+        // PROPRIEDADES DE ELEMENTOS
+        case 'update_element_properties':
+            handleUpdateElementProperties($db);
+            break;
+            
         // TEXTOS
         case 'get_texts':
             handleGetTexts($db);
@@ -643,6 +648,96 @@ function handleUploadImageDatabaseOnly($imageManager, $db) {
     } catch (Exception $e) {
         safeLog("Erro ao salvar imagem database-only: " . $e->getMessage());
         throw new Exception("Erro ao salvar imagem na base de dados: " . $e->getMessage());
+    }
+}
+
+function handleUpdateElementProperties($db) {
+    try {
+        $elementKey = $_POST['element_key'] ?? '';
+        $properties = $_POST['properties'] ?? '{}';
+        $pageId = $_POST['page_id'] ?? '';
+        
+        if (empty($elementKey)) {
+            throw new Exception("Chave do elemento é obrigatória");
+        }
+        
+        if (empty($pageId)) {
+            throw new Exception("ID da página é obrigatório");
+        }
+        
+        // Validar JSON das propriedades
+        $propertiesData = json_decode($properties, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new Exception("Propriedades devem ser um JSON válido");
+        }
+        
+        safeLog("Atualizando propriedades do elemento: {$elementKey} na página: {$pageId}");
+        
+        $db->beginTransaction();
+        
+        try {
+            // Verificar se já existe relacionamento
+            $existingRelation = $db->query("
+                SELECT id, propriedades 
+                FROM pagina_imagens 
+                WHERE pagina_id = ? AND contexto = ? AND status = 'ativo' 
+                LIMIT 1
+            ", [$pageId, $elementKey]);
+            
+            if (!empty($existingRelation)) {
+                // Atualizar relacionamento existente
+                $relationId = $existingRelation[0]['id'];
+                
+                // Mesclar propriedades existentes com novas
+                $existingProps = [];
+                if (!empty($existingRelation[0]['propriedades'])) {
+                    $existingProps = json_decode($existingRelation[0]['propriedades'], true) ?: [];
+                }
+                
+                $mergedProperties = array_merge($existingProps, $propertiesData);
+                
+                $db->update('pagina_imagens', [
+                    'propriedades' => json_encode($mergedProperties, JSON_UNESCAPED_UNICODE),
+                    'updated_at' => date('Y-m-d H:i:s')
+                ], 'id = ?', [$relationId]);
+                
+                safeLog("Propriedades atualizadas no relacionamento existente: {$relationId}");
+                
+            } else {
+                // Criar novo relacionamento apenas para propriedades
+                $relationId = $db->insert('pagina_imagens', [
+                    'pagina_id' => $pageId,
+                    'imagem_id' => 0, // ID fictício para elementos sem imagem
+                    'contexto' => $elementKey,
+                    'posicao' => 0,
+                    'propriedades' => json_encode($propertiesData, JSON_UNESCAPED_UNICODE),
+                    'status' => 'ativo',
+                    'created_at' => date('Y-m-d H:i:s'),
+                    'updated_at' => date('Y-m-d H:i:s')
+                ]);
+                
+                safeLog("Novo relacionamento criado para propriedades: {$relationId}");
+            }
+            
+            $db->commit();
+            
+            sendJsonResponse([
+                'success' => true,
+                'message' => 'Propriedades do elemento atualizadas com sucesso!',
+                'element_key' => $elementKey,
+                'page_id' => $pageId,
+                'relation_id' => $relationId,
+                'properties' => $propertiesData
+            ]);
+            
+        } catch (Exception $e) {
+            $db->rollback();
+            throw $e;
+        }
+        
+    } catch (Exception $e) {
+        safeLog("Erro ao atualizar propriedades do elemento: " . $e->getMessage());
+        throw new Exception("Erro ao atualizar propriedades: " . $e->getMessage());
     }
 }
 

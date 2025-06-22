@@ -1,0 +1,216 @@
+/**
+ * HARDEM - Estilos para Normalização de Imagens
+ * Garante aparência consistente para imagens normalizadas
+ * @version 1.0.0
+ */
+
+/* Container para imagens normalizadas */
+.hardem-image-container {
+    display: inline-block;
+    overflow: hidden;
+    position: relative;
+    box-sizing: border-box;
+}
+
+/* Estilos base para imagens normalizadas */
+img[data-normalized="true"] {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    display: block !important;
+    border: none;
+    transition: transform 0.3s ease;
+}
+
+/* Efeito hover para imagens normalizadas */
+img[data-normalized="true"]:hover {
+    transform: scale(1.05);
+}
+
+/* Backgrounds normalizados */
+[data-normalized="true"][style*="background-image"] {
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    transition: transform 0.3s ease;
+}
+
+/* Efeito hover para backgrounds normalizados */
+[data-normalized="true"][style*="background-image"]:hover {
+    transform: scale(1.02);
+}
+
+/* Responsividade para imagens normalizadas */
+@media (max-width: 768px) {
+    .hardem-image-container {
+        width: 100% !important;
+        max-width: 100%;
+    }
+    
+    img[data-normalized="true"] {
+        max-width: 100%;
+        height: auto !important;
+        min-height: 200px;
+    }
+    
+    [data-normalized="true"][style*="background-image"] {
+        width: 100% !important;
+        max-width: 100%;
+        min-height: 200px;
+    }
+}
+
+@media (max-width: 480px) {
+    img[data-normalized="true"] {
+        min-height: 150px;
+    }
+    
+    [data-normalized="true"][style*="background-image"] {
+        min-height: 150px;
+    }
+}
+
+/* Estilos para grids de imagens normalizadas */
+.hardem-normalized-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.hardem-normalized-grid .hardem-image-container {
+    width: 100%;
+    aspect-ratio: 16/9; /* Manter proporção consistente */
+}
+
+/* Estilos para galeria de imagens normalizadas */
+.hardem-normalized-gallery {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.hardem-normalized-gallery .hardem-image-container {
+    flex: 0 0 auto;
+}
+
+/* Loading placeholder para imagens normalizadas */
+img[data-normalized="true"]:not([src]),
+img[data-normalized="true"][src=""] {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+/* Indicador visual para imagens normalizadas (apenas em modo debug) */
+body.hardem-debug img[data-normalized="true"]::after {
+    content: "✅ Normalizada";
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(40, 167, 69, 0.9);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: bold;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+body.hardem-debug [data-normalized="true"][style*="background-image"]::before {
+    content: "🎨 BG Normalizado";
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    background: rgba(40, 167, 69, 0.9);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: bold;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+/* Correções para carrosséis/slides */
+.swiper-slide img[data-normalized="true"],
+.carousel-item img[data-normalized="true"] {
+    transform: none !important; /* Desabilitar transformações em slides */
+}
+
+.swiper-slide img[data-normalized="true"]:hover,
+.carousel-item img[data-normalized="true"]:hover {
+    transform: none !important;
+}
+
+/* Estilos para modo escuro */
+@media (prefers-color-scheme: dark) {
+    img[data-normalized="true"]:not([src]),
+    img[data-normalized="true"][src=""] {
+        background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+    }
+}
+
+/* Utilitários para diferentes proporções */
+.hardem-aspect-16-9 {
+    aspect-ratio: 16/9;
+}
+
+.hardem-aspect-4-3 {
+    aspect-ratio: 4/3;
+}
+
+.hardem-aspect-1-1 {
+    aspect-ratio: 1/1;
+}
+
+.hardem-aspect-3-2 {
+    aspect-ratio: 3/2;
+}
+
+/* Classe para desabilitar normalizações temporariamente */
+.hardem-no-normalize,
+.hardem-no-normalize img,
+.hardem-no-normalize [style*="background-image"] {
+    width: auto !important;
+    height: auto !important;
+    object-fit: initial !important;
+    background-size: initial !important;
+}
+
+/* Correções para elementos específicos */
+.logo img[data-normalized="true"],
+.icon img[data-normalized="true"],
+nav img[data-normalized="true"] {
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+/* Print styles */
+@media print {
+    img[data-normalized="true"] {
+        max-width: 100% !important;
+        height: auto !important;
+        object-fit: contain !important;
+        break-inside: avoid;
+    }
+    
+    .hardem-image-container {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+} 

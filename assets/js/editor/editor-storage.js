@@ -1061,6 +1061,12 @@ class HardemEditorStorage {
             // Tentar encontrar elemento pelo data-key
             let element = document.querySelector(`[data-key="${dataKey}"]`);
             
+            // NOVO: Busca especial para elementos de dropdown
+            if (!element && (dataKey.includes('a-pos') || content.isDropdownContent)) {
+                console.log(`🔽 Procurando elemento de dropdown: ${dataKey}`);
+                element = this.findDropdownElement(dataKey, content);
+            }
+            
             // Se não encontrar, tentar por informações detalhadas
             if (!element && content.elementInfo) {
                 element = this.findElementByDetailedInfo(content.elementInfo, dataKey);
@@ -1099,6 +1105,18 @@ class HardemEditorStorage {
             }, 500);
         }
 
+        // NOVO: Retry especial para elementos de dropdown órfãos
+        const dropdownOrphans = orphanedKeys.filter(key => 
+            key.includes('a-pos') || this.core.contentMap[key]?.isDropdownContent
+        );
+        
+        if (dropdownOrphans.length > 0) {
+            console.log(`🔽 Tentando recuperar ${dropdownOrphans.length} elementos de dropdown órfãos...`);
+            setTimeout(() => {
+                this.retryDropdownElements(dropdownOrphans);
+            }, 1000); // Delay maior para dropdowns
+        }
+
         // Tentar aplicar conteúdo órfão de header usando sincronização forçada
         if (orphanedKeys.length > 0) {
             const headerOrphans = this.filterHeaderOrphans(orphanedKeys);
@@ -1127,6 +1145,15 @@ class HardemEditorStorage {
 
         console.log(`✅ ${appliedCount} elementos aplicados, ${orphanedKeys.length} órfãos removidos`);
         
+        // NOVO: Aplicar normalizações salvas no banco de dados
+        if (this.core.imageEditor && this.core.imageEditor.applyContentFromDatabase) {
+            try {
+                this.core.imageEditor.applyContentFromDatabase(this.core.contentMap);
+            } catch (error) {
+                console.error('Erro ao aplicar normalizações do banco:', error);
+            }
+        }
+        
         if (appliedCount > 0) {
             this.core.ui.showAlert(`${appliedCount} elementos restaurados!`, 'success');
         }
@@ -1141,6 +1168,151 @@ class HardemEditorStorage {
             setTimeout(() => {
                 this.tryApplyOrphanedBackgrounds(orphanedKeys);
             }, 500);
+        }
+    }
+
+    /**
+     * NOVO: Buscar elementos de dropdown especificamente
+     */
+    findDropdownElement(dataKey, content) {
+        console.log(`🔽 Procurando dropdown detalhadamente: ${dataKey}`, content.elementInfo?.dropdownInfo);
+        
+        // Usar informações específicas de dropdown se disponíveis
+        if (content.elementInfo?.dropdownInfo?.isInDropdown) {
+            const dropdownInfo = content.elementInfo.dropdownInfo;
+            
+            // Procurar pelo tipo específico de dropdown
+            const dropdownSelectors = [];
+            if (dropdownInfo.dropdownType) {
+                dropdownSelectors.push(`.${dropdownInfo.dropdownType}`);
+            }
+            dropdownSelectors.push('.has-dropdown', '.submenu', '.rts-mega-menu', '.dropdown', '.nav-item');
+            
+            for (let selector of dropdownSelectors) {
+                const containers = document.querySelectorAll(selector);
+                
+                for (let container of containers) {
+                    // Procurar por texto exato primeiro
+                    if (content.text) {
+                        const textElements = container.querySelectorAll('a, span, p, li');
+                        for (let element of textElements) {
+                            if (element.textContent && element.textContent.trim() === content.text.trim()) {
+                                // Verificar se o contexto bate (textos de elementos próximos)
+                                if (this.validateDropdownContext(element, dropdownInfo)) {
+                                    console.log(`🔽 Dropdown encontrado por texto e contexto: ${dataKey}`);
+                                    element.setAttribute('data-key', dataKey);
+                                    return element;
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Procurar por posição no dropdown
+                    if (dropdownInfo.itemIndex !== undefined) {
+                        const dropdownItems = container.querySelectorAll('a, span, p, li');
+                        const targetElement = dropdownItems[dropdownInfo.itemIndex];
+                        
+                        if (targetElement && !targetElement.hasAttribute('data-key')) {
+                            console.log(`🔽 Dropdown encontrado por posição: ${dataKey} (índice ${dropdownInfo.itemIndex})`);
+                            targetElement.setAttribute('data-key', dataKey);
+                            return targetElement;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Fallback: busca geral por texto
+        const dropdownContainers = document.querySelectorAll('.has-dropdown, .submenu, .rts-mega-menu, .dropdown, .nav-item');
+        
+        for (let container of dropdownContainers) {
+            // Procurar por texto similar dentro do container
+            if (content.text) {
+                const textElements = container.querySelectorAll('a, span, p, li');
+                for (let element of textElements) {
+                    if (element.textContent && element.textContent.trim() === content.text.trim()) {
+                        console.log(`🔽 Dropdown encontrado por texto (fallback): ${dataKey}`);
+                        element.setAttribute('data-key', dataKey);
+                        return element;
+                    }
+                }
+            }
+            
+            // Procurar por estrutura similar
+            if (content.elementInfo) {
+                const similarElements = container.querySelectorAll(content.elementInfo.tagName || 'a');
+                for (let element of similarElements) {
+                    if (!element.hasAttribute('data-key') && 
+                        element.textContent && 
+                        element.textContent.trim().length > 0) {
+                        console.log(`🔽 Dropdown encontrado por estrutura (fallback): ${dataKey}`);
+                        element.setAttribute('data-key', dataKey);
+                        return element;
+                    }
+                }
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * NOVO: Validar contexto do dropdown (verificar elementos próximos)
+     */
+    validateDropdownContext(element, dropdownInfo) {
+        if (!dropdownInfo.siblingTexts || dropdownInfo.siblingTexts.length === 0) {
+            return true; // Se não há contexto para comparar, aceitar
+        }
+        
+        const container = element.closest('.has-dropdown, .submenu, .rts-mega-menu, .dropdown, .nav-item');
+        if (!container) return false;
+        
+        const dropdownItems = Array.from(container.querySelectorAll('a, span, p, li'));
+        const itemIndex = dropdownItems.indexOf(element);
+        
+        // Verificar textos próximos
+        const currentSiblingTexts = dropdownItems
+            .slice(Math.max(0, itemIndex - 1), itemIndex + 2)
+            .map(item => item.textContent?.trim())
+            .filter(text => text && text.length > 0);
+        
+        // Verificar se pelo menos metade dos textos próximos batem
+        const matches = currentSiblingTexts.filter(text => 
+            dropdownInfo.siblingTexts.includes(text)
+        );
+        
+        const matchRatio = matches.length / Math.max(dropdownInfo.siblingTexts.length, currentSiblingTexts.length);
+        
+        console.log(`🔍 Validação de contexto: ${matches.length}/${dropdownInfo.siblingTexts.length} matches (${(matchRatio * 100).toFixed(1)}%)`);
+        
+        return matchRatio >= 0.5; // Pelo menos 50% de correspondência
+    }
+
+    /**
+     * NOVO: Retry para elementos de dropdown órfãos
+     */
+    retryDropdownElements(dropdownOrphans) {
+        let recoveredCount = 0;
+        
+        dropdownOrphans.forEach(dataKey => {
+            const content = this.core.contentMap[dataKey];
+            if (!content) return;
+            
+            const element = this.findDropdownElement(dataKey, content);
+            if (element) {
+                try {
+                    this.applyContentToElement(element, content, dataKey);
+                    recoveredCount++;
+                    console.log(`🔽 Elemento de dropdown recuperado: ${dataKey}`);
+                } catch (error) {
+                    console.error(`❌ Erro ao recuperar dropdown ${dataKey}:`, error);
+                }
+            }
+        });
+        
+        if (recoveredCount > 0) {
+            console.log(`✅ ${recoveredCount} elementos de dropdown recuperados!`);
+            this.core.ui.showAlert(`${recoveredCount} elementos de dropdown recuperados!`, 'success');
         }
     }
 
@@ -1398,80 +1570,78 @@ class HardemEditorStorage {
      * Limpar conteúdo órfão
      */
     cleanOrphanedContent(orphanedKeys) {
-        // Tentar uma última busca para elementos com background antes de remover
-        const recoveredKeys = [];
+        if (!orphanedKeys || orphanedKeys.length === 0) return;
+
+        console.log(`🗑️ Processando ${orphanedKeys.length} elementos órfãos...`);
         
-        orphanedKeys.forEach(key => {
-            const content = this.core.contentMap[key];
-            
-            // Se tem background, tentar encontrar por características de background
-            if (content && content.backgroundImage) {
-                const recovered = this.tryRecoverBackgroundElement(key, content);
-                if (recovered) {
-                    recoveredKeys.push(key);
-                    console.log(`🔄 Elemento com background recuperado: ${key}`);
-                    return;
-                }
-            }
-            
-            delete this.core.contentMap[key];
+        // NOVO: Separar elementos de dropdown dos outros órfãos
+        const dropdownOrphans = orphanedKeys.filter(key => 
+            key.includes('a-pos') || this.core.contentMap[key]?.isDropdownContent || 
+            this.core.contentMap[key]?.elementInfo?.isInDropdown
+        );
+        
+        const regularOrphans = orphanedKeys.filter(key => !dropdownOrphans.includes(key));
+        
+        // Remover órfãos regulares imediatamente
+        regularOrphans.forEach(key => {
             console.log(`🗑️ Conteúdo órfão removido: ${key}`);
+            delete this.core.contentMap[key];
         });
         
-        // Salvar contentMap limpo com chave específica da página
-        const pageKey = this.getPageKey();
-        localStorage.setItem(pageKey, JSON.stringify(this.core.contentMap));
-        
-        if (recoveredKeys.length > 0) {
-            console.log(`✅ ${recoveredKeys.length} elementos recuperados na última tentativa`);
+        // NOVO: Para elementos de dropdown, dar mais tempo antes de remover
+        if (dropdownOrphans.length > 0) {
+            console.log(`⏳ Aguardando para remover ${dropdownOrphans.length} elementos de dropdown órfãos...`);
+            
+            // Tentar recuperar uma vez mais após 2 segundos
+            setTimeout(() => {
+                this.finalDropdownCleanup(dropdownOrphans);
+            }, 2000);
         }
     }
 
     /**
-     * Tentar recuperar elemento com background
+     * NOVO: Limpeza final de elementos de dropdown órfãos
      */
-    tryRecoverBackgroundElement(dataKey, content) {
-        // Procurar elementos que podem ter background
-        const potentialElements = document.querySelectorAll('div, section, header, .banner, .hero, .bg_image');
+    finalDropdownCleanup(dropdownOrphans) {
+        let recoveredCount = 0;
         
-        for (const element of potentialElements) {
-            // Verificar se já tem data-key
-            if (element.hasAttribute('data-key')) continue;
+        // Última tentativa de recuperação
+        dropdownOrphans.forEach(dataKey => {
+            const content = this.core.contentMap[dataKey];
+            if (!content) return;
             
-            // Verificar se tem background ou pode ter background
-            const computedStyle = getComputedStyle(element);
-            const hasExistingBg = element.style.backgroundImage || 
-                                 (computedStyle.backgroundImage && computedStyle.backgroundImage !== 'none');
+            // Verificar se o elemento foi encontrado na última tentativa
+            const element = document.querySelector(`[data-key="${dataKey}"]`);
+            if (element) {
+                recoveredCount++;
+                console.log(`✅ Elemento de dropdown recuperado na última tentativa: ${dataKey}`);
+                return;
+            }
             
-            // Verificar se as classes coincidem (se temos essa informação)
-            if (content.elementInfo && content.elementInfo.attributes && content.elementInfo.attributes.class) {
-                const expectedClasses = content.elementInfo.attributes.class.split(' ')
-                    .filter(cls => cls && !cls.startsWith('hardem-'));
-                const elementClasses = Array.from(element.classList);
-                
-                const matchingClasses = expectedClasses.filter(cls => elementClasses.includes(cls));
-                
-                // Se pelo menos 60% das classes coincidem, considerar como candidato
-                if (matchingClasses.length / expectedClasses.length >= 0.6) {
-                    console.log(`🎯 Candidato encontrado para ${dataKey}:`, element);
-                    element.setAttribute('data-key', dataKey);
-                    
-                    // Aplicar o background imediatamente
-                    this.applyContentToElement(element, content, dataKey);
-                    return element;
+            // Tentar encontrar novamente
+            const foundElement = this.findDropdownElement(dataKey, content);
+            if (foundElement) {
+                try {
+                    this.applyContentToElement(foundElement, content, dataKey);
+                    recoveredCount++;
+                    console.log(`✅ Elemento de dropdown recuperado na limpeza final: ${dataKey}`);
+                } catch (error) {
+                    console.error(`❌ Erro na recuperação final do dropdown ${dataKey}:`, error);
+                    // Só agora remover se realmente não conseguiu recuperar
+                    console.log(`🗑️ Conteúdo de dropdown órfão removido: ${dataKey}`);
+                    delete this.core.contentMap[dataKey];
                 }
+            } else {
+                // Não conseguiu encontrar, remover
+                console.log(`🗑️ Conteúdo de dropdown órfão removido: ${dataKey}`);
+                delete this.core.contentMap[dataKey];
             }
-            
-            // Se não temos informações de classe, tentar por posição ou outras características
-            if (hasExistingBg && element.offsetHeight > 100 && element.offsetWidth > 200) {
-                console.log(`🎯 Elemento com background encontrado para ${dataKey}:`, element);
-                element.setAttribute('data-key', dataKey);
-                this.applyContentToElement(element, content, dataKey);
-                return element;
-            }
-        }
+        });
         
-        return null;
+        if (recoveredCount > 0) {
+            console.log(`🎉 Recuperação final: ${recoveredCount} elementos de dropdown salvos!`);
+            this.core.ui.showAlert(`${recoveredCount} elementos de dropdown recuperados na última tentativa!`, 'success');
+        }
     }
 
     /**

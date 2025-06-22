@@ -53,22 +53,18 @@ class HardemTextEditor {
             return; // Não tornar editável
         }
         
-        // Verificar se está no header, para aplicar regras específicas
-        const isInHeader = element.closest('header') !== null;
-        
-        if (isInHeader) {
+        // Verificar se está no header e aplicar regras especiais
+        if (element.closest('header')) {
             // Verificar elementos de navegação que não devem ser editáveis
             if (element.classList.contains('header-bottom') ||
                 element.classList.contains('nav-area') || 
                 element.classList.contains('main-nav') || 
-                element.classList.contains('submenu') ||
                 element.classList.contains('rts-mega-menu')) {
                 return; // Não tornar editável
             }
             
             // Para links no header, verificar se são links de navegação complexos (com dropdown)
             if (element.tagName === 'A' && (
-                element.classList.contains('has-dropdown') || 
                 element.querySelector('.rts-mega-menu') || 
                 element.querySelector('.submenu'))) {
                 
@@ -76,6 +72,15 @@ class HardemTextEditor {
                 if (element.querySelector('.rts-mega-menu') || element.querySelector('.submenu')) {
                     return; // Não tornar editável
                 }
+            }
+            
+            // NOVO: Permitir edição de textos simples dentro de dropdowns
+            // Se é um elemento de texto simples (span, p, a sem filhos complexos) dentro de dropdown, permitir edição
+            if (element.closest('.submenu, .has-dropdown') && 
+                (element.tagName === 'SPAN' || element.tagName === 'P' || 
+                 (element.tagName === 'A' && !element.querySelector('.rts-mega-menu, .submenu')))) {
+                // Permitir edição de textos simples em dropdowns
+                console.log(`🔓 Permitindo edição de texto em dropdown: ${element.tagName} - "${element.textContent?.trim().substring(0, 30)}..."`);
             }
         }
         
@@ -162,7 +167,21 @@ class HardemTextEditor {
                     this.core.utils.collectElementInfo(element) : null;
                 this.core.contentMap[dataKey].timestamp = new Date().toISOString();
                 
-                console.log(`Texto atualizado: ${dataKey} = "${newText}" (header: ${this.core.contentMap[dataKey].isHeaderContent})`);
+                // NOVO: Debug melhorado para dropdowns
+                const isInDropdown = element.closest('.submenu, .has-dropdown') !== null;
+                if (isInDropdown) {
+                    console.log(`🔽 Texto de dropdown salvo: ${dataKey} = "${newText}" (header: ${this.core.contentMap[dataKey].isHeaderContent})`);
+                    this.core.contentMap[dataKey].isDropdownContent = true;
+                } else {
+                    console.log(`📝 Texto atualizado: ${dataKey} = "${newText}" (header: ${this.core.contentMap[dataKey].isHeaderContent})`);
+                }
+                
+                // Forçar salvamento imediato para elementos de dropdown
+                if (isInDropdown) {
+                    console.log(`💾 Forçando salvamento imediato para dropdown: ${dataKey}`);
+                    this.core.storage.saveContent();
+                }
+                
                 this.core.ui.showAlert('Texto atualizado!', 'success');
             }
             
@@ -640,7 +659,19 @@ class HardemTextEditor {
                 this.core.utils.collectElementInfo(element) : null;
             this.core.contentMap[dataKey].timestamp = new Date().toISOString();
             
-            console.log(`Texto atualizado via painel: ${dataKey} = "${newText}" (header: ${this.core.contentMap[dataKey].isHeaderContent})`);
+            // NOVO: Debug melhorado para dropdowns via painel
+            const isInDropdown = element.closest('.submenu, .has-dropdown') !== null;
+            if (isInDropdown) {
+                console.log(`🔽 Texto de dropdown salvo via painel: ${dataKey} = "${newText}" (header: ${this.core.contentMap[dataKey].isHeaderContent})`);
+                this.core.contentMap[dataKey].isDropdownContent = true;
+                
+                // Forçar salvamento imediato para elementos de dropdown
+                console.log(`💾 Forçando salvamento imediato para dropdown via painel: ${dataKey}`);
+                this.core.storage.saveContent();
+            } else {
+                console.log(`📝 Texto atualizado via painel: ${dataKey} = "${newText}" (header: ${this.core.contentMap[dataKey].isHeaderContent})`);
+            }
+            
             this.core.ui.showAlert('Texto atualizado!', 'success');
         }
     }

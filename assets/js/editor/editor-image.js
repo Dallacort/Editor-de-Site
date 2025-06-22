@@ -71,6 +71,9 @@ class HardemImageEditor {
         });
 
         console.log(`✅ Elementos de imagem configurados: ${imageCount} imagens, ${backgroundCount} backgrounds`);
+        
+        // Restaurar normalizações salvas no banco de dados
+        this.restoreNormalizationsFromDatabase(container);
     }
 
     /**
@@ -116,7 +119,17 @@ class HardemImageEditor {
             return false;
         }
 
-        // Verificar tamanho mínimo do elemento
+        // NOVO: Regras especiais para footer - ser menos restritivo
+        if (element.tagName.toLowerCase() === 'footer' || 
+            element.classList.contains('footer') || 
+            element.closest('footer') ||
+            element.classList.contains('rts-footer')) {
+            // Para footers, aceitar qualquer tamanho desde que tenha background
+            console.log(`🦶 Footer background detectado: ${element.tagName}.${element.className}`);
+            return true;
+        }
+
+        // Verificar tamanho mínimo do elemento (regras normais para outros elementos)
         if (element.offsetWidth < 100 || element.offsetHeight < 50) {
             return false;
         }
@@ -318,13 +331,26 @@ class HardemImageEditor {
                 // Atualizar uso de memória
                 this.currentMemoryUsage += file.size;
                 
-                // Redimensionar se necessário
-                this.resizeImageToFit(imgElement, newImageSrc, (resizedSrc) => {
+                // ATUALIZADO: Redimensionar usando dimensões alvo se disponível
+                const resizeFunction = this.defaultImageDimensions ? 
+                    this.resizeImageToTargetDimensions : this.resizeImageToFit;
+                
+                resizeFunction.call(this, imgElement, newImageSrc, (resizedSrc) => {
                     try {
                         const dataKey = imgElement.getAttribute('data-key');
                         
                         // Aplicar nova imagem
                         imgElement.src = resizedSrc;
+                        
+                        // NOVO: Aplicar estilos normalizados se temos dimensões alvo
+                        if (this.defaultImageDimensions) {
+                            this.applyNormalizedImageStyles(imgElement, this.defaultImageDimensions);
+                        } else {
+                            // Fallback: estilos básicos
+                            imgElement.style.width = '100%';
+                            imgElement.style.height = '100%';
+                            imgElement.style.objectFit = 'cover';
+                        }
                         
                         // Salvar no contentMap com informações completas
                         if (!this.core.contentMap[dataKey]) {
@@ -458,13 +484,26 @@ class HardemImageEditor {
                 // Atualizar uso de memória
                 this.currentMemoryUsage += file.size;
                 
-                // Redimensionar se necessário
-                this.resizeImageToFit(imgElement, newImageSrc, (resizedSrc) => {
+                // ATUALIZADO: Redimensionar usando dimensões alvo se disponível para slides
+                const resizeFunction = this.defaultImageDimensions ? 
+                    this.resizeImageToTargetDimensions : this.resizeImageToFit;
+                
+                resizeFunction.call(this, imgElement, newImageSrc, (resizedSrc) => {
                     try {
                         const dataKey = imgElement.getAttribute('data-key');
                         
                         // Aplicar nova imagem
                         imgElement.src = resizedSrc;
+                        
+                        // NOVO: Aplicar estilos normalizados para slides
+                        if (this.defaultImageDimensions) {
+                            this.applyNormalizedImageStyles(imgElement, this.defaultImageDimensions);
+                        } else {
+                            // Fallback: estilos básicos
+                            imgElement.style.width = '100%';
+                            imgElement.style.height = '100%';
+                            imgElement.style.objectFit = 'cover';
+                        }
                         
                         // Salvar no contentMap
                         if (!this.core.contentMap[dataKey]) {
@@ -888,6 +927,16 @@ class HardemImageEditor {
             element.src = content.src;
             if (content.alt) {
                 element.alt = content.alt;
+            }
+            
+            // ATUALIZADO: Aplicar estilos normalizados se temos dimensões alvo
+            if (this.defaultImageDimensions) {
+                this.applyNormalizedImageStyles(element, this.defaultImageDimensions);
+            } else {
+                // Fallback: estilos básicos
+                element.style.width = '100%';
+                element.style.height = '100%';
+                element.style.objectFit = 'cover';
             }
             
             // Se é imagem de slide, marcar adequadamente
@@ -1441,6 +1490,686 @@ class HardemImageEditor {
         }
         
         return restoredCount;
+    }
+
+    /**
+     * Normalizar apenas uma imagem específica (individual)
+     */
+    normalizeIndividualImage(element, targetDimensions = null) {
+        if (!element) return;
+        
+        // Se não foram fornecidas dimensões específicas, detectar do próprio elemento
+        if (!targetDimensions) {
+            const rect = element.getBoundingClientRect();
+            targetDimensions = {
+                width: Math.max(rect.width, 300), // Mínimo 300px
+                height: Math.max(rect.height, 200), // Mínimo 200px
+                element: element
+            };
+        }
+        
+        if (element.tagName.toLowerCase() === 'img') {
+            this.applyNormalizedImageStyles(element, targetDimensions);
+        } else if (this.hasValidBackgroundImage(element)) {
+            this.applyNormalizedBackgroundStyles(element, targetDimensions);
+        }
+        
+        console.log(`🎯 Elemento normalizado individualmente: ${element.tagName}.${element.className}`);
+    }
+
+    /**
+     * Normalizar todas as imagens (mantido para compatibilidade, mas com aviso)
+     */
+    normalizeAllImageSizes() {
+        console.warn('⚠️ ATENÇÃO: normalizeAllImageSizes() aplica as mesmas dimensões para TODAS as imagens!');
+        console.log('💡 Para normalização individual, use: normalizeIndividualImage(elemento)');
+        
+        const confirmGlobal = confirm(
+            'ATENÇÃO: Esta função vai aplicar as mesmas dimensões para TODAS as imagens da página.\n\n' +
+            'Isso pode causar problemas visuais. Tem certeza que deseja continuar?\n\n' +
+            'Para normalizar apenas uma imagem, cancele e use a função individual.'
+        );
+        
+        if (!confirmGlobal) {
+            console.log('❌ Normalização global cancelada pelo usuário');
+            return;
+        }
+        
+        console.log('🔧 Iniciando normalização GLOBAL de tamanhos de imagens...');
+        
+        // Detectar as dimensões do background principal
+        const backgroundDimensions = this.detectBackgroundDimensions();
+        
+        if (!backgroundDimensions) {
+            this.core.ui.showAlert('Não foi possível detectar as dimensões do background principal!', 'warning');
+            return;
+        }
+        
+        console.log(`📐 Dimensões do background detectadas: ${backgroundDimensions.width}x${backgroundDimensions.height}`);
+        
+        // Normalizar todas as imagens existentes
+        this.normalizeExistingImages(backgroundDimensions);
+        
+        // Atualizar configurações para novas imagens
+        this.updateImageResizeSettings(backgroundDimensions);
+        
+        this.core.ui.showAlert(`✅ Todas as imagens foram normalizadas para ${backgroundDimensions.width}x${backgroundDimensions.height}!`, 'success');
+    }
+
+    /**
+     * Detectar dimensões do background principal
+     */
+    detectBackgroundDimensions() {
+        // Procurar pelo background principal da página
+        const candidates = [
+            // Seções de banner/hero
+            document.querySelector('.banner, .hero, .rts-banner, .bg_image'),
+            // Elementos com background-image
+            ...document.querySelectorAll('[style*="background-image"]'),
+            // Seções principais
+            document.querySelector('section[class*="banner"], section[class*="hero"]'),
+            // Fallback: primeira seção com background
+            ...document.querySelectorAll('section, div[class*="bg"]')
+        ].filter(el => el && this.hasValidBackgroundImage(el));
+
+        for (const element of candidates) {
+            const rect = element.getBoundingClientRect();
+            
+            // Considerar apenas elementos com tamanho razoável
+            if (rect.width > 300 && rect.height > 200) {
+                return {
+                    width: Math.round(rect.width),
+                    height: Math.round(rect.height),
+                    element: element
+                };
+            }
+        }
+
+        // Fallback: usar dimensões da viewport
+        return {
+            width: window.innerWidth,
+            height: Math.round(window.innerHeight * 0.6), // 60% da altura da tela
+            element: null
+        };
+    }
+
+    /**
+     * Normalizar todas as imagens existentes
+     */
+    normalizeExistingImages(targetDimensions) {
+        const images = document.querySelectorAll('img:not([data-no-edit])');
+        const backgrounds = document.querySelectorAll('[style*="background-image"]:not([data-no-edit])');
+        
+        let processedCount = 0;
+        
+        // Normalizar imagens normais
+        images.forEach(img => {
+            if (this.isValidImage(img)) {
+                this.applyNormalizedImageStyles(img, targetDimensions);
+                processedCount++;
+            }
+        });
+        
+        // Normalizar backgrounds
+        backgrounds.forEach(bg => {
+            if (this.hasValidBackgroundImage(bg)) {
+                this.applyNormalizedBackgroundStyles(bg, targetDimensions);
+                processedCount++;
+            }
+        });
+        
+        console.log(`✅ ${processedCount} elementos normalizados`);
+    }
+
+    /**
+     * Aplicar estilos normalizados para imagens (versão individual)
+     */
+    applyNormalizedImageStyles(imgElement, targetDimensions) {
+        // Gerar ID único para esta normalização
+        const normalizeId = 'hardem-normalize-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        
+        // Verificar se já está normalizada - se sim, apenas atualizar
+        const isAlreadyNormalized = imgElement.hasAttribute('data-normalized');
+        
+        if (isAlreadyNormalized) {
+            console.log('🔄 Atualizando normalização existente...');
+            // Remover normalização anterior
+            this.removeIndividualNormalization(imgElement);
+        }
+        
+        // Aplicar estilos diretamente à imagem (sem afetar outras)
+        const originalWidth = imgElement.style.width;
+        const originalHeight = imgElement.style.height;
+        
+        // Salvar estilos originais para possível restauração
+        imgElement.setAttribute('data-original-width', originalWidth || 'auto');
+        imgElement.setAttribute('data-original-height', originalHeight || 'auto');
+        imgElement.setAttribute('data-original-object-fit', imgElement.style.objectFit || 'initial');
+        
+        // Aplicar novos estilos
+        imgElement.style.width = targetDimensions.width + 'px';
+        imgElement.style.height = targetDimensions.height + 'px';
+        imgElement.style.objectFit = 'cover';
+        imgElement.style.objectPosition = 'center';
+        imgElement.style.display = 'block';
+        
+        // Marcar como normalizada com ID único
+        imgElement.setAttribute('data-normalized', 'true');
+        imgElement.setAttribute('data-normalize-id', normalizeId);
+        imgElement.setAttribute('data-target-width', targetDimensions.width);
+        imgElement.setAttribute('data-target-height', targetDimensions.height);
+        
+        // Salvar dimensões de normalização no banco de dados
+        this.saveNormalizationToDatabase(imgElement, targetDimensions);
+        
+        console.log(`📷 Imagem normalizada individualmente: ${imgElement.src ? imgElement.src.substring(0, 50) + '...' : 'sem src'} (${targetDimensions.width}x${targetDimensions.height})`);
+    }
+
+    /**
+     * Aplicar estilos normalizados para backgrounds (versão individual)
+     */
+    applyNormalizedBackgroundStyles(element, targetDimensions) {
+        // Gerar ID único para esta normalização
+        const normalizeId = 'hardem-normalize-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        
+        // Verificar se já está normalizado - se sim, apenas atualizar
+        const isAlreadyNormalized = element.hasAttribute('data-normalized');
+        
+        if (isAlreadyNormalized) {
+            console.log('🔄 Atualizando normalização de background existente...');
+            // Remover normalização anterior
+            this.removeIndividualNormalization(element);
+        }
+        
+        // Salvar estilos originais
+        const originalWidth = element.style.width;
+        const originalHeight = element.style.height;
+        const originalBgSize = element.style.backgroundSize;
+        
+        element.setAttribute('data-original-width', originalWidth || 'auto');
+        element.setAttribute('data-original-height', originalHeight || 'auto');
+        element.setAttribute('data-original-bg-size', originalBgSize || 'initial');
+        
+        // Aplicar dimensões específicas para este elemento
+        element.style.width = targetDimensions.width + 'px';
+        element.style.height = targetDimensions.height + 'px';
+        
+        // Garantir que o background cubra todo o elemento
+        element.style.setProperty('background-size', 'cover', 'important');
+        element.style.setProperty('background-position', 'center', 'important');
+        element.style.setProperty('background-repeat', 'no-repeat', 'important');
+        
+        // Marcar como normalizado com ID único
+        element.setAttribute('data-normalized', 'true');
+        element.setAttribute('data-normalize-id', normalizeId);
+        element.setAttribute('data-target-width', targetDimensions.width);
+        element.setAttribute('data-target-height', targetDimensions.height);
+        
+        // Salvar dimensões de normalização no banco de dados
+        this.saveNormalizationToDatabase(element, targetDimensions);
+        
+        console.log(`🎨 Background normalizado individualmente: ${element.tagName}.${element.className} (${targetDimensions.width}x${targetDimensions.height})`);
+    }
+
+    /**
+     * Remover normalização individual de um elemento
+     */
+    removeIndividualNormalization(element) {
+        if (!element.hasAttribute('data-normalized')) {
+            return; // Não está normalizado
+        }
+        
+        const normalizeId = element.getAttribute('data-normalize-id');
+        console.log(`🗑️ Removendo normalização individual: ${normalizeId}`);
+        
+        // Restaurar estilos originais
+        if (element.tagName.toLowerCase() === 'img') {
+            // Restaurar imagem
+            const originalWidth = element.getAttribute('data-original-width');
+            const originalHeight = element.getAttribute('data-original-height');
+            const originalObjectFit = element.getAttribute('data-original-object-fit');
+            
+            element.style.width = originalWidth === 'auto' ? '' : originalWidth;
+            element.style.height = originalHeight === 'auto' ? '' : originalHeight;
+            element.style.objectFit = originalObjectFit === 'initial' ? '' : originalObjectFit;
+            element.style.objectPosition = '';
+            
+            // Remover atributos de backup
+            element.removeAttribute('data-original-width');
+            element.removeAttribute('data-original-height');
+            element.removeAttribute('data-original-object-fit');
+        } else {
+            // Restaurar background
+            const originalWidth = element.getAttribute('data-original-width');
+            const originalHeight = element.getAttribute('data-original-height');
+            const originalBgSize = element.getAttribute('data-original-bg-size');
+            
+            element.style.width = originalWidth === 'auto' ? '' : originalWidth;
+            element.style.height = originalHeight === 'auto' ? '' : originalHeight;
+            element.style.backgroundSize = originalBgSize === 'initial' ? '' : originalBgSize;
+            
+            // Remover important se foi adicionado
+            element.style.removeProperty('background-size');
+            element.style.removeProperty('background-position');
+            element.style.removeProperty('background-repeat');
+            
+            // Remover atributos de backup
+            element.removeAttribute('data-original-width');
+            element.removeAttribute('data-original-height');
+            element.removeAttribute('data-original-bg-size');
+        }
+        
+        // Remover atributos de normalização
+        element.removeAttribute('data-normalized');
+        element.removeAttribute('data-normalize-id');
+        element.removeAttribute('data-target-width');
+        element.removeAttribute('data-target-height');
+        
+        // Remover normalização do banco de dados
+        this.removeNormalizationFromDatabase(element);
+        
+        console.log(`✅ Normalização removida: ${element.tagName}.${element.className}`);
+    }
+
+    /**
+     * Criar container para imagem se necessário (mantido para compatibilidade)
+     */
+    createImageContainer(imgElement, targetDimensions) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'hardem-image-container';
+        wrapper.style.cssText = `
+            width: ${targetDimensions.width}px;
+            height: ${targetDimensions.height}px;
+            overflow: hidden;
+            position: relative;
+            display: inline-block;
+        `;
+        
+        // Inserir wrapper antes da imagem
+        imgElement.parentNode.insertBefore(wrapper, imgElement);
+        
+        // Mover imagem para dentro do wrapper
+        wrapper.appendChild(imgElement);
+        
+        return wrapper;
+    }
+
+    /**
+     * Atualizar configurações para novas imagens
+     */
+    updateImageResizeSettings(targetDimensions) {
+        // Salvar dimensões padrão para uso futuro
+        this.defaultImageDimensions = targetDimensions;
+        
+        // Atualizar limites de redimensionamento
+        this.resizeTargetWidth = targetDimensions.width;
+        this.resizeTargetHeight = targetDimensions.height;
+        
+        console.log(`⚙️ Configurações atualizadas para: ${targetDimensions.width}x${targetDimensions.height}`);
+    }
+
+    /**
+     * Função melhorada para redimensionar imagem considerando dimensões alvo
+     */
+    resizeImageToTargetDimensions(imageElement, newImageSrc, callback, targetDimensions = null) {
+        const targetDims = targetDimensions || this.defaultImageDimensions;
+        
+        if (!targetDims) {
+            // Fallback para função original
+            return this.resizeImageToFit(imageElement, newImageSrc, callback);
+        }
+        
+        const img = new Image();
+        img.onload = () => {
+            try {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Usar dimensões alvo
+                const targetWidth = targetDims.width;
+                const targetHeight = targetDims.height;
+                
+                canvas.width = targetWidth;
+                canvas.height = targetHeight;
+                
+                // Aplicar suavização
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                
+                // Calcular como centralizar e cortar a imagem
+                const sourceRatio = img.width / img.height;
+                const targetRatio = targetWidth / targetHeight;
+                
+                let sourceX = 0;
+                let sourceY = 0;
+                let sourceWidth = img.width;
+                let sourceHeight = img.height;
+                
+                if (sourceRatio > targetRatio) {
+                    // Imagem mais larga que o target - cortar nas laterais
+                    sourceWidth = img.height * targetRatio;
+                    sourceX = (img.width - sourceWidth) / 2;
+                } else {
+                    // Imagem mais alta que o target - cortar em cima/baixo
+                    sourceHeight = img.width / targetRatio;
+                    sourceY = (img.height - sourceHeight) / 2;
+                }
+                
+                // Desenhar imagem cortada e redimensionada
+                ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, targetWidth, targetHeight);
+                
+                // Compressão otimizada
+                let quality = 0.8;
+                let resizedSrc = canvas.toDataURL('image/jpeg', quality);
+                
+                console.log(`🎯 Imagem redimensionada para dimensões alvo: ${targetWidth}x${targetHeight}`);
+                callback(resizedSrc);
+                
+            } catch (error) {
+                console.error('Erro ao redimensionar para dimensões alvo:', error);
+                callback(newImageSrc);
+            }
+        };
+        
+        img.onerror = () => {
+            console.error('Erro ao carregar imagem para redimensionamento alvo');
+            callback(newImageSrc);
+        };
+        
+        img.src = newImageSrc;
+    }
+
+    /**
+     * Salvar dimensões de normalização no banco de dados
+     */
+    async saveNormalizationToDatabase(element, targetDimensions) {
+        try {
+            const dataKey = element.getAttribute('data-key');
+            if (!dataKey) {
+                console.log('⚠️ Elemento sem data-key, não será salvo no banco');
+                return;
+            }
+
+            // Preparar dados das propriedades de normalização
+            const normalizationData = {
+                normalized: true,
+                target_width: targetDimensions.width,
+                target_height: targetDimensions.height,
+                normalize_id: element.getAttribute('data-normalize-id'),
+                normalized_at: new Date().toISOString(),
+                element_type: element.tagName.toLowerCase(),
+                element_class: element.className || ''
+            };
+
+            // Obter propriedades existentes se houver
+            let existingProperties = {};
+            try {
+                const currentProperties = element.getAttribute('data-properties');
+                if (currentProperties) {
+                    existingProperties = JSON.parse(currentProperties);
+                }
+            } catch (e) {
+                console.log('Propriedades existentes inválidas, criando novas');
+            }
+
+            // Mesclar com propriedades existentes
+            const updatedProperties = {
+                ...existingProperties,
+                normalization: normalizationData
+            };
+
+            // Salvar via API
+            const formData = new FormData();
+            formData.append('action', 'update_element_properties');
+            formData.append('element_key', dataKey);
+            formData.append('properties', JSON.stringify(updatedProperties));
+            formData.append('page_id', this.getCurrentPageId());
+
+            const response = await fetch('api-admin.php', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                // Atualizar atributo local para cache
+                element.setAttribute('data-properties', JSON.stringify(updatedProperties));
+                console.log(`💾 Normalização salva no banco: ${dataKey}`);
+            } else {
+                console.warn(`⚠️ Erro ao salvar normalização: ${result.message}`);
+            }
+
+        } catch (error) {
+            console.error('Erro ao salvar normalização no banco:', error);
+        }
+    }
+
+    /**
+     * Remover normalização do banco de dados
+     */
+    async removeNormalizationFromDatabase(element) {
+        try {
+            const dataKey = element.getAttribute('data-key');
+            if (!dataKey) {
+                console.log('⚠️ Elemento sem data-key, nada para remover do banco');
+                return;
+            }
+
+            // Obter propriedades existentes
+            let existingProperties = {};
+            try {
+                const currentProperties = element.getAttribute('data-properties');
+                if (currentProperties) {
+                    existingProperties = JSON.parse(currentProperties);
+                }
+            } catch (e) {
+                console.log('Propriedades existentes inválidas');
+                return;
+            }
+
+            // Remover seção de normalização
+            if (existingProperties.normalization) {
+                delete existingProperties.normalization;
+            }
+
+            // Salvar via API
+            const formData = new FormData();
+            formData.append('action', 'update_element_properties');
+            formData.append('element_key', dataKey);
+            formData.append('properties', JSON.stringify(existingProperties));
+            formData.append('page_id', this.getCurrentPageId());
+
+            const response = await fetch('api-admin.php', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                // Atualizar atributo local
+                element.setAttribute('data-properties', JSON.stringify(existingProperties));
+                console.log(`🗑️ Normalização removida do banco: ${dataKey}`);
+            } else {
+                console.warn(`⚠️ Erro ao remover normalização: ${result.message}`);
+            }
+
+        } catch (error) {
+            console.error('Erro ao remover normalização do banco:', error);
+        }
+    }
+
+    /**
+     * Carregar dimensões de normalização do banco de dados
+     */
+    loadNormalizationFromDatabase(element) {
+        try {
+            const properties = element.getAttribute('data-properties');
+            if (!properties) return null;
+
+            const parsedProperties = JSON.parse(properties);
+            const normalization = parsedProperties.normalization;
+
+            if (normalization && normalization.normalized) {
+                return {
+                    width: normalization.target_width,
+                    height: normalization.target_height,
+                    normalizeId: normalization.normalize_id,
+                    normalizedAt: normalization.normalized_at
+                };
+            }
+
+            return null;
+        } catch (error) {
+            console.error('Erro ao carregar normalização do banco:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Aplicar normalização salva no banco (para restaurar ao carregar página)
+     */
+    applyNormalizationFromDatabase(element) {
+        const savedNormalization = this.loadNormalizationFromDatabase(element);
+        
+        if (savedNormalization) {
+            const targetDimensions = {
+                width: savedNormalization.width,
+                height: savedNormalization.height
+            };
+
+            // Aplicar normalização sem salvar novamente
+            if (element.tagName.toLowerCase() === 'img') {
+                this.applyNormalizedImageStylesFromDB(element, targetDimensions, savedNormalization.normalizeId);
+            } else if (this.hasValidBackgroundImage(element)) {
+                this.applyNormalizedBackgroundStylesFromDB(element, targetDimensions, savedNormalization.normalizeId);
+            }
+
+            console.log(`🔄 Normalização restaurada do banco: ${element.tagName}.${element.className}`);
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Aplicar estilos de imagem normalizados vindos do banco (sem salvar novamente)
+     */
+    applyNormalizedImageStylesFromDB(imgElement, targetDimensions, normalizeId) {
+        // Aplicar estilos
+        imgElement.style.width = targetDimensions.width + 'px';
+        imgElement.style.height = targetDimensions.height + 'px';
+        imgElement.style.objectFit = 'cover';
+        imgElement.style.objectPosition = 'center';
+        imgElement.style.display = 'block';
+        
+        // Marcar como normalizada
+        imgElement.setAttribute('data-normalized', 'true');
+        imgElement.setAttribute('data-normalize-id', normalizeId);
+        imgElement.setAttribute('data-target-width', targetDimensions.width);
+        imgElement.setAttribute('data-target-height', targetDimensions.height);
+    }
+
+    /**
+     * Aplicar estilos de background normalizados vindos do banco (sem salvar novamente)
+     */
+    applyNormalizedBackgroundStylesFromDB(element, targetDimensions, normalizeId) {
+        // Aplicar estilos
+        element.style.width = targetDimensions.width + 'px';
+        element.style.height = targetDimensions.height + 'px';
+        element.style.setProperty('background-size', 'cover', 'important');
+        element.style.setProperty('background-position', 'center', 'important');
+        element.style.setProperty('background-repeat', 'no-repeat', 'important');
+        
+        // Marcar como normalizado
+        element.setAttribute('data-normalized', 'true');
+        element.setAttribute('data-normalize-id', normalizeId);
+        element.setAttribute('data-target-width', targetDimensions.width);
+        element.setAttribute('data-target-height', targetDimensions.height);
+    }
+
+    /**
+     * Obter ID da página atual
+     */
+    getCurrentPageId() {
+        // Tentar obter do core
+        if (this.core && this.core.currentPageId) {
+            return this.core.currentPageId;
+        }
+
+        // Fallback: detectar do URL ou nome do arquivo
+        const path = window.location.pathname;
+        const filename = path.split('/').pop();
+        
+        if (filename && filename.includes('.html')) {
+            return `siteContent_${filename}`;
+        }
+
+        return 'siteContent_index.html';
+    }
+
+    /**
+     * Restaurar normalizações salvas no banco de dados
+     */
+    restoreNormalizationsFromDatabase(container = document) {
+        try {
+            let restoredCount = 0;
+            
+            // Buscar todos os elementos editáveis que podem ter normalização
+            const editableElements = container.querySelectorAll('.hardem-editable-element[data-key]');
+            
+            editableElements.forEach(element => {
+                // Tentar aplicar normalização salva
+                if (this.applyNormalizationFromDatabase(element)) {
+                    restoredCount++;
+                }
+            });
+            
+            if (restoredCount > 0) {
+                console.log(`🔄 ${restoredCount} normalizações restauradas do banco de dados`);
+            }
+            
+        } catch (error) {
+            console.error('Erro ao restaurar normalizações do banco:', error);
+        }
+    }
+
+    /**
+     * Aplicar conteúdo carregado do banco incluindo normalizações
+     */
+    applyContentFromDatabase(contentMap) {
+        try {
+            let appliedNormalizations = 0;
+            
+            Object.keys(contentMap).forEach(key => {
+                const content = contentMap[key];
+                
+                // Verificar se tem dados de normalização
+                if (content && content.normalization && content.normalization.normalized) {
+                    const element = document.querySelector(`[data-key="${key}"]`);
+                    
+                    if (element) {
+                        // Aplicar dados de propriedades ao elemento
+                        element.setAttribute('data-properties', JSON.stringify({
+                            normalization: content.normalization
+                        }));
+                        
+                        // Aplicar normalização
+                        if (this.applyNormalizationFromDatabase(element)) {
+                            appliedNormalizations++;
+                        }
+                    }
+                }
+            });
+            
+            if (appliedNormalizations > 0) {
+                console.log(`💾 ${appliedNormalizations} normalizações aplicadas do banco de dados`);
+            }
+            
+        } catch (error) {
+            console.error('Erro ao aplicar conteúdo do banco:', error);
+        }
     }
 }
 
