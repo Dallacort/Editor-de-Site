@@ -1109,6 +1109,12 @@ class HardemEditorStorage {
         console.log(`✅ ${appliedCount} elementos aplicados, ${orphanedKeys.length} órfãos processados`);
         this.core.ui.showAlert(`${appliedCount} elementos restaurados!`, 'success');
 
+        // NOVO: Aplicar normalizações salvas no banco de dados
+        if (this.core.imageEditor && this.core.imageEditor.applyContentFromDatabase) {
+            console.log('🎯 Aplicando normalizações do banco de dados...');
+            this.core.imageEditor.applyContentFromDatabase(this.core.contentMap);
+        }
+
         // Disparar evento para notificar que o conteúdo foi carregado
         const event = new Event('hardem-editor-content-loaded');
         document.dispatchEvent(event);

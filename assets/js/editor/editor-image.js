@@ -2141,30 +2141,60 @@ class HardemImageEditor {
     applyContentFromDatabase(contentMap) {
         try {
             let appliedNormalizations = 0;
+            let elementsWithNormalization = 0;
+            
+            console.log('🔍 Verificando normalizações no contentMap...');
             
             Object.keys(contentMap).forEach(key => {
                 const content = contentMap[key];
                 
-                // Verificar se tem dados de normalização
-                if (content && content.normalization && content.normalization.normalized) {
-                    const element = document.querySelector(`[data-key="${key}"]`);
+                // Debug: Verificar se tem dados de normalização
+                if (content && content.normalization) {
+                    elementsWithNormalization++;
+                    console.log(`📋 Elemento com normalização encontrado: ${key}`, content.normalization);
                     
-                    if (element) {
-                        // Aplicar dados de propriedades ao elemento
-                        element.setAttribute('data-properties', JSON.stringify({
-                            normalization: content.normalization
-                        }));
+                    if (content.normalization.normalized) {
+                        const element = document.querySelector(`[data-key="${key}"]`);
                         
-                        // Aplicar normalização
-                        if (this.applyNormalizationFromDatabase(element)) {
-                            appliedNormalizations++;
+                        if (element) {
+                            console.log(`🎯 Aplicando normalização para: ${key}`, {
+                                width: content.normalization.target_width,
+                                height: content.normalization.target_height,
+                                element: element.tagName
+                            });
+                            
+                            // Aplicar dados de propriedades ao elemento
+                            element.setAttribute('data-properties', JSON.stringify({
+                                normalization: content.normalization
+                            }));
+                            
+                            // Aplicar normalização
+                            if (this.applyNormalizationFromDatabase(element)) {
+                                appliedNormalizations++;
+                                console.log(`✅ Normalização aplicada com sucesso: ${key}`);
+                            } else {
+                                console.warn(`⚠️ Falha ao aplicar normalização: ${key}`);
+                            }
+                        } else {
+                            console.warn(`❌ Elemento não encontrado para normalização: ${key}`);
                         }
+                    } else {
+                        console.log(`⚠️ Normalização não marcada como ativa: ${key}`, content.normalization);
                     }
                 }
             });
             
+            console.log(`📊 Resumo de normalizações: ${elementsWithNormalization} encontradas, ${appliedNormalizations} aplicadas`);
+            
             if (appliedNormalizations > 0) {
                 console.log(`💾 ${appliedNormalizations} normalizações aplicadas do banco de dados`);
+                
+                // Mostrar feedback visual
+                if (this.core && this.core.ui) {
+                    this.core.ui.showAlert(`🎯 ${appliedNormalizations} dimensionamentos restaurados!`, 'success');
+                }
+            } else if (elementsWithNormalization > 0) {
+                console.warn(`⚠️ ${elementsWithNormalization} normalizações encontradas mas não aplicadas`);
             }
             
         } catch (error) {
