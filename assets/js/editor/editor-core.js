@@ -445,38 +445,50 @@ class HardemEditorCore {
      */
     bindEvents() {
         // Toggle do modo de edição
-        document.getElementById('hardem-toggle-edit').addEventListener('click', () => {
+        const editBtn = document.getElementById('hardem-edit-btn');
+        if (editBtn) {
+            editBtn.addEventListener('click', () => {
             this.toggleEditMode();
         });
+        }
 
         // Painel lateral
-        document.getElementById('hardem-open-panel').addEventListener('click', () => {
+        const openPanelBtn = document.getElementById('hardem-open-panel-btn');
+        if (openPanelBtn) {
+            openPanelBtn.addEventListener('click', () => {
             this.ui.toggleSidePanel();
         });
+        }
 
-        document.getElementById('hardem-close-panel').addEventListener('click', () => {
+        const closePanelBtn = document.getElementById('hardem-close-panel');
+        if (closePanelBtn) {
+            closePanelBtn.addEventListener('click', () => {
             this.ui.closeSidePanel();
         });
+        }
 
         // Salvar e restaurar
-        document.getElementById('hardem-save-content').addEventListener('click', () => {
+        const saveBtn = document.getElementById('hardem-save-content');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => {
             this.storage.saveContent();
         });
+        }
 
         // Visualizar página
-        document.getElementById('hardem-preview-mode').addEventListener('click', () => {
+        const previewBtn = document.getElementById('hardem-preview-mode');
+        if (previewBtn) {
+            previewBtn.addEventListener('click', () => {
             this.togglePreviewMode();
         });
+        }
 
-        // Publicar alterações
-        document.getElementById('hardem-publish-changes').addEventListener('click', () => {
-            this.publishChanges();
-        });
-
-        // Scroll inteligente no painel
-        this.sidePanel.addEventListener('wheel', (e) => {
+        // Scroll inteligente no painel (verificar se existe)
+        if (this.ui && this.ui.sidepanel) {
+            this.ui.sidepanel.addEventListener('wheel', (e) => {
             e.stopPropagation();
         });
+        }
 
         // Tecla de emergência para limpar overlays (ESC)
         document.addEventListener('keydown', (e) => {
@@ -492,23 +504,31 @@ class HardemEditorCore {
     toggleEditMode() {
         this.editMode = !this.editMode;
         
-        const toggleBtn = document.getElementById('hardem-toggle-edit');
+        const toggleBtn = document.getElementById('hardem-edit-btn');
         const statusEl = document.querySelector('.hardem-editor-status');
         
         if (this.editMode) {
+            if (toggleBtn) {
             toggleBtn.classList.add('active');
             toggleBtn.innerHTML = '🔒';
             toggleBtn.title = 'Desativar Edição';
+            }
+            if (statusEl) {
             statusEl.textContent = 'ON';
+            }
             
             this.textEditor.setupEditableElements();
             this.imageEditor.setupImageEditing();
             this.carouselEditor.setupCarouselEditing();
         } else {
+            if (toggleBtn) {
             toggleBtn.classList.remove('active');
             toggleBtn.innerHTML = '✏️';
             toggleBtn.title = 'Alternar Modo de Edição';
+            }
+            if (statusEl) {
             statusEl.textContent = 'OFF';
+            }
             
             this.ui.disableEditing();
         }
@@ -544,6 +564,13 @@ class HardemEditorCore {
      */
     async publishChanges() {
         const publishBtn = document.getElementById('hardem-publish-changes');
+        if (!publishBtn) {
+            // Se o botão não existe, apenas salvar o conteúdo
+            console.log('Botão de publicação não encontrado, salvando conteúdo...');
+            await this.storage.saveContent();
+            return;
+        }
+        
         const originalContent = publishBtn.innerHTML;
         
         // Verificar se há alterações para publicar

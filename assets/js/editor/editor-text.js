@@ -534,7 +534,12 @@ class HardemTextEditor {
      * Mostrar painel de elementos sobrepostos
      */
     showOverlappingElementsPanel(elements) {
-        const panelContent = document.getElementById('hardem-panel-content');
+        const panelContent = document.querySelector('.hardem-editor-sidepanel-content');
+        
+        if (!panelContent) {
+            console.error('Painel lateral não encontrado');
+            return;
+        }
         
         let html = `
             <h4>Elementos Sobrepostos</h4>

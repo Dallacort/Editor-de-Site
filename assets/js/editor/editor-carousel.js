@@ -74,7 +74,13 @@ class HardemCarouselEditor {
      * Mostrar painel de gerenciamento do carrossel
      */
     showCarouselManagementPanel(carouselContainer) {
-        const panelContent = document.getElementById('hardem-panel-content');
+        const panelContent = document.querySelector('.hardem-editor-sidepanel-content');
+        
+        if (!panelContent) {
+            console.error('Conteúdo do painel lateral não encontrado');
+            return;
+        }
+        
         const dataKey = carouselContainer.getAttribute('data-key');
         const slides = this.getCarouselSlides(carouselContainer);
         
@@ -470,7 +476,13 @@ class HardemCarouselEditor {
      * Popular painel do slide do carrossel
      */
     populateCarouselSlidePanel(slideElement, content) {
-        const panelContent = document.getElementById('hardem-panel-content');
+        const panelContent = document.querySelector('.hardem-editor-sidepanel-content');
+        
+        if (!panelContent) {
+            console.error('Conteúdo do painel lateral não encontrado');
+            return;
+        }
+        
         const dataKey = slideElement.getAttribute('data-key') || this.core.utils.generateDataKey(slideElement);
         
         let html = `

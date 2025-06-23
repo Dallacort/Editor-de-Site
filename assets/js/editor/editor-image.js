@@ -2120,7 +2120,7 @@ class HardemImageEditor {
             if (content && content.normalization && content.normalization.normalized) {
                 console.log(`🎯 Restaurando normalização para ${dataKey}`);
                 this.applyNormalizationFromDatabase(element, dataKey, content.normalization);
-            }
+        }
         });
     }
 

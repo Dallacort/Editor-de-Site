@@ -148,6 +148,19 @@ class HardemEditorUI {
                     transform: translateX(-320px);
                 }
 
+                /* ===== PAINEL À ESQUERDA ===== */
+                .hardem-editor-sidepanel.sidepanel-left {
+                    right: auto;
+                    left: -320px;
+                    border-left: none;
+                    border-right: 1px solid #e0e0e0;
+                    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+                }
+
+                .hardem-editor-sidepanel.sidepanel-left.visible {
+                    transform: translateX(320px);
+                }
+
                 .hardem-editor-sidepanel-header {
                     padding: 20px;
                     background: #ffffff;
@@ -184,6 +197,35 @@ class HardemEditorUI {
                     background: #e9ecef;
                     border-color: #ced4da;
                     color: #495057;
+                }
+
+                .hardem-editor-panel-controls {
+                    display: flex;
+                    gap: 8px;
+                    align-items: center;
+                }
+
+                .hardem-editor-move-panel {
+                    background: #007acc;
+                    border: 1px solid #0066cc;
+                    color: white;
+                    font-size: 14px;
+                    cursor: pointer;
+                    padding: 6px 10px;
+                    border-radius: 6px;
+                    transition: all 0.2s ease;
+                    font-weight: 500;
+                    min-width: 32px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .hardem-editor-move-panel:hover {
+                    background: #0056b3;
+                    border-color: #004085;
+                    transform: translateY(-1px);
+                    box-shadow: 0 2px 4px rgba(0, 122, 204, 0.3);
                 }
 
                 .hardem-editor-sidepanel-content {
@@ -582,35 +624,77 @@ class HardemEditorUI {
      * Criação do painel lateral
      */
     createSidePanel() {
-        this.core.sidePanel = document.createElement('div');
-        this.core.sidePanel.className = 'hardem-editor-sidepanel';
-        this.core.sidePanel.innerHTML = `
+        const panel = document.createElement('div');
+        panel.className = 'hardem-editor-sidepanel';
+        panel.innerHTML = `
             <div class="hardem-editor-sidepanel-header">
-                <h3 class="hardem-editor-sidepanel-title">Editor de Conteúdo</h3>
+                <h3 class="hardem-editor-sidepanel-title">Editar Elemento</h3>
+                <div class="hardem-editor-panel-controls">
+                    <button class="hardem-editor-move-panel" id="hardem-move-panel" title="Mover painel para o outro lado">↔</button>
                 <button class="hardem-editor-close-panel" id="hardem-close-panel">Fechar</button>
             </div>
-            <div class="hardem-editor-sidepanel-content" id="hardem-panel-content">
-                <p style="text-align: center; color: #6c757d; margin-top: 50px; font-style: italic;">
-                    Selecione um elemento para editá-lo
-                </p>
+            </div>
+            <div class="hardem-editor-sidepanel-content">
+                <p>Selecione um elemento na página para editar.</p>
             </div>
         `;
         
-        document.body.appendChild(this.core.sidePanel);
+        document.body.appendChild(panel);
+
+        this.sidepanel = panel;
+        this.sidepanelContent = panel.querySelector('.hardem-editor-sidepanel-content');
+
+        // Restaurar posição salva
+        const savedPosition = localStorage.getItem('hardem-editor-panel-position');
+        if (savedPosition === 'left') {
+            panel.classList.add('sidepanel-left');
+            console.log('🔄 Posição restaurada: esquerda');
+        } else {
+            console.log('🔄 Posição restaurada: direita');
+        }
+
+        // Listener para fechar
+        panel.querySelector('.hardem-editor-close-panel').addEventListener('click', () => this.closeSidePanel());
+        
+        // Listener para mover painel
+        panel.querySelector('.hardem-editor-move-panel').addEventListener('click', () => {
+            console.log('🔧 Botão de movimento clicado');
+            console.log('📍 Classes atuais do painel:', panel.className);
+            console.log('📍 Posição atual do painel:', panel.style.cssText);
+            
+            if (panel.classList.contains('sidepanel-left')) {
+                panel.classList.remove('sidepanel-left');
+                localStorage.setItem('hardem-editor-panel-position', 'right');
+                console.log('➡️ Movendo para direita - classes após:', panel.className);
+                this.showAlert('Painel movido para a direita.', 'info', 2000);
+            } else {
+                panel.classList.add('sidepanel-left');
+                localStorage.setItem('hardem-editor-panel-position', 'left');
+                console.log('⬅️ Movendo para esquerda - classes após:', panel.className);
+                this.showAlert('Painel movido para a esquerda.', 'info', 2000);
+            }
+            
+            // Forçar re-renderização
+            panel.offsetHeight;
+            console.log('🔄 Re-renderização forçada');
+        });
     }
 
     /**
      * Abrir painel lateral
      */
     openSidePanel() {
-        this.core.sidePanel.classList.add('visible');
+        if (!this.sidepanel) this.createSidePanel();
+        this.sidepanel.classList.add('visible');
     }
 
     /**
      * Fechar painel lateral
      */
     closeSidePanel() {
-        this.core.sidePanel.classList.remove('visible');
+        if (this.sidepanel) {
+            this.sidepanel.classList.remove('visible');
+        }
         
         // Remover seleção de elementos
         document.querySelectorAll('.hardem-selected').forEach(el => {
@@ -624,7 +708,9 @@ class HardemEditorUI {
      * Alternar painel lateral
      */
     toggleSidePanel() {
-        if (this.core.sidePanel.classList.contains('visible')) {
+        if (!this.sidepanel) {
+            this.openSidePanel();
+        } else if (this.sidepanel.classList.contains('visible')) {
             this.closeSidePanel();
         } else {
             this.openSidePanel();
@@ -635,7 +721,13 @@ class HardemEditorUI {
      * Popular painel lateral com dados do elemento
      */
     populateSidePanel(element) {
-        const panelContent = document.getElementById('hardem-panel-content');
+        const panelContent = this.sidepanelContent || document.querySelector('.hardem-editor-sidepanel-content');
+        
+        if (!panelContent) {
+            console.error('Conteúdo do painel lateral não encontrado');
+            return;
+        }
+        
         const dataKey = element.getAttribute('data-key') || this.core.utils.generateDataKey(element);
         const content = this.core.contentMap[dataKey] || {};
         
@@ -1232,475 +1324,20 @@ class HardemEditorUI {
         if (savePartsBtn) {
             if (show) {
                 savePartsBtn.style.display = 'inline-block';
-                savePartsBtn.title = `Salvar por Partes - ${reason}`;
-                console.log(`📦 Botão de salvamento por partes ativado: ${reason}`);
+                savePartsBtn.title = `Salvar em partes: ${reason}`;
             } else {
                 savePartsBtn.style.display = 'none';
+                savePartsBtn.title = 'Salvar em Partes';
             }
         }
     }
 
     /**
-     * Iniciar salvamento por partes via botão
+     * Iniciar processo de salvamento por partes
      */
     async startSaveInParts() {
-        if (this.core.storage) {
-            try {
-                this.showAlert('📦 Iniciando salvamento por partes...', 'info');
-                
-                // Usar wrapper que prepara os dados automaticamente
-                const result = await this.core.storage.saveContentInPartsWrapper();
-                if (result) {
-                    this.showAlert('✅ Salvamento por partes concluído!', 'success');
-                    // Ocultar botão após sucesso
-                    this.toggleSavePartsButton(false);
-                }
-            } catch (error) {
-                console.error('Erro no salvamento por partes:', error);
-                this.showAlert('❌ Erro no salvamento por partes', 'error');
-            }
-        }
-    }
-    /**
-     * SISTEMA DE NORMALIZAÇÃO INDIVIDUAL - Funções do Painel
-     */
-    
-    /**
-     * Normalizar elemento atual individualmente
-     */
-    normalizeCurrentElement() {
-        if (!this.core.currentElement) {
-            this.showAlert('❌ Nenhum elemento selecionado!', 'error');
-            return;
-        }
-        
-        const element = this.core.currentElement;
-        
-        if (this.core.imageEditor && this.core.imageEditor.normalizeIndividualImage) {
-            this.core.imageEditor.normalizeIndividualImage(element);
-            this.showAlert('✅ Elemento normalizado individualmente!', 'success');
-            this.refreshNormalizationPanel();
-        } else {
-            this.showAlert('❌ Sistema de normalização individual não disponível!', 'error');
-        }
-    }
-    
-    /**
-     * Remover normalização do elemento atual
-     */
-    removeCurrentNormalization() {
-        if (!this.core.currentElement) {
-            this.showAlert('❌ Nenhum elemento selecionado!', 'error');
-            return;
-        }
-        
-        const element = this.core.currentElement;
-        
-        if (this.core.imageEditor && this.core.imageEditor.removeIndividualNormalization) {
-            this.core.imageEditor.removeIndividualNormalization(element);
-            this.showAlert('✅ Normalização removida!', 'success');
-            this.refreshNormalizationPanel();
-        } else {
-            this.showAlert('❌ Sistema de remoção não disponível!', 'error');
-        }
-    }
-    
-    /**
-     * Normalizar elemento atual com dimensões específicas
-     */
-    normalizeCurrentToCustomDimensions() {
-        if (!this.core.currentElement) {
-            this.showAlert('❌ Nenhum elemento selecionado!', 'error');
-            return;
-        }
-        
-        const widthInput = document.getElementById('hardem-normalize-width');
-        const heightInput = document.getElementById('hardem-normalize-height');
-        
-        if (!widthInput || !heightInput) {
-            this.showAlert('❌ Inputs não encontrados!', 'error');
-            return;
-        }
-        
-        const width = parseInt(widthInput.value);
-        const height = parseInt(heightInput.value);
-        
-        if (!width || !height || width < 50 || height < 50) {
-            this.showAlert('❌ Digite dimensões válidas (mínimo 50x50)!', 'warning');
-            return;
-        }
-        
-        const element = this.core.currentElement;
-        const targetDimensions = { width, height, element };
-        
-        if (this.core.imageEditor && this.core.imageEditor.normalizeIndividualImage) {
-            this.core.imageEditor.normalizeIndividualImage(element, targetDimensions);
-            this.showAlert(`✅ Elemento redimensionado para ${width}x${height}!`, 'success');
-            this.refreshNormalizationPanel();
-        } else {
-            this.showAlert('❌ Sistema de normalização individual não disponível!', 'error');
-        }
-    }
-    
-    /**
-     * Normalizar todas as imagens individualmente (preservando proporções)
-     */
-    normalizeExistingImagesIndividually() {
-        this.showProcessingMessage('🔧 Normalizando imagens individualmente...');
-        
-        try {
-            if (typeof hardemNormalize !== 'undefined' && hardemNormalize.existing) {
-                hardemNormalize.existing();
-                this.showAlert('✅ Imagens normalizadas individualmente!', 'success');
-            } else {
-                // Fallback manual
-                const images = document.querySelectorAll('img:not([data-no-edit])');
-                const backgrounds = document.querySelectorAll('[style*="background-image"]:not([data-no-edit])');
-                let count = 0;
-                
-                images.forEach(img => {
-                    if (this.core.imageEditor && this.core.imageEditor.normalizeIndividualImage) {
-                        this.core.imageEditor.normalizeIndividualImage(img);
-                        count++;
-                    }
-                });
-                
-                backgrounds.forEach(bg => {
-                    if (this.core.imageEditor && this.core.imageEditor.normalizeIndividualImage) {
-                        this.core.imageEditor.normalizeIndividualImage(bg);
-                        count++;
-                    }
-                });
-                
-                this.showAlert(`✅ ${count} elementos normalizados individualmente!`, 'success');
-            }
-            
-            this.refreshNormalizationPanel();
-            
-        } catch (error) {
-            console.error('Erro na normalização individual:', error);
-            this.showAlert('❌ Erro ao normalizar imagens individualmente!', 'error');
-        }
-    }
-    
-    /**
-     * Normalizar todas as imagens globalmente (CUIDADO: mesmas dimensões para todas)
-     */
-    normalizeAllImagesGlobal() {
-        const confirmGlobal = confirm(
-            '⚠️ ATENÇÃO: Esta função vai aplicar as MESMAS DIMENSÕES para TODAS as imagens!\n\n' +
-            'Isso pode causar problemas visuais. Tem certeza?\n\n' +
-            'Para normalização individual (recomendado), clique em "Cancelar".'
-        );
-        
-        if (!confirmGlobal) {
-            console.log('❌ Normalização global cancelada pelo usuário');
-            return;
-        }
-        
-        this.showProcessingMessage('⚠️ Aplicando normalização GLOBAL...');
-        
-        try {
-            const backgroundDimensions = this.detectBackgroundDimensions();
-            
-            if (!backgroundDimensions) {
-                this.showAlert('❌ Não foi possível detectar dimensões de referência!', 'error');
-                return;
-            }
-            
-            console.log(`📐 Dimensões detectadas: ${backgroundDimensions.width}x${backgroundDimensions.height}`);
-            
-            this.applyNormalizationToAll(backgroundDimensions);
-            
-        } catch (error) {
-            console.error('Erro na normalização global:', error);
-            this.showAlert('❌ Erro ao normalizar imagens globalmente!', 'error');
-        }
-    }
-    
-    /**
-     * Resetar todas as normalizações (versão melhorada)
-     */
-    resetAllNormalization() {
-        if (!confirm('🔄 Tem certeza que deseja resetar TODAS as normalizações?')) {
-            return;
-        }
-        
-        this.showProcessingMessage('🔄 Removendo todas as normalizações...');
-        
-        try {
-            if (typeof hardemNormalize !== 'undefined' && hardemNormalize.reset) {
-                hardemNormalize.reset();
-                this.showAlert('✅ Todas as normalizações foram resetadas!', 'success');
-            } else {
-                // Fallback manual
-                const normalizedElements = document.querySelectorAll('[data-normalized="true"]');
-                let count = 0;
-                
-                normalizedElements.forEach(element => {
-                    if (this.core.imageEditor && this.core.imageEditor.removeIndividualNormalization) {
-                        this.core.imageEditor.removeIndividualNormalization(element);
-                    } else {
-                        // Método antigo
-                        element.removeAttribute('data-normalized');
-                        element.removeAttribute('data-target-width');
-                        element.removeAttribute('data-target-height');
-                        
-                        if (element.tagName.toLowerCase() === 'img') {
-                            element.style.width = '';
-                            element.style.height = '';
-                            element.style.objectFit = '';
-                            element.style.objectPosition = '';
-                        }
-                    }
-                    count++;
-                });
-                
-                this.showAlert(`✅ ${count} normalizações removidas!`, 'success');
-            }
-            
-            this.refreshNormalizationPanel();
-            
-        } catch (error) {
-            console.error('Erro ao resetar:', error);
-            this.showAlert('❌ Erro ao resetar normalizações!', 'error');
-        }
-    }
-    
-    /**
-     * SISTEMA ANTIGO - Normalizar todas as imagens (detectar tamanho do background)
-     */
-    normalizeAllImages() {
-        this.showProcessingMessage('🔧 Analisando imagens da página...');
-        
-        try {
-            // Detectar dimensões do background principal
-            const backgroundDimensions = this.detectBackgroundDimensions();
-            
-            if (!backgroundDimensions) {
-                this.showAlert('❌ Não foi possível detectar as dimensões do background principal!', 'warning');
-                return;
-            }
-            
-            console.log(`📐 Dimensões detectadas: ${backgroundDimensions.width}x${backgroundDimensions.height}`);
-            
-            // Aplicar normalização com as dimensões detectadas
-            this.applyNormalizationToAll(backgroundDimensions);
-            
-        } catch (error) {
-            console.error('Erro na normalização:', error);
-            this.showAlert('❌ Erro ao normalizar imagens!', 'error');
-        }
-    }
-    
-    /**
-     * Normalizar apenas imagens existentes (mantém proporção atual)
-     */
-    normalizeExistingImages() {
-        this.showProcessingMessage('📷 Normalizando imagens existentes...');
-        
-        try {
-            const images = document.querySelectorAll('img:not([data-no-edit])');
-            let count = 0;
-            
-            images.forEach(img => {
-                if (img.offsetWidth > 0 && img.offsetHeight > 0) {
-                    this.applyNormalizedStyles(img, {
-                        width: 400,  // Tamanho padrão
-                        height: 300
-                    });
-                    count++;
-                }
-            });
-            
-            this.showAlert(`✅ ${count} imagens normalizadas com sucesso!`, 'success');
-            this.refreshNormalizationPanel();
-            
-        } catch (error) {
-            console.error('Erro na normalização:', error);
-            this.showAlert('❌ Erro ao normalizar imagens existentes!', 'error');
-        }
-    }
-    
-    /**
-     * Normalizar com dimensões personalizadas
-     */
-    normalizeToCustomDimensions() {
-        const widthInput = document.getElementById('hardem-normalize-width');
-        const heightInput = document.getElementById('hardem-normalize-height');
-        
-        if (!widthInput || !heightInput) {
-            this.showAlert('❌ Inputs não encontrados!', 'error');
-            return;
-        }
-        
-        const width = parseInt(widthInput.value);
-        const height = parseInt(heightInput.value);
-        
-        if (!width || !height || width < 50 || height < 50) {
-            this.showAlert('❌ Digite dimensões válidas (mínimo 50x50)!', 'warning');
-            return;
-        }
-        
-        this.showProcessingMessage(`⚙️ Aplicando dimensões ${width}x${height}...`);
-        
-        try {
-            this.applyNormalizationToAll({ width, height });
-            this.showAlert(`✅ Imagens redimensionadas para ${width}x${height}!`, 'success');
-        } catch (error) {
-            console.error('Erro na normalização personalizada:', error);
-            this.showAlert('❌ Erro ao aplicar dimensões personalizadas!', 'error');
-        }
-    }
-    
-    /**
-     * Mostrar relatório de normalização
-     */
-    showNormalizationReport() {
-        const totalImages = document.querySelectorAll('img:not([data-no-edit])').length;
-        const normalizedImages = document.querySelectorAll('[data-normalized="true"]').length;
-        const unnormalizedImages = totalImages - normalizedImages;
-        
-        const report = `
-📊 RELATÓRIO DE NORMALIZAÇÃO
-
-📈 Estatísticas:
-• Total de imagens: ${totalImages}
-• Imagens normalizadas: ${normalizedImages}
-• Imagens pendentes: ${unnormalizedImages}
-• Status: ${normalizedImages === totalImages ? '✅ Concluído' : '⚠️ Parcial'}
-
-🎯 Benefícios da Normalização:
-• Layout mais profissional
-• Carregamento otimizado
-• Melhor experiência visual
-• Consistência entre dispositivos
-        `;
-        
-        this.showAlert(report, 'info', 8000);
-    }
-    
-    /**
-     * Resetar todas as normalizações
-     */
-    resetNormalization() {
-        if (!confirm('🔄 Tem certeza que deseja resetar todas as normalizações?')) {
-            return;
-        }
-        
-        this.showProcessingMessage('🔄 Removendo normalizações...');
-        
-        try {
-            const normalizedElements = document.querySelectorAll('[data-normalized="true"]');
-            let count = 0;
-            
-            normalizedElements.forEach(element => {
-                // Remover atributos de normalização
-                element.removeAttribute('data-normalized');
-                element.removeAttribute('data-target-width');
-                element.removeAttribute('data-target-height');
-                
-                // Resetar estilos
-                if (element.tagName.toLowerCase() === 'img') {
-                    element.style.width = '';
-                    element.style.height = '';
-                    element.style.objectFit = '';
-                    element.style.objectPosition = '';
-                } else {
-                    element.style.width = '';
-                    element.style.height = '';
-                    element.style.backgroundSize = '';
-                    element.style.backgroundPosition = '';
-                }
-                
-                count++;
-            });
-            
-            this.showAlert(`✅ ${count} normalizações removidas!`, 'success');
-            this.refreshNormalizationPanel();
-            
-        } catch (error) {
-            console.error('Erro ao resetar:', error);
-            this.showAlert('❌ Erro ao resetar normalizações!', 'error');
-        }
-    }
-    
-    /**
-     * Funções auxiliares de normalização
-     */
-    
-    detectBackgroundDimensions() {
-        // Tentar detectar element com background principal
-        const candidates = [
-            document.querySelector('.hero, .banner, .rts-banner'),
-            document.querySelector('[style*="background-image"]'),
-            document.querySelector('section:first-of-type'),
-            document.querySelector('.container img:first-of-type')
-        ];
-        
-        for (const candidate of candidates) {
-            if (candidate && candidate.offsetWidth > 0) {
-                return {
-                    width: Math.min(candidate.offsetWidth, 800),
-                    height: Math.min(candidate.offsetHeight, 600)
-                };
-            }
-        }
-        
-        // Fallback: usar dimensões padrão
-        return { width: 400, height: 300 };
-    }
-    
-    applyNormalizationToAll(dimensions) {
-        const images = document.querySelectorAll('img:not([data-no-edit])');
-        const backgrounds = document.querySelectorAll('[style*="background-image"]:not([data-no-edit])');
-        
-        let count = 0;
-        
-        // Normalizar imagens
-        images.forEach(img => {
-            this.applyNormalizedStyles(img, dimensions);
-            count++;
-        });
-        
-        // Normalizar backgrounds
-        backgrounds.forEach(bg => {
-            this.applyNormalizedStyles(bg, dimensions);
-            count++;
-        });
-        
-        this.showAlert(`✅ ${count} elementos normalizados!`, 'success');
-        this.refreshNormalizationPanel();
-    }
-    
-    applyNormalizedStyles(element, dimensions) {
-        // Marcar como normalizado
-        element.setAttribute('data-normalized', 'true');
-        element.setAttribute('data-target-width', dimensions.width);
-        element.setAttribute('data-target-height', dimensions.height);
-        
-        if (element.tagName.toLowerCase() === 'img') {
-            // Aplicar estilos para imagens
-            element.style.width = dimensions.width + 'px';
-            element.style.height = dimensions.height + 'px';
-            element.style.objectFit = 'cover';
-            element.style.objectPosition = 'center';
-            element.style.display = 'block';
-        } else {
-            // Aplicar estilos para backgrounds
-            element.style.width = dimensions.width + 'px';
-            element.style.height = dimensions.height + 'px';
-            element.style.backgroundSize = 'cover';
-            element.style.backgroundPosition = 'center';
-        }
-    }
-    
-    refreshNormalizationPanel() {
-        // Atualizar o painel se estiver aberto
-        if (this.core.currentElement) {
-            setTimeout(() => {
-                this.populateSidePanel(this.core.currentElement);
-            }, 100);
+        if (this.core && this.core.storage) {
+            await this.core.storage.saveContentInPartsWrapper();
         }
     }
 }

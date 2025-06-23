@@ -151,7 +151,7 @@ try {
         WHERE pi.pagina_id = ? AND pi.status = 'ativo' AND i.status = 'ativo'
         ORDER BY pi.contexto, has_normalization DESC, pi.created_at DESC
     ", ["%{$searchTerm}%", "siteContent_{$pageId}.html"]);
-
+    
     // Processar imagens garantindo que apenas o melhor registro de cada contexto seja usado
     $contentMap = array_merge($contentMap, processarImagens($imagens, $stats));
     

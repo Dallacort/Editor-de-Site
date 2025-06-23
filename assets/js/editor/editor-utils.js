@@ -815,7 +815,7 @@ class HardemEditorUtils {
         if (!element) return '';
         const path = [];
         let current = element;
-
+        
         while(current && !current.matches('.dropdown-menu, .sub-menu, .menu-item')) {
             current = current.parentElement;
         }
