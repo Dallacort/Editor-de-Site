@@ -48,6 +48,32 @@ if (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'POST'])) {
 }
 
 try {
+    // Verificar se é uma requisição de verificação de publicação
+    if (isset($_GET['check_publication'])) {
+        safeLog("Verificando se há dados publicados");
+        
+        // Inicializar banco de dados
+        $db = Database::getInstance();
+        
+        // Verificar se há dados no banco (textos ou imagens)
+        $textosCount = $db->query("SELECT COUNT(*) as total FROM textos WHERE status = 'ativo'")[0]['total'] ?? 0;
+        $imagensCount = $db->query("SELECT COUNT(*) as total FROM pagina_imagens WHERE status = 'ativo'")[0]['total'] ?? 0;
+        
+        $hasPublishedData = ($textosCount > 0 || $imagensCount > 0);
+        
+        safeLog("Dados publicados encontrados: " . ($hasPublishedData ? 'SIM' : 'NÃO') . " (Textos: {$textosCount}, Imagens: {$imagensCount})");
+        
+        sendJsonResponse([
+            'success' => true,
+            'has_published_data' => $hasPublishedData,
+            'stats' => [
+                'textos' => (int)$textosCount,
+                'imagens' => (int)$imagensCount
+            ],
+            'timestamp' => date('Y-m-d H:i:s')
+        ]);
+    }
+    
     safeLog("Iniciando carregamento de dados do banco");
     
     // Determinar página atual
@@ -106,48 +132,28 @@ try {
     }
     
     // Carregar imagens normais da tabela 'imagens' (database-only)
+    // Voltando à query mais robusta que prioriza normalização
+    $searchTerm = '"normalization"';
     $imagens = $db->query("
-        SELECT pi.contexto as chave, i.id as image_id, i.tipo_mime, i.alt_text, i.descricao, i.largura, i.altura, i.hash_md5, pi.propriedades
+        SELECT 
+            pi.contexto as chave, 
+            i.id as image_id, 
+            i.tipo_mime, 
+            i.alt_text, 
+            i.descricao, 
+            i.largura, 
+            i.altura, 
+            i.hash_md5, 
+            pi.propriedades,
+            CASE WHEN pi.propriedades LIKE ? THEN 1 ELSE 0 END as has_normalization
         FROM pagina_imagens pi
         JOIN imagens i ON pi.imagem_id = i.id
         WHERE pi.pagina_id = ? AND pi.status = 'ativo' AND i.status = 'ativo'
-        ORDER BY pi.created_at DESC
-    ", ["siteContent_{$pageId}.html"]);
-    
-    foreach ($imagens as $imagem) {
-        $key = $imagem['chave'];
-        
-        // Criar URL para servir imagem do banco
-        $imageUrl = "serve-image.php?id={$imagem['image_id']}&type=original";
-        
-        $imageData = [
-            'src' => $imageUrl,
-            'alt' => $imagem['alt_text'] ?: '',
-            'type' => 'image',
-            'width' => $imagem['largura'],
-            'height' => $imagem['altura'],
-            'hash' => $imagem['hash_md5'],
-            'image_id' => $imagem['image_id'],
-            'storage_type' => 'database',
-            'isHeaderContent' => (bool)$imagem['is_header_content']
-        ];
-        
-        // Adicionar informações do elemento se disponíveis
-        if (!empty($imagem['propriedades'])) {
-            $elementInfo = json_decode($imagem['propriedades'], true);
-            if (json_last_error() === JSON_ERROR_NONE) {
-                $imageData['elementInfo'] = $elementInfo;
-                
-                // Incluir dados de normalização se existirem
-                if (isset($elementInfo['normalization']) && $elementInfo['normalization']['normalized']) {
-                    $imageData['normalization'] = $elementInfo['normalization'];
-                }
-            }
-        }
-        
-        $contentMap[$key] = $imageData;
-        $stats['imagens_carregadas']++;
-    }
+        ORDER BY pi.contexto, has_normalization DESC, pi.created_at DESC
+    ", ["%{$searchTerm}%", "siteContent_{$pageId}.html"]);
+
+    // Processar imagens garantindo que apenas o melhor registro de cada contexto seja usado
+    $contentMap = array_merge($contentMap, processarImagens($imagens, $stats));
     
     // Se não encontrou dados no banco, tentar carregar do arquivo JSON (migração)
     if (empty($contentMap)) {
@@ -215,5 +221,55 @@ try {
         'error_code' => $errorCode,
         'timestamp' => date('Y-m-d H:i:s')
     ], $errorCode >= 400 && $errorCode < 600 ? $errorCode : 500);
+}
+
+/**
+ * Processa o array de imagens do banco para garantir um registro por contexto.
+ * @param array $imagens Lista de imagens da query.
+ * @param array &$stats Referência para as estatísticas.
+ * @return array Mapa de conteúdo de imagens.
+ */
+function processarImagens($imagens, &$stats) {
+    $contentMap = [];
+    $imagensProcessadas = [];
+
+    foreach ($imagens as $imagem) {
+        $key = $imagem['chave'];
+
+        if (isset($imagensProcessadas[$key])) {
+            continue; // Já processamos a melhor versão deste contexto
+        }
+
+        $imageUrl = "serve-image.php?id={$imagem['image_id']}&type=original";
+        
+        $imageData = [
+            'src' => $imageUrl,
+            'alt' => $imagem['alt_text'] ?: '',
+            'type' => 'image',
+            'width' => $imagem['largura'],
+            'height' => $imagem['altura'],
+            'hash' => $imagem['hash_md5'],
+            'image_id' => $imagem['image_id'],
+            'storage_type' => 'database'
+        ];
+        
+        if (!empty($imagem['propriedades'])) {
+            $elementInfo = json_decode($imagem['propriedades'], true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                // Adiciona o objeto 'normalization' diretamente se ele existir
+                if (isset($elementInfo['normalization'])) {
+                    $imageData['normalization'] = $elementInfo['normalization'];
+                }
+                // Adiciona todas as propriedades sob 'elementInfo' para consistência
+                $imageData['elementInfo'] = $elementInfo;
+            }
+        }
+        
+        $contentMap[$key] = $imageData;
+        $imagensProcessadas[$key] = true;
+        $stats['imagens_carregadas']++;
+    }
+    
+    return $contentMap;
 }
 ?> 

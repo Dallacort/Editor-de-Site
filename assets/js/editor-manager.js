@@ -204,11 +204,15 @@ class HardemEditorManager {
         const pageKey = this.getPageKey();
         console.log('⚡ Carregando conteúdo para visitantes...');
         
-        fetch(`load-database.php?page=${encodeURIComponent(pageKey)}`, {
+        // Adicionar um parâmetro de cache-busting para garantir dados novos
+        const cacheBuster = `?v=${new Date().getTime()}`;
+        
+        fetch(`load-database.php${cacheBuster}&page=${encodeURIComponent(pageKey)}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Cache-Control': 'no-cache'
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache' // Para compatibilidade
             }
         })
         .then(response => response.json())
@@ -244,12 +248,13 @@ class HardemEditorManager {
         Object.keys(contentMap).forEach(key => {
             const content = contentMap[key];
             
-            // Aplicar normalizações instantaneamente
+            // Aplicar normalizações instantaneamente com sistema persistente
             if (content && content.normalization && content.normalization.normalized) {
                 const selector = `[data-key="${key}"]`;
                 const width = content.normalization.target_width;
                 const height = content.normalization.target_height;
                 
+                // CSS tradicional
                 cssRules.push(`
                     ${selector} {
                         width: ${width}px !important;
@@ -259,14 +264,91 @@ class HardemEditorManager {
                         background-size: cover !important;
                         background-position: center !important;
                         background-repeat: no-repeat !important;
+                        max-width: none !important;
+                        max-height: none !important;
+                        min-width: ${width}px !important;
+                        min-height: ${height}px !important;
+                        box-sizing: border-box !important;
+                    }
+                    
+                    ${selector}.hardem-persistent-override {
+                        width: ${width}px !important;
+                        height: ${height}px !important;
                     }
                 `);
+                
+                // Aplicar também via sistema persistente se disponível
+                setTimeout(() => {
+                    if (window.hardemPersistentDims) {
+                        console.log(`🔄 Aplicando normalização persistente: ${key} = ${width}x${height}`);
+                        window.hardemPersistentDims.applyPersistentDimensions(key, width, height, true);
+                    } else {
+                        // Aplicar diretamente se sistema persistente não estiver disponível
+                        const element = document.querySelector(`[data-key="${key}"]`);
+                        if (element && element.tagName.toLowerCase() === 'img') {
+                            element.classList.remove('img-fluid', 'img-responsive', 'w-100', 'h-100');
+                            element.classList.add('hardem-persistent-override');
+                            
+                            element.style.setProperty('width', `${width}px`, 'important');
+                            element.style.setProperty('height', `${height}px`, 'important');
+                            element.style.setProperty('object-fit', 'cover', 'important');
+                            element.style.setProperty('object-position', 'center', 'important');
+                            element.style.setProperty('display', 'block', 'important');
+                            element.style.setProperty('max-width', 'none', 'important');
+                            element.style.setProperty('max-height', 'none', 'important');
+                            element.style.setProperty('min-width', `${width}px`, 'important');
+                            element.style.setProperty('min-height', `${height}px`, 'important');
+                            element.style.setProperty('box-sizing', 'border-box', 'important');
+                            
+                            // Forçar re-render
+                            element.offsetHeight;
+                            
+                            console.log(`🎨 Normalização aplicada diretamente: ${key} = ${width}x${height}`);
+                        }
+                    }
+                }, 100);
+                
                 appliedCount++;
             }
             
             // Aplicar backgrounds instantaneamente
             if (content && content.backgroundImage) {
                 const selector = `[data-key="${key}"]`;
+                
+                // Sistema inteligente de fallback para seletores CSS
+                const generateFallbackSelector = (dataKey) => {
+                    // Extrair informações do data-key para gerar seletor
+                    if (dataKey.includes('rts-banner-area')) {
+                        return '.rts-banner-area.bg_image, .rts-banner-area[class*="bg-"]';
+                    }
+                    if (dataKey.includes('single-right-content-bg-1')) {
+                        return '.single-right-content.bg-1';
+                    }
+                    if (dataKey.includes('single-right-content-bg-2')) {
+                        return '.single-right-content.bg-2';
+                    }
+                    if (dataKey.includes('working-process-area')) {
+                        return '.our-working-process-area-4, .working-process-area[class*="bg"]';
+                    }
+                    if (dataKey.includes('bg_image')) {
+                        return '.bg_image';
+                    }
+                    if (dataKey.includes('banner')) {
+                        return '[class*="banner"].bg_image, [class*="banner"][class*="bg-"]';
+                    }
+                    if (dataKey.includes('hero')) {
+                        return '[class*="hero"].bg_image, [class*="hero"][class*="bg-"]';
+                    }
+                    if (dataKey.includes('section')) {
+                        return 'section.bg_image, section[class*="bg-"]';
+                    }
+                    // Fallback genérico para elementos com background
+                    return '.bg_image, [class*="bg-"], [style*="background-image"]';
+                };
+                
+                // Gerar seletor de fallback inteligente
+                const fallbackSelector = generateFallbackSelector(key);
+                
                 cssRules.push(`
                     ${selector} {
                         background-image: url("${content.backgroundImage}") !important;
@@ -275,6 +357,20 @@ class HardemEditorManager {
                         background-repeat: no-repeat !important;
                     }
                 `);
+                
+                // Aplicar fallback inteligente
+                if (fallbackSelector) {
+                    cssRules.push(`
+                        ${fallbackSelector} {
+                            background-image: url("${content.backgroundImage}") !important;
+                            background-size: cover !important;
+                            background-position: center !important;
+                            background-repeat: no-repeat !important;
+                        }
+                    `);
+                    console.log(`🎨 Background aplicado com fallback inteligente: ${key} -> ${fallbackSelector}`);
+                }
+                
                 appliedCount++;
             }
             
@@ -293,6 +389,25 @@ class HardemEditorManager {
                 const element = document.querySelector(`[data-key="${key}"]`);
                 if (element) {
                     element.textContent = content.text;
+                    appliedCount++;
+                }
+            }
+            
+            // Aplicar contadores instantaneamente
+            if (content && (content.isCounter || content.counterValue !== undefined)) {
+                const element = document.querySelector(`[data-key="${key}"]`);
+                if (element) {
+                    const counterValue = content.counterValue || content.text || '0';
+                    
+                    // Se é um odometer, configurar corretamente
+                    if (element.classList.contains('odometer') || element.hasAttribute('data-count')) {
+                        element.setAttribute('data-count', counterValue);
+                        element.textContent = counterValue;
+                    } else {
+                        element.textContent = counterValue;
+                    }
+                    
+                    console.log(`🔢 Contador aplicado instantaneamente: ${key} = ${counterValue}`);
                     appliedCount++;
                 }
             }

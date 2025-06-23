@@ -1646,12 +1646,15 @@ class HardemImageEditor {
         imgElement.setAttribute('data-original-height', originalHeight || 'auto');
         imgElement.setAttribute('data-original-object-fit', imgElement.style.objectFit || 'initial');
         
-        // Aplicar novos estilos
-        imgElement.style.width = targetDimensions.width + 'px';
-        imgElement.style.height = targetDimensions.height + 'px';
-        imgElement.style.objectFit = 'cover';
-        imgElement.style.objectPosition = 'center';
-        imgElement.style.display = 'block';
+        // Aplicar novos estilos com !important para garantir que não sejam sobrescritos
+        imgElement.style.setProperty('width', targetDimensions.width + 'px', 'important');
+        imgElement.style.setProperty('height', targetDimensions.height + 'px', 'important');
+        imgElement.style.setProperty('object-fit', 'cover', 'important');
+        imgElement.style.setProperty('object-position', 'center', 'important');
+        imgElement.style.setProperty('display', 'block', 'important');
+        
+        // Forçar re-render
+        imgElement.offsetHeight;
         
         // Marcar como normalizada com ID único
         imgElement.setAttribute('data-normalized', 'true');
@@ -2004,65 +2007,54 @@ class HardemImageEditor {
      * Carregar dimensões de normalização do banco de dados
      */
     loadNormalizationFromDatabase(element) {
-        try {
-            const properties = element.getAttribute('data-properties');
-            if (!properties) return null;
-
-            const parsedProperties = JSON.parse(properties);
-            const normalization = parsedProperties.normalization;
-
-            if (normalization && normalization.normalized) {
-                return {
-                    width: normalization.target_width,
-                    height: normalization.target_height,
-                    normalizeId: normalization.normalize_id,
-                    normalizedAt: normalization.normalized_at
-                };
-            }
-
-            return null;
-        } catch (error) {
-            console.error('Erro ao carregar normalização do banco:', error);
-            return null;
-        }
+        // Esta função agora pode ser mais simples, apenas delega
+        this.applyNormalizationFromDatabase(element);
     }
 
-    /**
-     * Aplicar normalização salva no banco (para restaurar ao carregar página)
-     */
-    applyNormalizationFromDatabase(element) {
-        const savedNormalization = this.loadNormalizationFromDatabase(element);
+    applyNormalizationFromDatabase(element, normalizationData = null) {
+        const dataKey = element.getAttribute('data-key');
+        if (!dataKey) return;
         
-        if (savedNormalization) {
+        const content = this.core.storage.getFromContentMap(dataKey);
+        const normalization = normalizationData || (content ? content.normalization : null);
+
+        if (normalization && normalization.normalized) {
+            console.log(`🔄 Normalização restaurada do banco: ${element.tagName}.`);
+            
             const targetDimensions = {
-                width: savedNormalization.width,
-                height: savedNormalization.height
+                width: normalization.target_width,
+                height: normalization.target_height
             };
 
-            // Aplicar normalização sem salvar novamente
-            if (element.tagName.toLowerCase() === 'img') {
-                this.applyNormalizedImageStylesFromDB(element, targetDimensions, savedNormalization.normalizeId);
-            } else if (this.hasValidBackgroundImage(element)) {
-                this.applyNormalizedBackgroundStylesFromDB(element, targetDimensions, savedNormalization.normalizeId);
+            // *** AQUI ESTÁ A CORREÇÃO INTELIGENTE ***
+            if (element.tagName === 'IMG') {
+                this.applyNormalizedImageStyles(element, targetDimensions);
+            } else { // Trata DIVs e outros elementos como background
+                this.applyNormalizedBackgroundStyles(element, targetDimensions);
+
+                // Garante que a imagem seja visível no background
+                if (content && content.src) {
+                    // Extrai a URL real da imagem do 'serve-image.php...'
+                    const imageUrl = this.core.utils.extractImageUrl(content.src);
+                    element.style.backgroundImage = `url('${imageUrl}')`;
+                    element.style.backgroundSize = 'cover';
+                    element.style.backgroundPosition = 'center';
+                }
             }
-
-            console.log(`🔄 Normalização restaurada do banco: ${element.tagName}.${element.className}`);
-            return true;
         }
-
-        return false;
     }
 
-    /**
-     * Aplicar estilos de imagem normalizados vindos do banco (sem salvar novamente)
-     */
     applyNormalizedImageStylesFromDB(imgElement, targetDimensions, normalizeId) {
-        // Aplicar estilos
-        imgElement.style.width = targetDimensions.width + 'px';
-        imgElement.style.height = targetDimensions.height + 'px';
-        imgElement.style.objectFit = 'cover';
-        imgElement.style.objectPosition = 'center';
-        imgElement.style.display = 'block';
+        // Esta função pode ser simplificada ou removida se a lógica for centralizada
+        // Aplicar estilos com !important para garantir que não sejam sobrescritos
+        imgElement.style.setProperty('width', targetDimensions.width + 'px', 'important');
+        imgElement.style.setProperty('height', targetDimensions.height + 'px', 'important');
+        imgElement.style.setProperty('object-fit', 'cover', 'important');
+        imgElement.style.setProperty('object-position', 'center', 'important');
+        imgElement.style.setProperty('display', 'block', 'important');
+        
+        // Forçar re-render
+        imgElement.offsetHeight;
         
         // Marcar como normalizada
         imgElement.setAttribute('data-normalized', 'true');

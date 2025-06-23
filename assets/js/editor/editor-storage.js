@@ -348,13 +348,25 @@ class HardemEditorStorage {
         
         Object.entries(this.core.contentMap).forEach(([key, value]) => {
             if (value && typeof value === 'object' && 
-                (value.text || value.src || value.backgroundImage || value.title || value.description)) {
+                (value.text || value.src || value.backgroundImage || value.title || value.description || 
+                 value.isCounter || value.counterValue !== undefined || value.counterSuffix ||
+                 key.includes('counter') || key.includes('label') || key.includes('odometer'))) {
+                
                 const cleanValue = {};
+                
+                // Propriedades básicas
                 if (value.text && typeof value.text === 'string') cleanValue.text = value.text;
                 if (value.src && typeof value.src === 'string') cleanValue.src = value.src;
                 if (value.backgroundImage && typeof value.backgroundImage === 'string') cleanValue.backgroundImage = value.backgroundImage;
                 if (value.title && typeof value.title === 'string') cleanValue.title = value.title;
                 if (value.description && typeof value.description === 'string') cleanValue.description = value.description;
+                
+                // CORREÇÃO: Propriedades específicas de contadores
+                if (value.isCounter !== undefined) cleanValue.isCounter = value.isCounter;
+                if (value.counterValue !== undefined) cleanValue.counterValue = value.counterValue;
+                if (value.counterSuffix !== undefined) cleanValue.counterSuffix = value.counterSuffix;
+                
+                // Propriedades de metadados
                 if (value.type) cleanValue.type = value.type;
                 if (value.format) cleanValue.format = value.format;
                 if (value.slideIndex !== undefined) cleanValue.slideIndex = value.slideIndex;
@@ -363,6 +375,16 @@ class HardemEditorStorage {
                 filteredContent[key] = cleanValue;
             }
         });
+        
+        console.log(`🔍 getBasicFilteredContent: ${Object.keys(filteredContent).length} itens filtrados`);
+        
+        // Debug específico para contadores
+        const counters = Object.keys(filteredContent).filter(key => {
+            const content = filteredContent[key];
+            return content.isCounter || content.counterValue !== undefined || 
+                   key.includes('counter') || key.includes('label') || key.includes('odometer');
+        });
+        console.log(`🔢 Contadores no filteredContent: ${counters.length}`, counters);
         
         return filteredContent;
     }
@@ -1333,36 +1355,39 @@ class HardemEditorStorage {
                 console.log(`🎨 Background aplicado: ${dataKey}`);
             }
             
-            // Aplicar contador (elemento pai que contém odometer)
-            if (content.isCounter && content.counterValue !== undefined) {
+            // CORREÇÃO: Aplicação melhorada de contadores
+            if (content.isCounter || content.counterValue !== undefined || 
+                (dataKey && (dataKey.includes('counter') || dataKey.includes('label') || dataKey.includes('odometer')))) {
+                
+                const value = content.counterValue !== undefined ? content.counterValue : 
+                             (content.text && !isNaN(parseFloat(content.text))) ? parseFloat(content.text) : 0;
+                
+                // Caso 1: Elemento pai que contém odometer
                 const odometerSpan = element.querySelector('span.odometer');
                 if (odometerSpan) {
-                    // Atualizar o data-count para o novo valor
-                    odometerSpan.setAttribute('data-count', content.counterValue.toString());
-                    
-                    // Atualizar o texto diretamente primeiro
-                    odometerSpan.textContent = content.counterValue.toString();
-                    
-                    console.log(`🔢 Contador aplicado: ${dataKey} = ${content.counterValue}${content.counterSuffix || ''}`);
-                } else {
-                    console.warn(`⚠️ Elemento odometer não encontrado para contador: ${dataKey}`, element);
+                    odometerSpan.setAttribute('data-count', value.toString());
+                    odometerSpan.textContent = value.toString();
+                    console.log(`🔢 Contador aplicado (elemento pai): ${dataKey} = ${value}${content.counterSuffix || ''}`);
                 }
-            }
-            
-            // NOVO: Aplicar contador diretamente ao span odometer
-            if ((content.isCounter && content.counterValue !== undefined) || 
-                (content.text && element.classList.contains('odometer'))) {
                 
-                if (element.classList.contains('odometer')) {
-                    const value = content.counterValue !== undefined ? content.counterValue : content.text;
-                    
-                    // Atualizar o data-count para o novo valor
+                // Caso 2: Elemento é diretamente o odometer
+                else if (element.classList.contains('odometer')) {
                     element.setAttribute('data-count', value.toString());
-                    
-                    // Atualizar o texto diretamente
                     element.textContent = value.toString();
-                    
-                    console.log(`🎯 Valor aplicado diretamente ao odometer: ${dataKey} = ${value}`);
+                    console.log(`🎯 Contador aplicado (odometer direto): ${dataKey} = ${value}`);
+                }
+                
+                // Caso 3: Buscar odometer por data-key semelhante
+                else {
+                    const relatedOdometer = document.querySelector(`span.odometer[data-key*="${dataKey}"]`) ||
+                                          document.querySelector(`span.odometer[data-key="${dataKey}"]`);
+                    if (relatedOdometer) {
+                        relatedOdometer.setAttribute('data-count', value.toString());
+                        relatedOdometer.textContent = value.toString();
+                        console.log(`🔗 Contador aplicado (busca relacionada): ${dataKey} = ${value}`);
+                    } else {
+                        console.warn(`⚠️ Nenhum odometer encontrado para contador: ${dataKey}`, {element, content});
+                    }
                 }
             }
             
@@ -2335,14 +2360,29 @@ class HardemEditorStorage {
         
         // Separar por tipo de conteúdo
         const images = entries.filter(([key, value]) => value.src && value.src.startsWith('data:'));
-        const backgrounds = entries.filter(([key, value]) => value.backgroundImage && value.backgroundImage.startsWith('data:'));
+        const backgrounds = entries.filter(([key, value]) => 
+            value.backgroundImage && value.backgroundImage.startsWith('data:')
+        );
         const texts = entries.filter(([key, value]) => value.text || value.title || value.description);
-        const counters = entries.filter(([key, value]) => value.isCounter && value.counterValue !== undefined);
+        
+        // CORREÇÃO: Detecção melhorada de contadores
+        const counters = entries.filter(([key, value]) => 
+            value.isCounter || 
+            value.counterValue !== undefined || 
+            value.counterSuffix ||
+            (key && key.includes('counter')) ||
+            (key && key.includes('label')) ||
+            (key && key.includes('odometer'))
+        );
+        
         const others = entries.filter(([key, value]) => 
             !value.src?.startsWith('data:') && 
             !value.backgroundImage?.startsWith('data:') && 
             !value.text && !value.title && !value.description &&
-            !value.isCounter
+            !value.isCounter && value.counterValue === undefined && !value.counterSuffix &&
+            !(key && key.includes('counter')) &&
+            !(key && key.includes('label')) &&
+            !(key && key.includes('odometer'))
         );
         
         console.log(`📊 Dividindo salvamento: ${images.length} imagens, ${backgrounds.length} backgrounds, ${texts.length} textos, ${counters.length} contadores, ${others.length} outros`);
