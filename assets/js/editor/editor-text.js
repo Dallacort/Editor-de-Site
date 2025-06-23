@@ -100,7 +100,10 @@ class HardemTextEditor {
             
             // Configurar o elemento pai para edição apenas se o modo de edição estiver ativo
             if (parentElement && this.core.editMode) {
+                console.log(`🔢 Configurando contador para edição: ${dataKey} (editMode: ${this.core.editMode})`);
                 this.makeCounterEditable(parentElement);
+            } else if (parentElement && !this.core.editMode) {
+                console.log(`⏸️ Contador detectado mas não configurado para edição: ${dataKey} (editMode: ${this.core.editMode})`);
             }
         });
     }
@@ -109,6 +112,12 @@ class HardemTextEditor {
      * Tornar elemento de texto editável
      */
     makeTextElementEditable(element) {
+        // CRÍTICO: Só configurar elementos editáveis se o modo de edição estiver ativo
+        if (!this.core.editMode) {
+            console.log(`⏸️ makeTextElementEditable ignorado (editMode inativo): ${element.tagName}`);
+            return;
+        }
+        
         // Evitar elementos do próprio editor
         if (element.closest('.hardem-editor-toolbar') || 
             element.closest('.hardem-editor-sidepanel') ||
@@ -767,6 +776,12 @@ class HardemTextEditor {
      * Tratar contador como elemento único
      */
     makeCounterEditable(element) {
+        // CRÍTICO: Só configurar contadores editáveis se o modo de edição estiver ativo
+        if (!this.core.editMode) {
+            console.log(`⏸️ makeCounterEditable ignorado (editMode inativo): ${element.tagName}`);
+            return;
+        }
+        
         // Verificar se já foi processado para evitar duplicação
         if (element.classList.contains('hardem-counter-element') || 
             element.hasAttribute('data-hardem-processed')) {

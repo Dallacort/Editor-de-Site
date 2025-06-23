@@ -32,6 +32,12 @@ class HardemImageEditor {
      * Configurar edição de imagens
      */
     setupImageEditing(container = document) {
+        // CRÍTICO: Só configurar imagens editáveis se o modo de edição estiver ativo
+        if (!this.core.editMode) {
+            console.log(`⏸️ setupImageEditing ignorado (editMode inativo)`);
+            return;
+        }
+        
         let imageCount = 0;
         let backgroundCount = 0;
 

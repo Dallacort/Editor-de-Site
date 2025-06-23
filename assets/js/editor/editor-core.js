@@ -18,12 +18,14 @@ class HardemEditorCore {
         
         this.debouncedSetupEditableElements = this.debounce(() => {
             if (this.editMode && !this.isProcessingElements) {
-                // console.log("HARDEM Editor: Executando setupEditableElements via debounce.");
+                console.log("🔧 HARDEM Editor: Executando setupEditableElements via debounce (editMode ativo).");
                 this.isProcessingElements = true;
                 this.textEditor.setupEditableElements(document.body);
                 setTimeout(() => {
                     this.isProcessingElements = false;
                 }, 100);
+            } else if (!this.editMode) {
+                console.log("⏸️ HARDEM Editor: setupEditableElements ignorado (editMode inativo).");
             }
         }, 300);
         
@@ -118,15 +120,7 @@ class HardemEditorCore {
         // Aguardar DOM estar completamente carregado antes de carregar conteúdo
         this.waitForDOMAndLoadContent();
         
-        // Habilitar botão de editar após inicialização completa
-        setTimeout(() => {
-            const toggleBtn = document.getElementById('hardem-toggle-edit');
-            if (toggleBtn) {
-                toggleBtn.disabled = false;
-                toggleBtn.title = 'Ativar Modo de Edição';
-                console.log('✅ Botão de edição habilitado');
-            }
-        }, 1000);
+        // O botão será habilitado pelo editor-manager.js quando conectar à toolbar
     }
 
     /**
@@ -444,13 +438,8 @@ class HardemEditorCore {
      * Vinculação de eventos principais
      */
     bindEvents() {
-        // Toggle do modo de edição
-        const editBtn = document.getElementById('hardem-edit-btn');
-        if (editBtn) {
-            editBtn.addEventListener('click', () => {
-            this.toggleEditMode();
-        });
-        }
+        // Toggle do modo de edição - agora conectado via editor-manager
+        // O botão hardem-toggle-edit é conectado pelo editor-manager.js
 
         // Painel lateral
         const openPanelBtn = document.getElementById('hardem-open-panel-btn');
@@ -502,38 +491,104 @@ class HardemEditorCore {
      * Alternar modo de edição
      */
     toggleEditMode() {
+        const previousState = this.editMode;
         this.editMode = !this.editMode;
         
-        const toggleBtn = document.getElementById('hardem-edit-btn');
-        const statusEl = document.querySelector('.hardem-editor-status');
+        console.log(`🔄 Alternando modo de edição: ${previousState ? 'ATIVO' : 'INATIVO'} → ${this.editMode ? 'ATIVO' : 'INATIVO'}`);
         
         if (this.editMode) {
-            if (toggleBtn) {
-            toggleBtn.classList.add('active');
-            toggleBtn.innerHTML = '🔒';
-            toggleBtn.title = 'Desativar Edição';
-            }
-            if (statusEl) {
-            statusEl.textContent = 'ON';
+            console.log('✅ Ativando modo de edição...');
+            
+            // Adicionar classe ao body para indicar modo de edição
+            document.body.classList.add('hardem-editor-active');
+            
+            // Ativar edição de texto
+            if (this.textEditor && this.textEditor.setupEditableElements) {
+                console.log(`📝 Chamando setupEditableElements... (editMode: ${this.editMode})`);
+                this.textEditor.setupEditableElements(document.body);
+                console.log('📝 Editor de texto ativado');
+            } else {
+                console.error('❌ textEditor ou setupEditableElements não encontrado');
             }
             
-            this.textEditor.setupEditableElements();
-            this.imageEditor.setupImageEditing();
-            this.carouselEditor.setupCarouselEditing();
+            // Ativar edição de imagens
+            if (this.imageEditor && this.imageEditor.setupImageEditing) {
+                this.imageEditor.setupImageEditing();
+                console.log('🖼️ Editor de imagens ativado');
+            } else {
+                console.warn('⚠️ imageEditor ou setupImageEditing não encontrado');
+            }
+            
+            // Ativar edição de carrosséis
+            if (this.carouselEditor && this.carouselEditor.setupCarouselEditing) {
+                this.carouselEditor.setupCarouselEditing();
+                console.log('🎠 Editor de carrosséis ativado');
+            } else {
+                console.warn('⚠️ carouselEditor ou setupCarouselEditing não encontrado');
+            }
+            
+            // Mostrar controles específicos do modo de edição
+            if (this.ui) {
+                // A toolbar permanece sempre visível
+                const toolbar = document.getElementById('hardem-editor-toolbar');
+                if (toolbar) {
+                    toolbar.style.display = 'flex';
+                    console.log('🔧 Toolbar sempre visível');
+                }
+                
+                // Mostrar botões específicos do modo de edição
+                this.showEditingControls();
+                
+                const sidePanel = document.querySelector('.hardem-editor-sidepanel');
+                if (sidePanel) {
+                    sidePanel.style.display = 'block';
+                    console.log('📋 Painel lateral disponível');
+                } else {
+                    console.warn('⚠️ Painel lateral não encontrado');
+                }
+            } else {
+                console.error('❌ UI do editor não encontrada');
+            }
+            
         } else {
-            if (toggleBtn) {
-            toggleBtn.classList.remove('active');
-            toggleBtn.innerHTML = '✏️';
-            toggleBtn.title = 'Alternar Modo de Edição';
-            }
-            if (statusEl) {
-            statusEl.textContent = 'OFF';
+            console.log('❌ Desativando modo de edição...');
+            
+            // Desativar edição
+            if (this.ui && this.ui.disableEditing) {
+                this.ui.disableEditing();
+                console.log('🚫 Edição desativada');
             }
             
-            this.ui.disableEditing();
+            // Ocultar apenas controles específicos do modo de edição (toolbar permanece visível)
+            this.hideEditingControls();
+            
+            const sidePanel = document.querySelector('.hardem-editor-sidepanel');
+            if (sidePanel) {
+                sidePanel.style.display = 'none';
+                console.log('📋 Painel lateral oculto');
+            }
+            
+            // Remover classe do body
+            document.body.classList.remove('hardem-editor-active');
+            
+            // Remover seleções ativas
+            document.querySelectorAll('.hardem-selected').forEach(el => {
+                el.classList.remove('hardem-selected');
+            });
         }
         
-        console.log(`Modo de edição: ${this.editMode ? 'ATIVO' : 'INATIVO'}`);
+        console.log(`✅ Modo de edição: ${this.editMode ? 'ATIVO' : 'INATIVO'}`);
+        
+        // Verificar se há elementos editáveis após ativação
+        if (this.editMode) {
+            setTimeout(() => {
+                const editableElements = document.querySelectorAll('.hardem-editable');
+                console.log(`🔍 Elementos editáveis encontrados após ativação: ${editableElements.length}`);
+                if (editableElements.length === 0) {
+                    console.warn('⚠️ Nenhum elemento editável foi configurado! Pode haver um problema na configuração.');
+                }
+            }, 500);
+        }
     }
 
     /**
@@ -866,6 +921,52 @@ class HardemEditorCore {
             element.style.removeProperty('-webkit-animation');
             element.style.removeProperty('opacity');
         }
+    }
+
+    /**
+     * Mostrar controles específicos do modo de edição
+     */
+    showEditingControls() {
+        // Mostrar botões específicos do modo de edição
+        const editingButtons = [
+            'hardem-open-panel',
+            'hardem-save-content', 
+            'hardem-preview-mode',
+            'hardem-publish-changes',
+            'hardem-reload-content'
+        ];
+        
+        editingButtons.forEach(buttonId => {
+            const button = document.getElementById(buttonId);
+            if (button) {
+                button.style.display = 'flex';
+            }
+        });
+        
+        console.log('🔧 Controles de edição exibidos');
+    }
+
+    /**
+     * Ocultar controles específicos do modo de edição
+     */
+    hideEditingControls() {
+        // Ocultar botões específicos do modo de edição (mas manter o toggle)
+        const editingButtons = [
+            'hardem-open-panel',
+            'hardem-save-content', 
+            'hardem-preview-mode',
+            'hardem-publish-changes',
+            'hardem-reload-content'
+        ];
+        
+        editingButtons.forEach(buttonId => {
+            const button = document.getElementById(buttonId);
+            if (button) {
+                button.style.display = 'none';
+            }
+        });
+        
+        console.log('🔧 Controles de edição ocultos (toolbar permanece visível)');
     }
 
     /**

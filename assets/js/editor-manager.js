@@ -230,146 +230,226 @@ class HardemEditorManager {
     }
     
     loadEditor() {
-        // Criar indicador visual de modo de edição
-        this.createEditModeIndicator();
-        
-        // NOVO: Pré-carregar conteúdo em paralelo
+        // Pré-carregar conteúdo para uma experiência mais suave
         this.preloadContent();
         
-        // Carregar scripts do editor dinamicamente
+        // Carregar os scripts principais do editor
         this.loadEditorScripts().then(() => {
-            console.log('📝 Editor carregado com sucesso!');
-            
-            // Aguardar um pouco e verificar se editor foi carregado
-            setTimeout(() => {
-                if (window.hardemEditor) {
-                    console.log('✅ Editor carregado - ativando automaticamente após login');
-                    this.activateEditorAfterLogin();
-                } else {
-                    console.log('⏳ Aguardando editor estar disponível...');
-                    this.waitForEditor();
-                }
-            }, 1000);
+            console.log('📝 Editor e seus módulos carregados com sucesso.');
+            // Agora que os scripts estão prontos, esperamos a instância do editor ser criada
+            this.waitForEditorInstance();
         });
     }
-    
-    waitForEditor() {
-        const checkEditor = setInterval(() => {
+
+    waitForEditorInstance() {
+        let attempts = 0;
+        const maxAttempts = 50; // Tenta por 5 segundos
+        const interval = setInterval(() => {
+            attempts++;
             if (window.hardemEditor) {
-                clearInterval(checkEditor);
-                console.log('✅ Editor disponível - ativando automaticamente após login');
-                this.activateEditorAfterLogin();
+                clearInterval(interval);
+                console.log('✅ Instância do editor pronta. Criando interface de controle.');
+                // O editor está pronto, mas inativo. Criamos nossa UI de controle.
+                this.createEditorControls();
+            } else if (attempts > maxAttempts) {
+                clearInterval(interval);
+                console.error('❌ Falha ao encontrar a instância do editor a tempo.');
             }
-        }, 500);
-        
-        // Timeout após 10 segundos
-        setTimeout(() => {
-            clearInterval(checkEditor);
-            if (!window.hardemEditor) {
-                console.error('❌ Timeout - Editor não carregou');
-            }
-        }, 10000);
+        }, 100);
     }
-    
-    activateEditorAfterLogin() {
-        if (window.hardemEditor) {
-            // Criar a interface do editor
-            if (window.hardemEditor.createEditorUI) {
-                window.hardemEditor.createEditorUI();
-            }
+
+    createEditorControls() {
+        // Em vez de criar novos controles, vamos conectar ao botão existente da toolbar
+        this.connectToExistingToolbar();
+    }
+
+    connectToExistingToolbar() {
+        // Garantir que a toolbar seja sempre visível
+        const toolbar = document.getElementById('hardem-editor-toolbar');
+        if (toolbar) {
+            toolbar.style.display = 'flex';
+            console.log('🔧 Toolbar sempre visível');
+        }
+
+        // Conectar ao botão de toggle existente na toolbar
+        const toggleBtn = document.getElementById('hardem-toggle-edit');
+        if (toggleBtn) {
+            // Remover qualquer listener anterior
+            toggleBtn.removeEventListener('click', this.toggleEditorActivation);
             
-            // Ativar modo de edição
-            setTimeout(() => {
-                if (!window.hardemEditor.editMode) {
-                    window.hardemEditor.toggleEditMode();
-                }
-                
-                // Adicionar botão de logout
-                this.addLogoutButton();
-            }, 200);
+            // Adicionar nosso listener
+            toggleBtn.addEventListener('click', () => this.toggleEditorActivation());
+            
+            // Habilitar o botão
+            toggleBtn.disabled = false;
+            toggleBtn.title = 'Ativar Modo de Edição';
+            
+            console.log('🔗 Conectado ao botão da toolbar existente');
+        } else {
+            console.warn('⚠️ Botão hardem-toggle-edit não encontrado na toolbar');
+        }
+
+        // Inicializar controles de edição como ocultos (editor inativo por padrão)
+        if (window.hardemEditor && window.hardemEditor.hideEditingControls) {
+            window.hardemEditor.hideEditingControls();
+        }
+
+        // Adicionar informações do usuário e botão de logout na toolbar
+        this.addUserInfoToToolbar();
+        
+        // Atualizar interface inicial (editor inativo)
+        this.updateEditorControls();
+    }
+
+    addUserInfoToToolbar() {
+        const toolbar = document.getElementById('hardem-editor-toolbar');
+        if (!toolbar) return;
+
+        // Verificar se já existe
+        if (document.getElementById('hardem-user-controls')) return;
+
+        const userControls = document.createElement('div');
+        userControls.id = 'hardem-user-controls';
+        userControls.className = 'hardem-editor-controls';
+        userControls.style.cssText = `
+            margin-left: auto;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            color: #666;
+        `;
+
+        userControls.innerHTML = `
+            <span id="hardem-user-name" style="font-weight: 600;"></span>
+            <button class="hardem-editor-btn error" id="hardem-toolbar-logout" title="Sair do Editor">
+                🚪
+            </button>
+        `;
+
+        // Adicionar ao final da toolbar
+        const controls = toolbar.querySelector('.hardem-editor-controls');
+        if (controls) {
+            controls.appendChild(userControls);
+            
+            // Conectar evento de logout
+            document.getElementById('hardem-toolbar-logout').addEventListener('click', () => this.logout());
         }
     }
-    
-    addLogoutButton() {
-        // Remover botão existente se houver
-        const existingBtn = document.getElementById("hardem-logout-btn");
-        if (existingBtn) existingBtn.remove();
+
+    toggleEditorActivation() {
+        if (!window.hardemEditor) {
+            console.error('❌ Editor não encontrado para ativar/desativar');
+            return;
+        }
         
-        const logoutBtn = document.createElement("div");
-        logoutBtn.id = "hardem-logout-btn";
-        logoutBtn.innerHTML = `
-            <div style="
-                position: fixed; top: 20px; right: 20px;
-                background: #e74c3c; color: white; padding: 12px 20px;
-                border-radius: 25px; cursor: pointer; font-size: 14px;
-                font-weight: 600; z-index: 9999;
-            ">
-                👤 ${this.userInfo ? this.userInfo.username : 'Admin'} | 🚪 Sair
-            </div>
-        `;
+        console.log('🎛️ Alternando ativação do editor...');
         
-        logoutBtn.addEventListener("click", () => {
-            if (confirm("Deseja sair do modo de edição?")) {
-                this.logout();
-            }
-        });
+        // Chama o método do core que ativa/desativa o editor
+        window.hardemEditor.toggleEditMode();
         
-        document.body.appendChild(logoutBtn);
+        // Aguarda um pouco para garantir que o estado foi alterado
+        setTimeout(() => {
+            this.updateEditorControls();
+            console.log(`🎛️ Interface atualizada. Editor ${window.hardemEditor.editMode ? 'ATIVO' : 'INATIVO'}`);
+        }, 100);
     }
-    
+
+    updateEditorControls() {
+        const isActive = window.hardemEditor.editMode;
+        const toggleBtn = document.getElementById('hardem-toggle-edit');
+        const statusEl = document.querySelector('.hardem-editor-status');
+        const userControls = document.getElementById('hardem-user-controls');
+        const userNameEl = document.getElementById('hardem-user-name');
+
+        if (toggleBtn) {
+            if (isActive) {
+                toggleBtn.innerHTML = '🔒'; // Ícone de cadeado (ativo)
+                toggleBtn.title = 'Desativar Modo de Edição';
+                toggleBtn.classList.add('active');
+            } else {
+                toggleBtn.innerHTML = '✏️'; // Ícone de edição (inativo)
+                toggleBtn.title = 'Ativar Modo de Edição';
+                toggleBtn.classList.remove('active');
+            }
+        }
+
+        if (statusEl) {
+            statusEl.textContent = isActive ? 'ON' : 'OFF';
+        }
+
+        if (userControls) {
+            if (isActive && this.userInfo) {
+                userControls.style.display = 'flex';
+                if (userNameEl) {
+                    userNameEl.textContent = this.userInfo.username;
+                }
+            } else {
+                userControls.style.display = 'none';
+            }
+        }
+    }
+
     async logout() {
+        if (!confirm("Tem certeza que deseja sair?")) return;
+        
         try {
             await fetch("auth.php", {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
                 body: "action=logout"
             });
-            
-            // Remover UI do editor
-            this.removeEditorUI();
-            
-            // Resetar estado
-            this.isAuthenticated = false;
-            this.userInfo = null;
-            
-            // Mostrar modal de login novamente
-            this.showLoginModal();
-            
         } catch (error) {
             console.error("Erro no logout:", error);
+        } finally {
+            // Garante que a UI seja removida e o estado resetado
+            this.removeEditorUI();
+            this.isAuthenticated = false;
+            this.userInfo = null;
+            window.location.reload(); // Recarrega a página para um estado limpo
         }
     }
     
     removeEditorUI() {
-        // Desativar modo de edição se estiver ativo
-        if (typeof window.hardemEditor !== 'undefined' && window.hardemEditor && window.hardemEditor.editMode) {
+        // Se o editor estiver ativo, desativa-o primeiro
+        if (window.hardemEditor && window.hardemEditor.editMode) {
             window.hardemEditor.toggleEditMode();
         }
         
-        // Remover toolbar e painel
+        // Remover controles de usuário da toolbar
+        const userControls = document.getElementById('hardem-user-controls');
+        if (userControls) userControls.remove();
+        
+        // Desconectar o botão de toggle
+        const toggleBtn = document.getElementById('hardem-toggle-edit');
+        if (toggleBtn) {
+            toggleBtn.disabled = true;
+            toggleBtn.innerHTML = '✏️';
+            toggleBtn.title = 'Editor Desconectado';
+        }
+        
+        // Ocultar toolbar (mas não remover - pode ser útil manter)
         const toolbar = document.getElementById('hardem-editor-toolbar');
+        if (toolbar) {
+            toolbar.style.display = 'none';
+            console.log('🔧 Toolbar oculta após logout');
+        }
+        
         const sidePanel = document.querySelector('.hardem-editor-sidepanel');
-        const logoutBtn = document.getElementById('hardem-logout-btn');
-        
-        if (toolbar) toolbar.remove();
-        if (sidePanel) sidePanel.remove();
-        if (logoutBtn) logoutBtn.remove();
-        
-        // Remover classe do body
-        document.body.classList.remove('hardem-editor-active');
-        
-        console.log('🗑️ UI do editor removida');
+        if(sidePanel) sidePanel.remove();
+
+        console.log('🗑️ UI do editor removida (toolbar mantida oculta).');
     }
-    
+
     async loadEditorScripts() {
         const scripts = [
+            'assets/js/editor/editor-utils.js',
             'assets/js/editor/editor-core.js',
             'assets/js/editor/editor-ui.js',
             'assets/js/editor/editor-text.js',
             'assets/js/editor/editor-image.js',
             'assets/js/editor/editor-carousel.js',
             'assets/js/editor/editor-storage.js',
-            'assets/js/editor/editor-utils.js',
             'assets/js/editor-refatorado.js'
         ];
         

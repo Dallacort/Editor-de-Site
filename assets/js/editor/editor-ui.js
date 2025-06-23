@@ -77,9 +77,16 @@ class HardemEditorUI {
                 }
 
                 .hardem-editor-btn.active {
-                    background: #007acc;
-                    border-color: #0099ff;
-                    box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.3);
+                    background: #e74c3c;
+                    border-color: #c0392b;
+                    box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.3);
+                    animation: pulse-active 2s infinite;
+                }
+
+                @keyframes pulse-active {
+                    0% { box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.3); }
+                    50% { box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.6); }
+                    100% { box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.3); }
                 }
 
                 .hardem-editor-btn.success {

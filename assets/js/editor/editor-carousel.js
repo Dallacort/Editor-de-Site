@@ -13,6 +13,12 @@ class HardemCarouselEditor {
      * Configurar edição de carrosséis
      */
     setupCarouselEditing(container = document) {
+        // CRÍTICO: Só configurar carrosséis editáveis se o modo de edição estiver ativo
+        if (!this.core.editMode) {
+            console.log(`⏸️ setupCarouselEditing ignorado (editMode inativo)`);
+            return;
+        }
+        
         // Buscar elementos de carrossel
         const carouselSelectors = [
             '.carousel',
