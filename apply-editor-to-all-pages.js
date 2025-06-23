@@ -73,110 +73,77 @@ const pagesToEdit = [
     'working-process-2.html'
 ];
 
-// Verifica se o arquivo já tem a referência ao editor-refatorado.js
-function hasEditorScript(content) {
-    return content.includes('assets/js/editor-refatorado.js') || 
-           content.includes('editor-refatorado.js') ||
-           content.includes('assets/js/editor/editor-core.js') ||
-           content.includes('assets/js/editor/editor-ui.js');
-}
+function cleanOldScripts(content) {
+    // Regex para remover o bloco de scripts antigos inteiros, incluindo comentários
+    const oldBlockRegex = /<!--\s*Editor Refatorado Scripts\s*-->[\s\S]*?editor-refatorado\.js"><\/script>/gi;
+    content = content.replace(oldBlockRegex, '');
+    
+    // Regex para remover scripts individuais, caso o bloco não seja encontrado
+    const individualScripts = [
+        /<!--.*?-->\s*<script\s+src="assets\/js\/editor-refatorado\.js"><\/script>/gi,
+        /<script\s+src="assets\/js\/editor-refatorado\.js"><\/script>/gi,
+        /<script\s+src="assets\/js\/editor\/editor-core\.js"><\/script>/gi,
+        /<script\s+src="assets\/js\/editor\/editor-ui\.js"><\/script>/gi,
+        /<script\s+src="assets\/js\/editor\/editor-text\.js"><\/script>/gi,
+        /<script\s+src="assets\/js\/editor\/editor-image\.js"><\/script>/gi,
+        /<script\s+src="assets\/js\/editor\/editor-carousel\.js"><\/script>/gi,
+        /<script\s+src="assets\/js\/editor\/editor-storage\.js"><\/script>/gi,
+        /<script\s+src="assets\/js\/editor\/editor-utils\.js"><\/script>/gi,
+        // Também remove o editor-manager para evitar duplicatas
+        /<script\s+src="assets\/js\/editor-manager\.js"><\/script>/gi
+    ];
 
-// Remove referências antigas do editor
-function removeOldEditorReferences(content) {
-    // Remove TODAS as referências ao editor-refatorado.js (incluindo duplicatas)
-    content = content.replace(/\s*<!-- Editor Refatorado Script -->\s*\n?\s*<script src="assets\/js\/editor-refatorado\.js"><\/script>\s*\n?/g, '');
-    content = content.replace(/\s*<script src="assets\/js\/editor-refatorado\.js"><\/script>\s*\n?/g, '');
-    
-    // Remove TODAS as referências aos módulos individuais
-    content = content.replace(/\s*<!-- Editor Refatorado Scripts -->\s*\n?/g, '');
-    content = content.replace(/\s*<script src="assets\/js\/editor\/editor-core\.js"><\/script>\s*\n?/g, '');
-    content = content.replace(/\s*<script src="assets\/js\/editor\/editor-ui\.js"><\/script>\s*\n?/g, '');
-    content = content.replace(/\s*<script src="assets\/js\/editor\/editor-text\.js"><\/script>\s*\n?/g, '');
-    content = content.replace(/\s*<script src="assets\/js\/editor\/editor-image\.js"><\/script>\s*\n?/g, '');
-    content = content.replace(/\s*<script src="assets\/js\/editor\/editor-carousel\.js"><\/script>\s*\n?/g, '');
-    content = content.replace(/\s*<script src="assets\/js\/editor\/editor-storage\.js"><\/script>\s*\n?/g, '');
-    content = content.replace(/\s*<script src="assets\/js\/editor\/editor-utils\.js"><\/script>\s*\n?/g, '');
-    
-    // Remove comentários antigos do editor
-    content = content.replace(/\s*<!-- Editor Script -->\s*\n?/g, '');
-    content = content.replace(/\s*<!-- Editor Refatorado - Módulos \(ordem importante\) -->\s*\n?/g, '');
-    
+    individualScripts.forEach(regex => {
+        content = content.replace(regex, '');
+    });
+
     return content;
 }
 
-// Adiciona o script editor-refatorado.js ao final do body
-function addEditorScript(content) {
-    // Se já tem o script, não faz nada
-    if (hasEditorScript(content)) {
-        return content;
-    }
-
-    // Remove referências antigas primeiro
-    content = removeOldEditorReferences(content);
-
-    // Encontra o fechamento do body
-    const bodyCloseIndex = content.lastIndexOf('</body>');
-    
-    if (bodyCloseIndex === -1) {
-        console.error('Não foi possível encontrar o fechamento do body');
-        return content;
-    }
-
-    // Scripts do editor que precisam ser carregados
-    const editorScripts = `
-    <!-- Editor Refatorado Scripts -->
-    <script src="assets/js/editor/editor-core.js"></script>
-    <script src="assets/js/editor/editor-ui.js"></script>
-    <script src="assets/js/editor/editor-text.js"></script>
-    <script src="assets/js/editor/editor-image.js"></script>
-    <script src="assets/js/editor/editor-carousel.js"></script>
-    <script src="assets/js/editor/editor-storage.js"></script>
-    <script src="assets/js/editor/editor-utils.js"></script>
-    <script src="assets/js/editor-refatorado.js"></script>
-`;
-
-    // Adiciona os scripts antes do fechamento do body
-    const newContent = 
-        content.substring(0, bodyCloseIndex) + 
-        editorScripts + 
-        content.substring(bodyCloseIndex);
-    
-    return newContent;
-}
-
-// Processa cada arquivo
 function processFile(filePath) {
     try {
-        const content = fs.readFileSync(filePath, 'utf8');
-        const updatedContent = addEditorScript(content);
+        let content = fs.readFileSync(filePath, 'utf8');
+        const originalContent = content;
+
+        // 1. Limpa TODOS os scripts de editor, antigos e o manager (para garantir)
+        content = cleanOldScripts(content);
+
+        // 2. Adiciona APENAS o script do editor-manager antes do main.js
+        const mainJsScript = 'assets/js/main.js';
+        const managerScript = `
+    <!-- Inclusão do Gerenciador do Editor Hardem -->
+    <script src="assets/js/editor-manager.js"></script>
+`;
         
-        if (content !== updatedContent) {
-            fs.writeFileSync(filePath, updatedContent, 'utf8');
-            console.log(`✅ Editor script adicionado a ${filePath}`);
+        if (content.includes(mainJsScript)) {
+            content = content.replace(mainJsScript, `${managerScript}\n    <script src="${mainJsScript}"></script>`);
+        } else if (content.includes('</body>')) {
+             content = content.replace('</body>', `${managerScript}\n</body>`);
+        }
+
+        if (content !== originalContent) {
+            fs.writeFileSync(filePath, content, 'utf8');
+            console.log(`✅ Sistema de edição ATUALIZADO em: ${path.basename(filePath)}`);
         } else {
-            console.log(`⏭️ Arquivo ${filePath} já tem o script ou não pôde ser modificado`);
+            console.log(`⏭️ Arquivo ${path.basename(filePath)} não precisou de atualização.`);
         }
     } catch (error) {
-        console.error(`❌ Erro ao processar ${filePath}:`, error.message);
+        console.error(`❌ Erro ao processar ${path.basename(filePath)}:`, error.message);
     }
 }
 
-// Função principal
-function main() {
-    console.log('Iniciando adição do editor-refatorado.js a todas as páginas...');
-    
-    pagesToEdit.forEach(page => {
-        const filePath = path.join(__dirname, page);
-        
-        if (fs.existsSync(filePath)) {
-            processFile(filePath);
-        } else {
-            console.warn(`⚠️ Arquivo ${page} não encontrado`);
-        }
-    });
-    
-    console.log('Processo concluído!');
-}
+console.log('🚀 Iniciando a GRANDE ATUALIZAÇÃO do sistema de edição...');
+console.log('Esta operação vai remover todos os scripts de edição antigos e instalar o novo "editor-manager".');
+console.log('---');
 
-// Executa o script
-main(); 
+pagesToEdit.forEach(page => {
+    const filePath = path.join(__dirname, page);
+    if (fs.existsSync(filePath)) {
+        processFile(filePath);
+    } else {
+        console.warn(`⚠️ Arquivo ${page} não encontrado, pulando.`);
+    }
+});
+
+console.log('---');
+console.log('🎉 Atualização concluída!'); 

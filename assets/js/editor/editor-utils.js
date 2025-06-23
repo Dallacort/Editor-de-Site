@@ -812,22 +812,43 @@ class HardemEditorUtils {
      * NOVO: Obter caminho específico do dropdown
      */
     getDropdownPath(element) {
+        if (!element) return '';
         const path = [];
         let current = element;
-        
-        while (current && !current.classList?.contains('main-nav')) {
-            if (current.classList?.contains('submenu') || 
-                current.classList?.contains('has-dropdown')) {
-                
-                const text = current.textContent?.trim().substring(0, 20) || current.className;
-                path.unshift(text);
-            }
+
+        while(current && !current.matches('.dropdown-menu, .sub-menu, .menu-item')) {
             current = current.parentElement;
+        }
+
+        while (current) {
+            const parentItem = current.closest('.menu-item');
+            if (parentItem) {
+                const link = parentItem.querySelector('a');
+                path.unshift(link ? link.textContent.trim().substring(0, 20) : `item-${this.getDropdownLevel(parentItem)}`);
+            }
+            current = current.parentElement?.closest('.menu-item');
         }
         
         return path.join(' > ');
     }
+
+    /**
+     * Extrai a URL real de uma string de imagem (pode ser data URI, URL http, ou proxy)
+     * Por enquanto, apenas retorna a string se for uma string válida.
+     * @param {string} imageSrc - A fonte da imagem.
+     * @returns {string} - A URL da imagem.
+     */
+    extractImageUrl(imageSrc) {
+        if (typeof imageSrc === 'string' && imageSrc.trim() !== '') {
+            // Lógica futura poderia extrair de um objeto ou limpar a URL.
+            // Por agora, retorna a fonte como está para evitar quebras.
+            // Isso assume que o src é uma URL utilizável (direta, data URI, ou proxy).
+            return imageSrc;
+        }
+        console.warn('extractImageUrl recebeu uma fonte de imagem inválida:', imageSrc);
+        return ''; // Retorna uma string vazia para evitar erros
+    }
 }
 
-// Expor classe globalmente
+// Expor a classe globalmente
 window.HardemEditorUtils = HardemEditorUtils; 

@@ -8,7 +8,6 @@ class HardemEditorManager {
     constructor() {
         this.editMode = false;
         this.isAuthenticated = false;
-        this.init();
     }
     
     init() {
@@ -30,6 +29,17 @@ class HardemEditorManager {
     async enableEditMode() {
         console.log('🔓 Habilitando modo de edição...');
         
+        // CRÍTICO: Obter o parâmetro da URL novamente para garantir
+        const urlParams = new URLSearchParams(window.location.search);
+        const isEditUrl = urlParams.get('edit') === 'true';
+
+        // Se não estamos em uma URL de edição, parar imediatamente.
+        if (!isEditUrl) {
+            console.log('👁️ URL não é de edição. Forçando modo de visualização.');
+            this.disableEditMode();
+            return;
+        }
+        
         // Verificar autenticação
         const isAuth = await this.checkAuthentication();
         
@@ -39,7 +49,7 @@ class HardemEditorManager {
             return;
         }
         
-        console.log('✅ Autenticado - carregando editor...');
+        console.log('✅ Autenticado e em URL de edição - carregando editor...');
         this.loadEditor();
     }
     
@@ -68,8 +78,155 @@ class HardemEditorManager {
     }
     
     redirectToAdmin() {
-        alert('Acesso não autorizado. Redirecionando para o painel administrativo.');
-        window.location.href = 'admin.html';
+        console.log('❌ Não autenticado - mostrando modal de login');
+        this.showLoginModal();
+    }
+    
+    showLoginModal() {
+        // Criar modal de login se não existir
+        if (!document.getElementById('hardem-login-modal')) {
+            this.createLoginModal();
+        }
+        
+        const modal = document.getElementById('hardem-login-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+            document.getElementById('hardem-username').focus();
+        }
+    }
+    
+    createLoginModal() {
+        const modalHTML = `
+            <div id="hardem-login-modal" style="
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.8); display: none; z-index: 10000;
+                justify-content: center; align-items: center;
+                font-family: Arial, sans-serif;
+            ">
+                <div style="
+                    background: white; padding: 40px; border-radius: 12px;
+                    box-shadow: 0 20px 60px rgba(0,0,0,0.3); width: 400px;
+                    max-width: 90vw; text-align: center;
+                ">
+                    <h2 style="color: #2c3e50; margin: 0 0 30px 0; font-size: 28px;">
+                        🔐 HARDEM Editor
+                    </h2>
+                    <p style="color: #7f8c8d; margin: 0 0 30px 0;">Acesso Administrativo</p>
+                    
+                    <form id="hardem-login-form" style="text-align: left;">
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; color: #2c3e50; font-weight: 500;">
+                                Usuário:
+                            </label>
+                            <input type="text" id="hardem-username" required style="
+                                width: 100%; padding: 12px; border: 2px solid #e1e8ed;
+                                border-radius: 8px; font-size: 16px; box-sizing: border-box;
+                            " placeholder="Digite seu usuário">
+                        </div>
+                        
+                        <div style="margin-bottom: 25px;">
+                            <label style="display: block; margin-bottom: 8px; color: #2c3e50; font-weight: 500;">
+                                Senha:
+                            </label>
+                            <input type="password" id="hardem-password" required style="
+                                width: 100%; padding: 12px; border: 2px solid #e1e8ed;
+                                border-radius: 8px; font-size: 16px; box-sizing: border-box;
+                            " placeholder="Digite sua senha">
+                        </div>
+                        
+                        <button type="submit" id="hardem-login-btn" style="
+                            width: 100%; padding: 14px; background: #3498db;
+                            color: white; border: none; border-radius: 8px;
+                            font-size: 16px; font-weight: 600; cursor: pointer;
+                        ">Entrar</button>
+                        
+                        <div id="hardem-login-message" style="
+                            margin-top: 15px; padding: 10px; border-radius: 6px;
+                            font-size: 14px; display: none; text-align: center;
+                        "></div>
+                    </form>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML("beforeend", modalHTML);
+        this.setupLoginEvents();
+    }
+    
+    setupLoginEvents() {
+        const form = document.getElementById("hardem-login-form");
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById("hardem-username").value.trim();
+            const password = document.getElementById("hardem-password").value;
+            
+            if (!username || !password) {
+                this.showLoginMessage("Preencha todos os campos", "error");
+                return;
+            }
+            
+            const btn = document.getElementById("hardem-login-btn");
+            btn.textContent = "Entrando...";
+            btn.disabled = true;
+            
+            const result = await this.login(username, password);
+            
+            if (result.success) {
+                this.showLoginMessage(result.message, "success");
+                this.hideLoginModal();
+                this.loadEditor(); // Carregar editor após login bem-sucedido
+            } else {
+                this.showLoginMessage(result.message, "error");
+                document.getElementById("hardem-password").value = "";
+            }
+            
+            btn.textContent = "Entrar";
+            btn.disabled = false;
+        });
+    }
+    
+    async login(username, password) {
+        try {
+            const response = await fetch("auth.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: `action=login&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                this.isAuthenticated = true;
+                this.userInfo = data.user;
+                return { success: true, message: data.message };
+            } else {
+                return { success: false, message: data.message };
+            }
+        } catch (error) {
+            return { success: false, message: "Erro de conexão" };
+        }
+    }
+    
+    showLoginMessage(message, type) {
+        const messageDiv = document.getElementById("hardem-login-message");
+        messageDiv.textContent = message;
+        messageDiv.style.display = "block";
+        
+        if (type === "success") {
+            messageDiv.style.background = "#d4edda";
+            messageDiv.style.color = "#155724";
+        } else {
+            messageDiv.style.background = "#f8d7da";
+            messageDiv.style.color = "#721c24";
+        }
+    }
+    
+    hideLoginModal() {
+        const modal = document.getElementById('hardem-login-modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
     }
     
     loadEditor() {
@@ -86,8 +243,8 @@ class HardemEditorManager {
             // Aguardar um pouco e verificar se editor foi carregado
             setTimeout(() => {
                 if (window.hardemEditor) {
-                    console.log('✅ Editor carregado - aguardando ativação manual');
-                    // NÃO ativar automaticamente - usuário deve clicar no botão ✏️
+                    console.log('✅ Editor carregado - ativando automaticamente após login');
+                    this.activateEditorAfterLogin();
                 } else {
                     console.log('⏳ Aguardando editor estar disponível...');
                     this.waitForEditor();
@@ -100,8 +257,8 @@ class HardemEditorManager {
         const checkEditor = setInterval(() => {
             if (window.hardemEditor) {
                 clearInterval(checkEditor);
-                console.log('✅ Editor disponível - pronto para ativação manual');
-                // NÃO ativar automaticamente - aguardar usuário clicar no botão ✏️
+                console.log('✅ Editor disponível - ativando automaticamente após login');
+                this.activateEditorAfterLogin();
             }
         }, 500);
         
@@ -112,6 +269,96 @@ class HardemEditorManager {
                 console.error('❌ Timeout - Editor não carregou');
             }
         }, 10000);
+    }
+    
+    activateEditorAfterLogin() {
+        if (window.hardemEditor) {
+            // Criar a interface do editor
+            if (window.hardemEditor.createEditorUI) {
+                window.hardemEditor.createEditorUI();
+            }
+            
+            // Ativar modo de edição
+            setTimeout(() => {
+                if (!window.hardemEditor.editMode) {
+                    window.hardemEditor.toggleEditMode();
+                }
+                
+                // Adicionar botão de logout
+                this.addLogoutButton();
+            }, 200);
+        }
+    }
+    
+    addLogoutButton() {
+        // Remover botão existente se houver
+        const existingBtn = document.getElementById("hardem-logout-btn");
+        if (existingBtn) existingBtn.remove();
+        
+        const logoutBtn = document.createElement("div");
+        logoutBtn.id = "hardem-logout-btn";
+        logoutBtn.innerHTML = `
+            <div style="
+                position: fixed; top: 20px; right: 20px;
+                background: #e74c3c; color: white; padding: 12px 20px;
+                border-radius: 25px; cursor: pointer; font-size: 14px;
+                font-weight: 600; z-index: 9999;
+            ">
+                👤 ${this.userInfo ? this.userInfo.username : 'Admin'} | 🚪 Sair
+            </div>
+        `;
+        
+        logoutBtn.addEventListener("click", () => {
+            if (confirm("Deseja sair do modo de edição?")) {
+                this.logout();
+            }
+        });
+        
+        document.body.appendChild(logoutBtn);
+    }
+    
+    async logout() {
+        try {
+            await fetch("auth.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: "action=logout"
+            });
+            
+            // Remover UI do editor
+            this.removeEditorUI();
+            
+            // Resetar estado
+            this.isAuthenticated = false;
+            this.userInfo = null;
+            
+            // Mostrar modal de login novamente
+            this.showLoginModal();
+            
+        } catch (error) {
+            console.error("Erro no logout:", error);
+        }
+    }
+    
+    removeEditorUI() {
+        // Desativar modo de edição se estiver ativo
+        if (typeof window.hardemEditor !== 'undefined' && window.hardemEditor && window.hardemEditor.editMode) {
+            window.hardemEditor.toggleEditMode();
+        }
+        
+        // Remover toolbar e painel
+        const toolbar = document.getElementById('hardem-editor-toolbar');
+        const sidePanel = document.querySelector('.hardem-editor-sidepanel');
+        const logoutBtn = document.getElementById('hardem-logout-btn');
+        
+        if (toolbar) toolbar.remove();
+        if (sidePanel) sidePanel.remove();
+        if (logoutBtn) logoutBtn.remove();
+        
+        // Remover classe do body
+        document.body.classList.remove('hardem-editor-active');
+        
+        console.log('🗑️ UI do editor removida');
     }
     
     async loadEditorScripts() {
@@ -164,6 +411,10 @@ class HardemEditorManager {
     
     disableEditMode() {
         console.log('👁️ Modo visualização ativo');
+        
+        // CRÍTICO: Limpar qualquer UI do editor que possa existir
+        this.removeEditorUI();
+        
         // NOVO: Mesmo em modo visualização, pré-carregar conteúdo para aplicar instantaneamente
         this.preloadContentForVisitors();
         // Não carregar scripts do editor
@@ -478,7 +729,12 @@ function exitEditMode() {
 
 // Inicializar quando DOM estiver pronto
 document.addEventListener('DOMContentLoaded', () => {
-    window.editorManager = new HardemEditorManager();
+    // Garantir que só exista uma instância
+    if (!window.hardemEditorManager) {
+        window.hardemEditorManager = new HardemEditorManager();
+        // CHAMADO AQUI: Inicia a lógica APÓS o objeto ser criado
+        window.hardemEditorManager.init(); 
+    }
 });
 
 window.HardemEditorManager = HardemEditorManager; 

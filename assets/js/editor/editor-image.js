@@ -2011,19 +2011,24 @@ class HardemImageEditor {
         this.applyNormalizationFromDatabase(element);
     }
 
-    applyNormalizationFromDatabase(element, normalizationData = null) {
-        const dataKey = element.getAttribute('data-key');
-        if (!dataKey) return;
-        
-        const content = this.core.storage.getFromContentMap(dataKey);
-        const normalization = normalizationData || (content ? content.normalization : null);
+    applyNormalizationFromDatabase(element, dataKey, normalizationData) {
+        if (!element) return;
 
-        if (normalization && normalization.normalized) {
+        // Tenta obter o conteúdo do contentMap para verificar a URL da imagem
+        // CORREÇÃO: Acessar a propriedade `contentMap` no `this.core`, não em `this.core.storage`
+        const content = this.core.contentMap[dataKey];
+        if (!content || !(content.src || content.backgroundImage)) {
+            // Se não há URL de imagem no contentMap, não aplicar normalização para evitar distorcer placeholders
+            console.log(`⏩ Normalização pulada para ${dataKey} (sem imagem no banco)`);
+            return;
+        }
+
+        if (normalizationData && normalizationData.normalized) {
             console.log(`🔄 Normalização restaurada do banco: ${element.tagName}.`);
             
             const targetDimensions = {
-                width: normalization.target_width,
-                height: normalization.target_height
+                width: normalizationData.target_width,
+                height: normalizationData.target_height
             };
 
             // *** AQUI ESTÁ A CORREÇÃO INTELIGENTE ***
@@ -2105,26 +2110,18 @@ class HardemImageEditor {
      * Restaurar normalizações salvas no banco de dados
      */
     restoreNormalizationsFromDatabase(container = document) {
-        try {
-            let restoredCount = 0;
+        console.log('Restaurando normalizações do banco de dados...');
+        const elements = document.querySelectorAll('[data-key]');
+        elements.forEach(element => {
+            const dataKey = element.getAttribute('data-key');
+            // CORREÇÃO: Acessar a propriedade `contentMap` no `this.core`
+            const content = this.core.contentMap[dataKey];
             
-            // Buscar todos os elementos editáveis que podem ter normalização
-            const editableElements = container.querySelectorAll('.hardem-editable-element[data-key]');
-            
-            editableElements.forEach(element => {
-                // Tentar aplicar normalização salva
-                if (this.applyNormalizationFromDatabase(element)) {
-                    restoredCount++;
-                }
-            });
-            
-            if (restoredCount > 0) {
-                console.log(`🔄 ${restoredCount} normalizações restauradas do banco de dados`);
+            if (content && content.normalization && content.normalization.normalized) {
+                console.log(`🎯 Restaurando normalização para ${dataKey}`);
+                this.applyNormalizationFromDatabase(element, dataKey, content.normalization);
             }
-            
-        } catch (error) {
-            console.error('Erro ao restaurar normalizações do banco:', error);
-        }
+        });
     }
 
     /**
