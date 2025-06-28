@@ -1,0 +1,57 @@
+/**
+ * HARDEM - Configuração do Marquee para Scroll
+ * Remove animação automática e permite controle via JavaScript
+ */
+
+/* Remove animação automática do marquee */
+.marque-area-wrapper-4 .marque-wrapper.one .marquee-2,
+.marque-wrapper .marquee,
+.marquee,
+.marquee-2 {
+    /* Remove todas as animações CSS */
+    animation: none !important;
+    white-space: nowrap;
+    will-change: transform;
+    /* Permite que o JavaScript controle a posição */
+    transform: translateX(0px);
+    transition: none;
+}
+
+/* Garante que o container do marquee não tenha overflow */
+.marque-area-wrapper-4,
+.marque-wrapper {
+    overflow: hidden;
+    position: relative;
+}
+
+/* Melhora a performance do transform */
+.marquee,
+.marquee-2 {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    -moz-backface-visibility: hidden;
+    -ms-backface-visibility: hidden;
+}
+
+/* Remove qualquer animação residual */
+* {
+    animation-play-state: running;
+}
+
+/* Garante que outros elementos marquee também não tenham animação automática */
+[class*="marquee"] {
+    animation: none !important;
+}
+
+/* Estilo adicional para melhor visualização */
+.marque-area-wrapper-4 .marque-wrapper.one .marquee-2 span,
+.marque-wrapper .marquee span {
+    display: inline-block;
+    padding-right: 50px; /* Espaço entre repetições */
+}
+
+/* Cor específica para o texto do marquee */
+.marque-area-wrapper-4 .marque-wrapper.one .marquee-2 span {
+    color: #fff;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+} 

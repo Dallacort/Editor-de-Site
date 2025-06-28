@@ -18,6 +18,8 @@
     <link rel="stylesheet" preload="" href="assets/css/style.css">
     <!-- NOVO: Loading instantâneo -->
     <link rel="stylesheet" href="assets/css/instant-loading.css">
+    <!-- NOVO: Correção do Marquee -->
+    <link rel="stylesheet" href="assets/css/marquee-fix.css">
 </head>
 
 <body class="bg-home-4 hardem-loading-active">
@@ -1537,6 +1539,63 @@
 
     <!-- Main JS -->
     <script src="assets/js/main.js"></script>
+    <script src="assets/js/counter-stability-fix.js"></script>
+
+    <!-- Script para controle do marquee baseado em scroll -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let lastScrollY = window.scrollY;
+            let marquee = document.querySelector('.marquee');
+            let marquee_2 = document.querySelector('.marquee-2');
+            let position = 0;
+            let position2 = 0;
+
+            // Função para atualizar marquee 1
+            function updateMarqueeOnScroll() {
+                if (!marquee) return;
+                
+                const currentScrollY = window.scrollY;
+                const scrollDelta = currentScrollY - lastScrollY;
+
+                // Mover baseado na direção do scroll
+                position -= scrollDelta * 0.5;
+
+                // Aplicar transformação
+                marquee.style.transform = `translateX(${position}px)`;
+            }
+            
+            // Função para atualizar marquee 2 (Hardem Construtora)
+            function updateMarqueeOnScrollTwo() {
+                if (!marquee_2) return;
+                
+                const currentScrollY = window.scrollY;
+                const scrollDelta = currentScrollY - lastScrollY;
+
+                // Mover baseado na direção do scroll (direção oposta)
+                position2 += scrollDelta * 0.3;
+
+                // Aplicar transformação
+                marquee_2.style.transform = `translateX(${position2}px)`;
+            }
+
+            // Handler unificado de scroll
+            function handleScroll() {
+                const currentScrollY = window.scrollY;
+                
+                updateMarqueeOnScroll();
+                updateMarqueeOnScrollTwo();
+                
+                lastScrollY = currentScrollY;
+            }
+
+            // Adicionar listener de scroll
+            window.addEventListener('scroll', handleScroll, { passive: true });
+            
+            // Inicialização silenciosa
+            if (marquee) marquee.style.transform = 'translateX(0px)';
+            if (marquee_2) marquee_2.style.transform = 'translateX(0px)';
+        });
+    </script>
     
 </body>
 </html>
