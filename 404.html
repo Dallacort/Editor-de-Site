@@ -18,12 +18,22 @@
     <link rel="stylesheet" preload="" href="assets/css/style.css">
     <!-- NOVO: Correção do Marquee -->
     <link rel="stylesheet" href="assets/css/marquee-fix.css">
+
+    <!-- NOVO: Loading instantâneo -->
+    <link rel="stylesheet" href="assets/css/instant-loading.css">    <!-- NOVO: Normalização de imagens -->
+    <link rel="stylesheet" href="assets/css/image-normalization-styles.css">
 </head>
 
-<body>
+<body class="hardem-loading-active">
+    <!-- NOVO: Loading screen instantâneo -->
+    <div id="hardem-instant-loading">
+        <div class="hardem-loading-spinner"></div>
+        <div class="hardem-loading-text">Carregando conteúdo...</div>
+        <div class="hardem-loading-subtitle">Aguarde enquanto restauramos suas edições</div>
+    </div>
 
-    <!-- rts coming soon area start -->
-    <div class="rts-coming-soon-area rts-section-gap d-flex align-items-center h-100-vh">
+    <!-- Wrapper para todo o conteúdo -->
+    <div class="hardem-content"><div class="rts-coming-soon-area rts-section-gap d-flex align-items-center h-100-vh">
         <div class="container">
             <div class="row">
                 <div class="col-lg-12">
@@ -37,7 +47,35 @@
                 </div>
             </div>
         </div>
+    </div><div class="rtl-ltr-switcher-btn">
+    <span class="rtl show" data-key="404_content_label_4">View RTL</span>
+    <span class="ltr" data-key="404_content_label_5">View LTR</span>
+</div><div class="progress-wrap">
+    <svg class="progress-circle svg-content" width="100%" height="100%" viewBox="-1 -1 102 102">
+        <path d="M50,1 a49,49 0 0,1 0,98 a49,49 0 0,1 0,-98" style="transition: stroke-dashoffset 10ms linear 0s; stroke-dasharray: 307.919, 307.919; stroke-dashoffset: 307.919;">
+        </path>
+    </svg>
+</div><div class="search-input-area">
+    <div class="container">
+        <div class="search-input-inner">
+            <div class="input-div">
+                <input class="search-input autocomplete" type="text" placeholder="Search by keyword or #">
+                <button><i class="far fa-search"></i></button>
+            </div>
+        </div>
     </div>
+    <div id="close" class="search-close-icon"><i class="far fa-times"></i></div>
+</div><div id="anywhere-home" class="">
+</div><script src="assets/js/plugins/jquery.js"></script><script src="assets/js/vendor/bootstrap.min.js"></script><script src="assets/js/plugins/odometer.js"></script><script src="assets/js/plugins/jquery-appear.js"></script><script src="assets/js/plugins/metismenu.js"></script><script src="assets/js/plugins/swiper.js"></script><script src="assets/js/plugins/aos.js"></script><script src="assets/js/plugins/nice-select.js"></script><script src="assets/js/plugins/smooth-scroll.js"></script><script src="assets/js/vendor/waw.js"></script><script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAuSiPhoDaOJ7aqtJVtQhYhLzwwJ7rQlmA"></script><script src="assets/js/vendor/marker.js"></script><script src="assets/js/vendor/map-content.js"></script><script src="assets/js/vendor/info-box.js"></script><script src="https://html.themewant.com/golfy/assets/js/plugins/magnific-popup.js"></script><script src="assets/js/plugins/contact.form.js"></script><script src="
+    <!-- Inclusão do Gerenciador do Editor Hardem -->
+    <script src=" assets="" js="" editor-manager.js"=""></script><script src="
+    <!-- Inclusão do Gerenciador do Editor Hardem -->
+    <script src=" assets="" js="" editor-manager.js"=""></script>
+
+    <script src="assets/js/main.js"></script>"&gt;</div>
+
+    <!-- rts coming soon area start -->
+    
     <!-- rts coming soon area end -->
 
 
@@ -55,63 +93,45 @@
 <!-- progress area end -->
 
 <!-- rtl btn area start -->
-<div class="rtl-ltr-switcher-btn">
-    <span class="rtl show" data-key="404_content_label_4">View RTL</span>
-    <span class="ltr" data-key="404_content_label_5">View LTR</span>
-</div>
+
 <!-- rtl btn area end -->
 
 <!-- progress area start -->
-<div class="progress-wrap">
-    <svg class="progress-circle svg-content" width="100%" height="100%" viewBox="-1 -1 102 102">
-        <path d="M50,1 a49,49 0 0,1 0,98 a49,49 0 0,1 0,-98" style="transition: stroke-dashoffset 10ms linear 0s; stroke-dasharray: 307.919, 307.919; stroke-dashoffset: 307.919;">
-        </path>
-    </svg>
-</div>
+
 <!-- progress area end -->
 
 
 <!-- offcanvase search -->
-<div class="search-input-area">
-    <div class="container">
-        <div class="search-input-inner">
-            <div class="input-div">
-                <input class="search-input autocomplete" type="text" placeholder="Search by keyword or #">
-                <button><i class="far fa-search"></i></button>
-            </div>
-        </div>
-    </div>
-    <div id="close" class="search-close-icon"><i class="far fa-times"></i></div>
-</div>
-<div id="anywhere-home" class="">
-</div>
+
+
 
 <!-- scripts -->
-<script src="assets/js/plugins/jquery.js"></script>
-<script src="assets/js/vendor/bootstrap.min.js"></script>
 
-<script src="assets/js/plugins/odometer.js"></script>
-<script src="assets/js/plugins/jquery-appear.js"></script>
 
-<script src="assets/js/plugins/metismenu.js"></script>
-<script src="assets/js/plugins/swiper.js"></script>
-<script src="assets/js/plugins/aos.js"></script>
-<script src="assets/js/plugins/nice-select.js"></script>
-<script src="assets/js/plugins/smooth-scroll.js"></script>
-<script src="assets/js/vendor/waw.js"></script>
 
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAuSiPhoDaOJ7aqtJVtQhYhLzwwJ7rQlmA"></script>
-<script src="assets/js/vendor/marker.js"></script>
-<script src="assets/js/vendor/map-content.js"></script>
-<script src="assets/js/vendor/info-box.js"></script>
-<script src="https://html.themewant.com/golfy/assets/js/plugins/magnific-popup.js"></script>
 
-<script src="assets/js/plugins/contact.form.js"></script>
 
-<script src="
-    <!-- Inclusão do Gerenciador do Editor Hardem -->
-    <script src="assets/js/editor-manager.js"></script>
 
-    <script src="assets/js/main.js"></script>"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    "&gt;
     
-</body></html>
+
+    <!-- .hardem-content -->
+    <!-- NOVO: Script de loading -->
+    <script src="assets/js/instant-loading.js"></script></body></html>

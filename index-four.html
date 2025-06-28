@@ -18,11 +18,20 @@
     <link rel="stylesheet" preload="" href="assets/css/style.css">
     <!-- NOVO: Correção do Marquee -->
     <link rel="stylesheet" href="assets/css/marquee-fix.css">
-</head>
 
-<body class="bg-home-4">
+    <!-- NOVO: Loading instantâneo -->
+    <link rel="stylesheet" href="assets/css/instant-loading.css"></head>
 
-    <header class="header-four header--sticky">
+<body class="bg-home-4 hardem-loading-active">
+    <!-- NOVO: Loading screen instantâneo -->
+    <div id="hardem-instant-loading">
+        <div class="hardem-loading-spinner"></div>
+        <div class="hardem-loading-text">Carregando conteúdo...</div>
+        <div class="hardem-loading-subtitle">Aguarde enquanto restauramos suas edições</div>
+    </div>
+
+    <!-- Wrapper para todo o conteúdo -->
+    <div class="hardem-content"><header class="header-four header--sticky">
         <div class="header-top">
             <div class="container">
                 <div class="row">
@@ -472,9 +481,7 @@
                 </div>
             </div>
         </div>
-    </header>
-
-    <div id="side-bar" class="side-bar header-two">
+    </header><div id="side-bar" class="side-bar header-two">
     <button class="close-icon-menu"><i class="far fa-times"></i></button>
     <!-- inner menu area desktop start -->
     <div class="inner-main-wrapper-desk">
@@ -651,9 +658,7 @@
         </div>
     </div>
     <!-- mobile menu area end -->
-</div>
-
-    <div class="banner-swiper-main-wrapper-four">
+</div><div class="banner-swiper-main-wrapper-four">
         <div class="swiper mySwiper-banner-four" dir="ltr">
             <div class="swiper-wrapper">
                 <div class="swiper-slide" data-key="slide_1">
@@ -802,10 +807,7 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- rts about area start -->
-    <div class="rts-about-area bg-dark-large rts-section-gap">
+    </div><div class="rts-about-area bg-dark-large rts-section-gap">
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-xl-6">
@@ -866,11 +868,7 @@
                 </div>
             </div>
         </div>
-    </div>
-    <!-- rts about area end -->
-
-    <!-- rts service area start -->
-    <div class="rts-service-area rts-section-gap">
+    </div><div class="rts-service-area rts-section-gap">
         <div class="container">
             <div class="row">
                 <div class="col-lg-12">
@@ -959,11 +957,7 @@
                 </div>
             </div>
         </div>
-    </div>
-    <!-- rts service area end -->
-
-    <!-- our working process area start -->
-    <div class="our-working-process-area-4 bg_image">
+    </div><div class="our-working-process-area-4 bg_image">
         <div class="marque-wrapper one" dir="ltr">
             <div class="marquee">
                 <span data-key="index-four_content_label_19">grandes projetos em realizações extraordinárias&nbsp;</span>
@@ -988,10 +982,7 @@
                 </div>
             </div>
         </div>
-    </div>
-    <!-- our working process area end -->
-
-    <div class="working-process-mt-dec-4">
+    </div><div class="working-process-mt-dec-4">
         <div class="container">
             <div class="row bd-process">
                 <div class="col-lg-3">
@@ -1036,10 +1027,7 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- small cta area start -->
-    <div class="small-cta-area rts-section-gapTop">
+    </div><div class="small-cta-area rts-section-gapTop">
         <div class="container">
             <div class="row g-5">
                 <div class="col-lg-4">
@@ -1056,11 +1044,7 @@
                 </div>
             </div>
         </div>
-    </div>
-    <!-- small cta area end -->
-
-    <!-- feature project and success stories -->
-    <div class="rts-feature-projects-and-success-stories rts-section-gap">
+    </div><div class="rts-feature-projects-and-success-stories rts-section-gap">
         <div class="container">
             <div class="row">
                 <div class="col-lg-12">
@@ -1143,11 +1127,7 @@
                 </div>
             </div>
         </div>
-    </div>
-    <!-- feature project and success stories end -->
-
-    <!-- team area start -->
-    <div class="team-area-four">
+    </div><div class="team-area-four">
         <div class="container-1730">
             <div class="row">
                 <div class="col-lg-12">
@@ -1257,11 +1237,7 @@
                 </div>
             </div>
         </div>
-    </div>
-    <!-- team area end -->
-
-    <!-- rts marque area start -->
-    <div class="rts-marque-area ptb--80">
+    </div><div class="rts-marque-area ptb--80">
         <div class="container-1730">
             <div class="row">
                 <div class="col-lg-12">
@@ -1282,11 +1258,7 @@
                 </div>
             </div>
         </div>
-    </div>
-    <!-- rts marque area end -->
-
-    <!-- rts testimonials area start -->
-    <div class="rts-testimonials-area">
+    </div><div class="rts-testimonials-area">
         <div class="container-1730">
             <div class="row">
                 <div class="col-lg-12">
@@ -1391,11 +1363,7 @@
                 </div>
             </div>
         </div>
-    </div>
-    <!-- rts testimonials area end -->
-
-    <!-- rts blog area start -->
-    <div class="rts-blog-area rts-section-gap">
+    </div><div class="rts-blog-area rts-section-gap">
         <div class="container">
             <div class="row">
                 <div class="col-lg-12">
@@ -1452,11 +1420,7 @@
                 </div>
             </div>
         </div>
-    </div>
-    <!-- rts blog area end -->
-
-    <!-- footer area four start -->
-    <div class="footer-area-four">
+    </div><div class="footer-area-four">
         <div class="container-1730">
             <div class="row">
                 <div class="col-lg-12">
@@ -1556,42 +1520,15 @@
                 </div>
             </div>
         </div>
-    </div>
-    <!-- footer area four end -->
-
-    
-    <!-- progress area start -->
-<!-- <div id="elevate-load">
-    <div class="loader-wrapper">
-        <div class="lds-ellipsis">
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-        </div>
-    </div>
-</div> -->
-<!-- progress area end -->
-
-<!-- rtl btn area start -->
-<div class="rtl-ltr-switcher-btn">
+    </div><div class="rtl-ltr-switcher-btn">
     <span class="rtl show" data-key="index-four_content_label_45">Ver Projetos</span>
     <span class="ltr" data-key="index-four_content_label_46">Ver Projetos</span>
-</div>
-<!-- rtl btn area end -->
-
-<!-- progress area start -->
-<div class="progress-wrap">
+</div><div class="progress-wrap">
     <svg class="progress-circle svg-content" width="100%" height="100%" viewBox="-1 -1 102 102">
         <path d="M50,1 a49,49 0 0,1 0,98 a49,49 0 0,1 0,-98" style="transition: stroke-dashoffset 10ms linear 0s; stroke-dasharray: 307.919, 307.919; stroke-dashoffset: 307.919;">
         </path>
     </svg>
-</div>
-<!-- progress area end -->
-
-
-<!-- offcanvase search -->
-<div class="search-input-area">
+</div><div class="search-input-area">
     <div class="container">
         <div class="search-input-inner">
             <div class="input-div">
@@ -1601,39 +1538,14 @@
         </div>
     </div>
     <div id="close" class="search-close-icon"><i class="far fa-times"></i></div>
-</div>
-<div id="anywhere-home" class="">
-</div>
-
-<!-- scripts -->
-<script src="assets/js/plugins/jquery.js"></script>
-<script src="assets/js/vendor/bootstrap.min.js"></script>
-
-<script src="assets/js/plugins/odometer.js"></script>
-<script src="assets/js/plugins/jquery-appear.js"></script>
-
-<script src="assets/js/plugins/metismenu.js"></script>
-<script src="assets/js/plugins/swiper.js"></script>
-<script src="assets/js/plugins/aos.js"></script>
-<script src="assets/js/plugins/nice-select.js"></script>
-<script src="assets/js/plugins/smooth-scroll.js"></script>
-<script src="assets/js/vendor/waw.js"></script>
-
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAuSiPhoDaOJ7aqtJVtQhYhLzwwJ7rQlmA"></script>
-<script src="assets/js/vendor/marker.js"></script>
-<script src="assets/js/vendor/map-content.js"></script>
-<script src="assets/js/vendor/info-box.js"></script>
-<script src="https://html.themewant.com/golfy/assets/js/plugins/magnific-popup.js"></script>
-
-<script src="assets/js/plugins/contact.form.js"></script>
-
-<script src="
+</div><div id="anywhere-home" class="">
+</div><script src="assets/js/plugins/jquery.js"></script><script src="assets/js/vendor/bootstrap.min.js"></script><script src="assets/js/plugins/odometer.js"></script><script src="assets/js/plugins/jquery-appear.js"></script><script src="assets/js/plugins/metismenu.js"></script><script src="assets/js/plugins/swiper.js"></script><script src="assets/js/plugins/aos.js"></script><script src="assets/js/plugins/nice-select.js"></script><script src="assets/js/plugins/smooth-scroll.js"></script><script src="assets/js/vendor/waw.js"></script><script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAuSiPhoDaOJ7aqtJVtQhYhLzwwJ7rQlmA"></script><script src="assets/js/vendor/marker.js"></script><script src="assets/js/vendor/map-content.js"></script><script src="assets/js/vendor/info-box.js"></script><script src="https://html.themewant.com/golfy/assets/js/plugins/magnific-popup.js"></script><script src="assets/js/plugins/contact.form.js"></script><script src="
     <!-- Inclusão do Gerenciador do Editor Hardem -->
-    <script src="assets/js/editor-manager.js"></script>
+    <script src=" assets="" js="" editor-manager.js"=""></script><script src="
+    <!-- Inclusão do Gerenciador do Editor Hardem -->
+    <script src=" assets="" js="" editor-manager.js"=""></script>
 
-    <script src="assets/js/main.js"></script>
-    <script src="assets/js/counter-stability-fix.js"></script>"></script>
-    <script>
+    <script src="assets/js/main.js"></script>"&gt;<script src="assets/js/counter-stability-fix.js"></script><script>
         let lastScrollY = window.scrollY;
         let marquee = document.querySelector('.marquee');
         let marquee_2 = document.querySelector('.marquee-2');
@@ -1687,6 +1599,112 @@
         // Listen for scroll events
         window.addEventListener('scroll', updateMarqueeOnScroll);
         window.addEventListener('scroll', updateMarqueeOnScrollTwo);
-    </script>
+    </script></div>
+
     
-</body></html>
+
+    
+
+    
+
+    <!-- rts about area start -->
+    
+    <!-- rts about area end -->
+
+    <!-- rts service area start -->
+    
+    <!-- rts service area end -->
+
+    <!-- our working process area start -->
+    
+    <!-- our working process area end -->
+
+    
+
+    <!-- small cta area start -->
+    
+    <!-- small cta area end -->
+
+    <!-- feature project and success stories -->
+    
+    <!-- feature project and success stories end -->
+
+    <!-- team area start -->
+    
+    <!-- team area end -->
+
+    <!-- rts marque area start -->
+    
+    <!-- rts marque area end -->
+
+    <!-- rts testimonials area start -->
+    
+    <!-- rts testimonials area end -->
+
+    <!-- rts blog area start -->
+    
+    <!-- rts blog area end -->
+
+    <!-- footer area four start -->
+    
+    <!-- footer area four end -->
+
+    
+    <!-- progress area start -->
+<!-- <div id="elevate-load">
+    <div class="loader-wrapper">
+        <div class="lds-ellipsis">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    </div>
+</div> -->
+<!-- progress area end -->
+
+<!-- rtl btn area start -->
+
+<!-- rtl btn area end -->
+
+<!-- progress area start -->
+
+<!-- progress area end -->
+
+
+<!-- offcanvase search -->
+
+
+
+<!-- scripts -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    "&gt;
+    
+    
+
+    <!-- .hardem-content -->
+    <!-- NOVO: Script de loading -->
+    <script src="assets/js/instant-loading.js"></script></body></html>

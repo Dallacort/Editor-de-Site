@@ -8,6 +8,7 @@
  */
 
 const fs = require('fs');
+const cheerio = require('cheerio');
 const path = require('path');
 const { execSync } = require('child_process');
 
@@ -134,4 +135,84 @@ async function main() {
 }
 
 // Executa o script
-main().catch(console.error); 
+main().catch(console.error);
+
+console.log('🔄 Iniciando adição de loading screen em todas as páginas...');
+
+// Encontrar todos os arquivos HTML no diretório atual
+const files = fs.readdirSync('.')
+    .filter(file => file.endsWith('.html'));
+
+let processedCount = 0;
+
+files.forEach(file => {
+    console.log(`Processando: ${file}`);
+    
+    try {
+        const html = fs.readFileSync(file, 'utf8');
+        const $ = cheerio.load(html);
+        
+        // Verificar se já tem o CSS de loading
+        let hasLoadingCss = false;
+        $('link').each(function() {
+            if ($(this).attr('href') === 'assets/css/instant-loading.css') {
+                hasLoadingCss = true;
+            }
+        });
+        
+        // Adicionar CSS de loading se não existir
+        if (!hasLoadingCss) {
+            $('head').append('\n    <!-- NOVO: Loading instantâneo -->\n    <link rel="stylesheet" href="assets/css/instant-loading.css">');
+        }
+        
+        // Verificar se já tem o script de loading
+        let hasLoadingScript = false;
+        $('script').each(function() {
+            if ($(this).attr('src') === 'assets/js/instant-loading.js') {
+                hasLoadingScript = true;
+            }
+        });
+        
+        // Adicionar script de loading se não existir
+        if (!hasLoadingScript) {
+            $('body').append('\n    <!-- NOVO: Script de loading -->\n    <script src="assets/js/instant-loading.js"></script>');
+        }
+        
+        // Adicionar classe de loading no body
+        $('body').addClass('hardem-loading-active');
+        
+        // Verificar se já tem o HTML do loading
+        if (!$('#hardem-instant-loading').length) {
+            // Adicionar HTML do loading no início do body
+            const loadingHtml = `
+    <!-- NOVO: Loading screen instantâneo -->
+    <div id="hardem-instant-loading">
+        <div class="hardem-loading-spinner"></div>
+        <div class="hardem-loading-text">Carregando conteúdo...</div>
+        <div class="hardem-loading-subtitle">Aguarde enquanto restauramos suas edições</div>
+    </div>
+
+    <!-- Wrapper para todo o conteúdo -->
+    <div class="hardem-content">`;
+            
+            // Mover todo o conteúdo existente para dentro do wrapper
+            const $content = $('body').children().not('#hardem-instant-loading, .hardem-content');
+            $('body').prepend(loadingHtml);
+            $('.hardem-content').append($content);
+            
+            // Fechar a div do wrapper antes do </body>
+            $('body').append('\n    </div><!-- .hardem-content -->');
+            
+            processedCount++;
+            console.log(`✅ Loading screen adicionada em: ${file}`);
+        }
+        
+        // Salvar o arquivo
+        fs.writeFileSync(file, $.html());
+        
+    } catch (error) {
+        console.error(`❌ Erro ao processar ${file}:`, error);
+    }
+});
+
+console.log(`\n🎉 Loading screen adicionada em ${processedCount} páginas!`); 

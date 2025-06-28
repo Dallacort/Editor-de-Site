@@ -18,11 +18,22 @@
     <link rel="stylesheet" preload="" href="assets/css/style.css">
     <!-- NOVO: Correção do Marquee -->
     <link rel="stylesheet" href="assets/css/marquee-fix.css">
+
+    <!-- NOVO: Loading instantâneo -->
+    <link rel="stylesheet" href="assets/css/instant-loading.css">    <!-- NOVO: Normalização de imagens -->
+    <link rel="stylesheet" href="assets/css/image-normalization-styles.css">
 </head>
 
-<body>
-    <!-- header area start -->
-    <header class="heder-one">
+<body class="hardem-loading-active">
+    <!-- NOVO: Loading screen instantâneo -->
+    <div id="hardem-instant-loading">
+        <div class="hardem-loading-spinner"></div>
+        <div class="hardem-loading-text">Carregando conteúdo...</div>
+        <div class="hardem-loading-subtitle">Aguarde enquanto restauramos suas edições</div>
+    </div>
+
+    <!-- Wrapper para todo o conteúdo -->
+    <div class="hardem-content"><header class="heder-one">
     <div class="header-two-container">
         <div class="row">
             <div class="col-12">
@@ -420,8 +431,7 @@
             </div>
         </div>
     </div>
-</header>
-<header class="heder-one header--sticky">
+</header><header class="heder-one header--sticky">
     <div class="header-two-container">
         <div class="row">
             <div class="col-12">
@@ -819,8 +829,7 @@
             </div>
         </div>
     </div>
-</header>
-<div id="side-bar" class="side-bar header-two">
+</header><div id="side-bar" class="side-bar header-two">
     <button class="close-icon-menu"><i class="far fa-times"></i></button>
     <!-- inner menu area desktop start -->
     <div class="inner-main-wrapper-desk">
@@ -990,11 +999,7 @@
         </div>
     </div>
     <!-- mobile menu area end -->
-</div>
-    <!-- header area end -->
-
-    <!-- rts banner area strart -->
-    <div class="rts-banner-area rts-section-gap rts-breadcrumb-area project-bread  position-relative">
+</div><div class="rts-banner-area rts-section-gap rts-breadcrumb-area project-bread  position-relative">
         <div class="container">
             <div class="row">
                 <div class="col-lg-12">
@@ -1011,13 +1016,7 @@
                 </div>
             </div>
         </div>
-    </div>
-    <!-- rts banner area end -->
-
-
-
-    <!-- rts about area start -->
-    <div class="rts-about-area-about vision rts-section-gap">
+    </div><div class="rts-about-area-about vision rts-section-gap">
         <div class="container plr_sm--15">
             <div class="vision-wrapper">
                 <div class="swiper swiper-vision" dir="ltr">
@@ -1155,11 +1154,7 @@
             </div>
         </div>
         <div class="swiper-pagination"></div>
-    </div>
-    <!-- rts about area end -->
-
-    <!-- rts service area start -->
-    <div class="service-abot-area rts-section-gap service-about-bg bg_image">
+    </div><div class="service-abot-area rts-section-gap service-about-bg bg_image">
         <div class="container-120">
             <div class="row align-items-center">
                 <div class="col-xl-6 col-lg-12  plr-sm">
@@ -1239,11 +1234,7 @@
                 </div>
             </div>
         </div>
-    </div>
-    <!-- rts service area end -->
-
-    <!-- what we offer start -->
-    <div class="rts-offer-provide-section rts-section-gap">
+    </div><div class="rts-offer-provide-section rts-section-gap">
         <div class="container">
             <div class="row">
                 <div class="col-lg-12">
@@ -1316,11 +1307,7 @@
                 </div>
             </div>
         </div>
-    </div>
-    <!-- what we offer end -->
-
-    <!-- rts fun facts area starts -->
-    <div class="rts-about-fun-facts rts-section-gap bg_about-f">
+    </div><div class="rts-about-fun-facts rts-section-gap bg_about-f">
         <div class="container">
             <div class="row">
                 <div class="col-lg-12">
@@ -1387,12 +1374,7 @@
                 </div>
             </div>
         </div>
-    </div>
-    <!-- rts fun facts area end -->
-
-
-    <!-- rts footer area start -->
-<div class="rts-footer-area rts-section-gapTop bg_footer-1 bg_image">
+    </div><div class="rts-footer-area rts-section-gapTop bg_footer-1 bg_image">
     <div class="container">
         <div class="row">
             <div class="col-lg-12">
@@ -1550,7 +1532,63 @@
             </div>
         </div>
     </div>
-</div>
+</div><div class="rtl-ltr-switcher-btn">
+    <span class="rtl show" data-key="vision_content_label_86">View RTL</span>
+    <span class="ltr" data-key="vision_content_label_87">View LTR</span>
+</div><div class="progress-wrap">
+    <svg class="progress-circle svg-content" width="100%" height="100%" viewBox="-1 -1 102 102">
+        <path d="M50,1 a49,49 0 0,1 0,98 a49,49 0 0,1 0,-98" style="transition: stroke-dashoffset 10ms linear 0s; stroke-dasharray: 307.919, 307.919; stroke-dashoffset: 307.919;">
+        </path>
+    </svg>
+</div><div class="search-input-area">
+    <div class="container">
+        <div class="search-input-inner">
+            <div class="input-div">
+                <input class="search-input autocomplete" type="text" placeholder="Search by keyword or #">
+                <button><i class="far fa-search"></i></button>
+            </div>
+        </div>
+    </div>
+    <div id="close" class="search-close-icon"><i class="far fa-times"></i></div>
+</div><div id="anywhere-home" class="">
+</div><script src="assets/js/plugins/jquery.js"></script><script src="assets/js/vendor/bootstrap.min.js"></script><script src="assets/js/plugins/odometer.js"></script><script src="assets/js/plugins/jquery-appear.js"></script><script src="assets/js/plugins/metismenu.js"></script><script src="assets/js/plugins/swiper.js"></script><script src="assets/js/plugins/aos.js"></script><script src="assets/js/plugins/nice-select.js"></script><script src="assets/js/plugins/smooth-scroll.js"></script><script src="assets/js/vendor/waw.js"></script><script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAuSiPhoDaOJ7aqtJVtQhYhLzwwJ7rQlmA"></script><script src="assets/js/vendor/marker.js"></script><script src="assets/js/vendor/map-content.js"></script><script src="assets/js/vendor/info-box.js"></script><script src="https://html.themewant.com/golfy/assets/js/plugins/magnific-popup.js"></script><script src="assets/js/plugins/contact.form.js"></script><script src="
+    <!-- Inclusão do Gerenciador do Editor Hardem -->
+    <script src=" assets="" js="" editor-manager.js"=""></script><script src="
+    <!-- Inclusão do Gerenciador do Editor Hardem -->
+    <script src=" assets="" js="" editor-manager.js"=""></script>
+
+    <script src="assets/js/main.js"></script>"&gt;<script src="assets/js/counter-stability-fix.js"></script></div>
+    <!-- header area start -->
+    
+
+
+    <!-- header area end -->
+
+    <!-- rts banner area strart -->
+    
+    <!-- rts banner area end -->
+
+
+
+    <!-- rts about area start -->
+    
+    <!-- rts about area end -->
+
+    <!-- rts service area start -->
+    
+    <!-- rts service area end -->
+
+    <!-- what we offer start -->
+    
+    <!-- what we offer end -->
+
+    <!-- rts fun facts area starts -->
+    
+    <!-- rts fun facts area end -->
+
+
+    <!-- rts footer area start -->
+
 <!-- rts footer area end -->
 
     <!-- progress area start -->
@@ -1567,64 +1605,46 @@
 <!-- progress area end -->
 
 <!-- rtl btn area start -->
-<div class="rtl-ltr-switcher-btn">
-    <span class="rtl show" data-key="vision_content_label_86">View RTL</span>
-    <span class="ltr" data-key="vision_content_label_87">View LTR</span>
-</div>
+
 <!-- rtl btn area end -->
 
 <!-- progress area start -->
-<div class="progress-wrap">
-    <svg class="progress-circle svg-content" width="100%" height="100%" viewBox="-1 -1 102 102">
-        <path d="M50,1 a49,49 0 0,1 0,98 a49,49 0 0,1 0,-98" style="transition: stroke-dashoffset 10ms linear 0s; stroke-dasharray: 307.919, 307.919; stroke-dashoffset: 307.919;">
-        </path>
-    </svg>
-</div>
+
 <!-- progress area end -->
 
 
 <!-- offcanvase search -->
-<div class="search-input-area">
-    <div class="container">
-        <div class="search-input-inner">
-            <div class="input-div">
-                <input class="search-input autocomplete" type="text" placeholder="Search by keyword or #">
-                <button><i class="far fa-search"></i></button>
-            </div>
-        </div>
-    </div>
-    <div id="close" class="search-close-icon"><i class="far fa-times"></i></div>
-</div>
-<div id="anywhere-home" class="">
-</div>
+
+
 
 <!-- scripts -->
-<script src="assets/js/plugins/jquery.js"></script>
-<script src="assets/js/vendor/bootstrap.min.js"></script>
 
-<script src="assets/js/plugins/odometer.js"></script>
-<script src="assets/js/plugins/jquery-appear.js"></script>
 
-<script src="assets/js/plugins/metismenu.js"></script>
-<script src="assets/js/plugins/swiper.js"></script>
-<script src="assets/js/plugins/aos.js"></script>
-<script src="assets/js/plugins/nice-select.js"></script>
-<script src="assets/js/plugins/smooth-scroll.js"></script>
-<script src="assets/js/vendor/waw.js"></script>
 
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAuSiPhoDaOJ7aqtJVtQhYhLzwwJ7rQlmA"></script>
-<script src="assets/js/vendor/marker.js"></script>
-<script src="assets/js/vendor/map-content.js"></script>
-<script src="assets/js/vendor/info-box.js"></script>
-<script src="https://html.themewant.com/golfy/assets/js/plugins/magnific-popup.js"></script>
 
-<script src="assets/js/plugins/contact.form.js"></script>
 
-<script src="
-    <!-- Inclusão do Gerenciador do Editor Hardem -->
-    <script src="assets/js/editor-manager.js"></script>
 
-    <script src="assets/js/main.js"></script>
-    <script src="assets/js/counter-stability-fix.js"></script>"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
-</body></html>
+    "&gt;
+    
+
+    <!-- .hardem-content -->
+    <!-- NOVO: Script de loading -->
+    <script src="assets/js/instant-loading.js"></script></body></html>

@@ -1,81 +1,86 @@
 /**
- * HARDEM Instant Loading Screen
- * Aparece imediatamente ao carregar a página, antes do JavaScript
+ * HARDEM - Loading Screen
+ * Estilo para a tela de carregamento instantânea
  */
 
-/* Loading overlay que aparece instantaneamente */
+/* Container do loading */
 #hardem-instant-loading {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: #ffffff;
-    z-index: 99999;
+    background: #fff;
     display: flex;
-    align-items: center;
-    justify-content: center;
     flex-direction: column;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    opacity: 1;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
     transition: opacity 0.3s ease-out;
 }
 
-/* Spinner animado */
+/* Spinner de loading */
 .hardem-loading-spinner {
-    width: 60px;
-    height: 60px;
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #007bff;
+    width: 50px;
+    height: 50px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #ff5e14;
     border-radius: 50%;
-    animation: hardem-spin 1s linear infinite;
+    animation: spin 1s linear infinite;
     margin-bottom: 20px;
 }
 
 /* Texto do loading */
 .hardem-loading-text {
-    font-size: 18px;
-    font-weight: 600;
-    color: #333;
+    font-size: 24px;
+    color: #1b1b1b;
     margin-bottom: 10px;
+    font-weight: 600;
 }
 
+/* Subtítulo do loading */
 .hardem-loading-subtitle {
-    font-size: 14px;
+    font-size: 16px;
     color: #666;
 }
 
 /* Animação do spinner */
-@keyframes hardem-spin {
+@keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
 
-/* Esconder conteúdo durante carregamento */
+/* Estado de loading ativo */
 .hardem-loading-active {
     overflow: hidden;
 }
 
-.hardem-loading-active .hardem-content {
-    opacity: 0.1;
-    transition: opacity 0.1s;
+/* Estado de loading oculto */
+.hardem-loading-hidden {
+    opacity: 0;
+    pointer-events: none;
 }
 
-/* Classe para mostrar conteúdo após carregamento */
-.hardem-content-loaded .hardem-content {
-    opacity: 1;
-    transition: opacity 0.3s ease-in;
-}
-
-/* Esconder loading após carregamento */
+/* Conteúdo carregado */
 .hardem-content-loaded #hardem-instant-loading {
     opacity: 0;
     pointer-events: none;
 }
 
-/* Remover loading completamente após transição */
-.hardem-loading-hidden {
-    display: none !important;
+/* Wrapper do conteúdo */
+.hardem-content {
+    opacity: 1;
+    transition: opacity 0.3s ease-in;
+}
+
+/* Estado inicial do conteúdo */
+.hardem-loading-active .hardem-content {
+    opacity: 0;
+}
+
+/* Conteúdo visível após carregamento */
+.hardem-content-loaded .hardem-content {
+    opacity: 1;
 }
 
 /* Animação de pulse para indicar atividade */

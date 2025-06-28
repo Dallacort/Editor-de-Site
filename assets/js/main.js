@@ -1,3 +1,30 @@
+/**
+ * HARDEM - Template Principal
+ */
+
+// Sistema de Loading Screen
+(function() {
+    function hideLoading() {
+        document.body.classList.add('hardem-content-loaded');
+        setTimeout(() => {
+            const loading = document.getElementById('hardem-instant-loading');
+            if (loading) {
+                loading.classList.add('hardem-loading-hidden');
+            }
+        }, 300);
+    }
+
+    // Esconder loading quando a página carregar
+    if (document.readyState === 'complete') {
+        hideLoading();
+    } else {
+        window.addEventListener('load', hideLoading);
+    }
+
+    // Se o editor estiver ativo, aguardar ele carregar
+    document.addEventListener('hardem-editor-content-loaded', hideLoading);
+})();
+
 /*=== Javascript function indexing hear===========
 
 1.counterUp ----------(Its use for counting number)

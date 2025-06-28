@@ -19,9 +19,17 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "cheerio": "^1.0.0-rc.12"
+    "cheerio": "^1.1.0"
   },
   "devDependencies": {
     "http-server": "^14.1.1"
-  }
-} 
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dallacort/Editor-de-Site.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Dallacort/Editor-de-Site/issues"
+  },
+  "homepage": "https://github.com/Dallacort/Editor-de-Site#readme"
+}
