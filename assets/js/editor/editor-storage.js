@@ -26,40 +26,23 @@ class HardemEditorStorage {
             Object.entries(this.core.contentMap).forEach(([key, value]) => {
                 if (value && typeof value === 'object' && 
                     (value.text || value.src || value.backgroundImage || value.title || value.description || 
-                     value.isCounter || value.counterValue !== undefined)) {
-                    // Limpar dados corrompidos
-                    const cleanValue = {};
-                    if (value.text && typeof value.text === 'string') cleanValue.text = value.text;
-                    if (value.src && typeof value.src === 'string') {
-                        // Otimizar SVG se for muito grande
-                        cleanValue.src = this.optimizeImageData(value.src);
-                    }
-                    if (value.backgroundImage && typeof value.backgroundImage === 'string') {
-                        // Otimizar background se for muito grande
-                        cleanValue.backgroundImage = this.optimizeImageData(value.backgroundImage);
-                    }
-                    if (value.title && typeof value.title === 'string') cleanValue.title = value.title;
-                    if (value.description && typeof value.description === 'string') cleanValue.description = value.description;
-                    if (value.type) cleanValue.type = value.type;
-                    if (value.format) cleanValue.format = value.format;
-                    if (value.slideIndex !== undefined) cleanValue.slideIndex = value.slideIndex;
-                    if (value.elementInfo) cleanValue.elementInfo = value.elementInfo;
-                    
-                    // NOVO: Incluir dados de contador
-                    if (value.isCounter) cleanValue.isCounter = value.isCounter;
-                    if (value.counterValue !== undefined) cleanValue.counterValue = value.counterValue;
-                    if (value.counterSuffix) cleanValue.counterSuffix = value.counterSuffix;
-                    if (value.timestamp) cleanValue.timestamp = value.timestamp;
-                    
-                    filteredContent[key] = cleanValue;
+                    value.isCounter || value.counterValue !== undefined || value.normalization || value.properties)) {
+                    filteredContent[key] = value;
+                }
+            });
+
+            // Debug: Verificar dados de normalização
+            Object.entries(filteredContent).forEach(([key, value]) => {
+                if (value.normalization) {
+                    console.log(`🔍 Dados de normalização encontrados para ${key}:`, value.normalization);
                 }
             });
 
             const exportData = {
                 timestamp: new Date().toISOString(),
                 url: window.location.href,
-                contentMap: filteredContent, // Mudança aqui: content -> contentMap para compatibilidade com save.php
-                content: filteredContent,    // Manter ambos para compatibilidade
+                contentMap: filteredContent,
+                content: filteredContent,
                 metadata: {
                     userAgent: navigator.userAgent,
                     totalElements: Object.keys(filteredContent).length,
@@ -1145,7 +1128,10 @@ class HardemEditorStorage {
         // NOVO: Aplicar normalizações salvas no banco de dados
         if (this.core.imageEditor && this.core.imageEditor.applyContentFromDatabase) {
             console.log('🎯 Aplicando normalizações do banco de dados...');
-            this.core.imageEditor.applyContentFromDatabase(this.core.contentMap);
+            // Aguardar um pouco para garantir que todos os elementos tenham data-key
+            setTimeout(async () => {
+                await this.core.imageEditor.applyContentFromDatabase(this.core.contentMap);
+            }, 500);
         }
 
         // Disparar evento para notificar que o conteúdo foi carregado

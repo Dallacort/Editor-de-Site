@@ -19,6 +19,10 @@ class HardemImageEditor {
         this.maxMemoryUsage = 500 * 1024 * 1024; // 500MB máximo em memória (foi 50MB)
         this.currentMemoryUsage = 0;
         
+        // Controle de debounce para salvar propriedades
+        this.savePropertiesTimeout = null;
+        this.savePropertiesDelay = 1000; // 1 segundo de delay
+        
         // Iniciar monitoramento do sistema
         setTimeout(() => this.monitorSystem(), 5000); // Aguardar 5s para inicializar
         
@@ -421,14 +425,24 @@ class HardemImageEditor {
                 // Atualizar uso de memória
                 this.currentMemoryUsage += file.size;
                 
-                // Redimensionar background
-                this.resizeBackgroundImage(imageSrc, (resizedSrc) => {
+                // ATUALIZADO: Usar as mesmas dimensões das imagens para backgrounds
+                const resizeFunction = this.defaultImageDimensions ? 
+                    this.resizeImageToTargetDimensions : this.resizeBackgroundImage;
+                
+                resizeFunction.call(this, element, imageSrc, (resizedSrc) => {  
                     try {
                         // Aplicar background
                         element.style.setProperty('background-image', `url("${resizedSrc}")`, 'important');
-                        element.style.setProperty('background-size', 'cover', 'important');
-                        element.style.setProperty('background-position', 'center', 'important');
-                        element.style.setProperty('background-repeat', 'no-repeat', 'important');
+                        
+                        // NOVO: Aplicar dimensões normalizadas se disponível
+                        if (this.defaultImageDimensions) {
+                            this.applyNormalizedBackgroundStyles(element, this.defaultImageDimensions);
+                        } else {
+                            // Fallback: estilos básicos
+                            element.style.setProperty('background-size', 'cover', 'important');
+                            element.style.setProperty('background-position', 'center', 'important');
+                            element.style.setProperty('background-repeat', 'no-repeat', 'important');
+                        }
                         
                         // Forçar re-renderização
                         element.style.display = 'none';
@@ -439,7 +453,14 @@ class HardemImageEditor {
                         this.saveBackgroundImage(element, resizedSrc, {
                             processedAt: Date.now(),
                             fileName: file.name,
-                            fileSize: file.size
+                            fileSize: file.size,
+                            // NOVO: Salvar informações de normalização
+                            normalization: this.defaultImageDimensions ? {
+                                normalized: true,
+                                target_width: this.defaultImageDimensions.width,
+                                target_height: this.defaultImageDimensions.height,
+                                normalize_id: 'hardem-normalize-' + Date.now()
+                            } : null
                         });
                         
                         // Adicionar ao cache
@@ -1699,14 +1720,20 @@ class HardemImageEditor {
         element.setAttribute('data-original-height', originalHeight || 'auto');
         element.setAttribute('data-original-bg-size', originalBgSize || 'initial');
         
-        // Aplicar dimensões específicas para este elemento
-        element.style.width = targetDimensions.width + 'px';
-        element.style.height = targetDimensions.height + 'px';
+        // ATUALIZADO: Aplicar dimensões com !important para garantir que não sejam sobrescritas
+        element.style.setProperty('width', targetDimensions.width + 'px', 'important');
+        element.style.setProperty('height', targetDimensions.height + 'px', 'important');
+        element.style.setProperty('min-width', targetDimensions.width + 'px', 'important');
+        element.style.setProperty('min-height', targetDimensions.height + 'px', 'important');
+        element.style.setProperty('max-width', targetDimensions.width + 'px', 'important');
+        element.style.setProperty('max-height', targetDimensions.height + 'px', 'important');
         
         // Garantir que o background cubra todo o elemento
         element.style.setProperty('background-size', 'cover', 'important');
         element.style.setProperty('background-position', 'center', 'important');
         element.style.setProperty('background-repeat', 'no-repeat', 'important');
+        element.style.setProperty('display', 'block', 'important');
+        element.style.setProperty('overflow', 'hidden', 'important');
         
         // Marcar como normalizado com ID único
         element.setAttribute('data-normalized', 'true');
@@ -1889,69 +1916,80 @@ class HardemImageEditor {
     }
 
     /**
-     * Salvar dimensões de normalização no banco de dados
+     * Salvar propriedades com debounce para evitar chamadas duplicadas
      */
     async saveNormalizationToDatabase(element, targetDimensions) {
-        try {
-            const dataKey = element.getAttribute('data-key');
-            if (!dataKey) {
-                console.log('⚠️ Elemento sem data-key, não será salvo no banco');
-                return;
-            }
-
-            // Preparar dados das propriedades de normalização
-            const normalizationData = {
-                normalized: true,
-                target_width: targetDimensions.width,
-                target_height: targetDimensions.height,
-                normalize_id: element.getAttribute('data-normalize-id'),
-                normalized_at: new Date().toISOString(),
-                element_type: element.tagName.toLowerCase(),
-                element_class: element.className || ''
-            };
-
-            // Obter propriedades existentes se houver
-            let existingProperties = {};
-            try {
-                const currentProperties = element.getAttribute('data-properties');
-                if (currentProperties) {
-                    existingProperties = JSON.parse(currentProperties);
-                }
-            } catch (e) {
-                console.log('Propriedades existentes inválidas, criando novas');
-            }
-
-            // Mesclar com propriedades existentes
-            const updatedProperties = {
-                ...existingProperties,
-                normalization: normalizationData
-            };
-
-            // Salvar via API
-            const formData = new FormData();
-            formData.append('action', 'update_element_properties');
-            formData.append('element_key', dataKey);
-            formData.append('properties', JSON.stringify(updatedProperties));
-            formData.append('page_id', this.getCurrentPageId());
-
-            const response = await fetch('api-admin.php', {
-                method: 'POST',
-                body: formData
-            });
-
-            const result = await response.json();
-            
-            if (result.success) {
-                // Atualizar atributo local para cache
-                element.setAttribute('data-properties', JSON.stringify(updatedProperties));
-                console.log(`💾 Normalização salva no banco: ${dataKey}`);
-            } else {
-                console.warn(`⚠️ Erro ao salvar normalização: ${result.message}`);
-            }
-
-        } catch (error) {
-            console.error('Erro ao salvar normalização no banco:', error);
+        if (this.savePropertiesTimeout) {
+            clearTimeout(this.savePropertiesTimeout);
         }
+
+        return new Promise((resolve, reject) => {
+            this.savePropertiesTimeout = setTimeout(async () => {
+                try {
+                    const dataKey = element.getAttribute('data-key');
+                    if (!dataKey) {
+                        console.warn('Elemento sem data-key, não é possível salvar normalização');
+                        resolve(false);
+                        return;
+                    }
+
+                    // Obter ID da página do elemento atual
+                    const pageId = this.getPageId();
+                    if (!pageId) {
+                        console.warn('ID da página não encontrado');
+                        resolve(false);
+                        return;
+                    }
+
+                    // Preparar dados de normalização
+                    const normalizationData = {
+                        normalized: true,
+                        target_width: targetDimensions?.width || null,
+                        target_height: targetDimensions?.height || null
+                    };
+                    // Salvar sempre como { normalization: { ... } }
+                    const propertiesToSave = { normalization: normalizationData };
+
+                    // Enviar para API
+                    const response = await fetch('api-admin.php?action=update_element_properties', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: new URLSearchParams({
+                            element_key: dataKey,
+                            page_id: pageId,
+                            properties: JSON.stringify(propertiesToSave)
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    if (!result.success) {
+                        throw new Error(result.message || 'Erro ao salvar normalização');
+                    }
+
+                    console.log(`✅ Normalização salva para ${dataKey}`);
+                    resolve(true);
+
+                } catch (error) {
+                    console.error('❌ Erro ao salvar normalização:', error);
+                    reject(error);
+                }
+            }, this.savePropertiesDelay);
+        });
+    }
+
+    /**
+     * Obter ID da página atual
+     */
+    getPageId() {
+        const url = window.location.pathname;
+        const pageName = url.split('/').pop().split('.')[0];
+        return pageName;
     }
 
     /**
@@ -1987,7 +2025,7 @@ class HardemImageEditor {
             formData.append('action', 'update_element_properties');
             formData.append('element_key', dataKey);
             formData.append('properties', JSON.stringify(existingProperties));
-            formData.append('page_id', this.getCurrentPageId());
+            formData.append('page_id', this.getPageId());
 
             const response = await fetch('api-admin.php', {
                 method: 'POST',
@@ -2018,78 +2056,103 @@ class HardemImageEditor {
     }
 
     applyNormalizationFromDatabase(element, dataKey, normalizationData) {
-        if (!element) return;
+        if (!element) return false;
 
-        // Tenta obter o conteúdo do contentMap para verificar a URL da imagem
-        // CORREÇÃO: Acessar a propriedade `contentMap` no `this.core`, não em `this.core.storage`
-        const content = this.core.contentMap[dataKey];
-        if (!content || !(content.src || content.backgroundImage)) {
-            // Se não há URL de imagem no contentMap, não aplicar normalização para evitar distorcer placeholders
-            console.log(`⏩ Normalização pulada para ${dataKey} (sem imagem no banco)`);
-            return;
-        }
+        try {
+            // Se não foi fornecido dataKey, tentar obter do elemento
+            if (!dataKey) {
+                dataKey = element.getAttribute('data-key');
+            }
 
-        if (normalizationData && normalizationData.normalized) {
-            console.log(`🔄 Normalização restaurada do banco: ${element.tagName}.`);
+            // Se não foi fornecido normalizationData, tentar obter das propriedades do elemento
+            if (!normalizationData) {
+                const properties = element.getAttribute('data-properties');
+                if (properties) {
+                    try {
+                        const parsedProps = JSON.parse(properties);
+                        normalizationData = parsedProps.normalization;
+                    } catch (e) {
+                        console.warn('Erro ao parsear propriedades:', e);
+                    }
+                }
+            }
+
+            // Tenta obter o conteúdo do contentMap para verificar a URL da imagem
+            const content = this.core.contentMap[dataKey];
+            
+            // Verificar se temos dados de normalização válidos
+            if (!normalizationData || !normalizationData.normalized) {
+                console.log(`⏩ Normalização pulada para ${dataKey} (sem dados de normalização)`);
+                return false;
+            }
+
+            console.log(`🔄 Aplicando normalização do banco: ${element.tagName}`, normalizationData);
             
             const targetDimensions = {
                 width: normalizationData.target_width,
                 height: normalizationData.target_height
             };
 
-            // *** AQUI ESTÁ A CORREÇÃO INTELIGENTE ***
-            if (element.tagName === 'IMG') {
-                this.applyNormalizedImageStyles(element, targetDimensions);
-            } else { // Trata DIVs e outros elementos como background
-                this.applyNormalizedBackgroundStyles(element, targetDimensions);
+            // Backup das dimensões originais
+            if (!element.hasAttribute('data-original-width')) {
+                element.setAttribute('data-original-width', element.style.width || 'auto');
+            }
+            if (!element.hasAttribute('data-original-height')) {
+                element.setAttribute('data-original-height', element.style.height || 'auto');
+            }
 
-                // Garante que a imagem seja visível no background
-                if (content && content.src) {
-                    // Extrai a URL real da imagem do 'serve-image.php...'
-                    const imageUrl = this.core.utils.extractImageUrl(content.src);
-                    element.style.backgroundImage = `url('${imageUrl}')`;
-                    element.style.backgroundSize = 'cover';
-                    element.style.backgroundPosition = 'center';
+            // Aplicar estilos de normalização
+            element.style.width = `${targetDimensions.width}px`;
+            element.style.height = `${targetDimensions.height}px`;
+            element.style.setProperty('width', `${targetDimensions.width}px`, 'important');
+            element.style.setProperty('height', `${targetDimensions.height}px`, 'important');
+
+            if (element.tagName.toLowerCase() === 'img') {
+                element.style.objectFit = 'cover';
+                element.style.objectPosition = 'center';
+                element.style.setProperty('object-fit', 'cover', 'important');
+                element.style.setProperty('object-position', 'center', 'important');
+            } else {
+                if (!element.hasAttribute('data-original-bg-size')) {
+                    element.setAttribute('data-original-bg-size', element.style.backgroundSize || 'initial');
+                }
+                element.style.backgroundSize = 'cover';
+                element.style.backgroundPosition = 'center';
+                element.style.backgroundRepeat = 'no-repeat';
+                element.style.setProperty('background-size', 'cover', 'important');
+                element.style.setProperty('background-position', 'center', 'important');
+                element.style.setProperty('background-repeat', 'no-repeat', 'important');
+
+                // Garantir que a imagem seja visível no background se houver
+                if (content && content.backgroundImage) {
+                    element.style.backgroundImage = content.backgroundImage;
                 }
             }
+
+            // Atualizar atributos de normalização
+            element.setAttribute('data-normalized', 'true');
+            element.setAttribute('data-normalize-id', normalizationData.normalize_id || '');
+            element.setAttribute('data-target-width', targetDimensions.width);
+            element.setAttribute('data-target-height', targetDimensions.height);
+
+            // Atualizar atributo de propriedades no elemento
+            const updatedProperties = {
+                ...JSON.parse(element.getAttribute('data-properties') || '{}'),
+                normalization: normalizationData
+            };
+            element.setAttribute('data-properties', JSON.stringify(updatedProperties));
+
+            // Atualizar contentMap
+            if (!this.core.contentMap[dataKey]) {
+                this.core.contentMap[dataKey] = {};
+            }
+            this.core.contentMap[dataKey].normalization = normalizationData;
+
+            return true;
+        } catch (error) {
+            console.error('Erro ao aplicar normalização do banco:', error);
+            return false;
         }
-    }
-
-    applyNormalizedImageStylesFromDB(imgElement, targetDimensions, normalizeId) {
-        // Esta função pode ser simplificada ou removida se a lógica for centralizada
-        // Aplicar estilos com !important para garantir que não sejam sobrescritos
-        imgElement.style.setProperty('width', targetDimensions.width + 'px', 'important');
-        imgElement.style.setProperty('height', targetDimensions.height + 'px', 'important');
-        imgElement.style.setProperty('object-fit', 'cover', 'important');
-        imgElement.style.setProperty('object-position', 'center', 'important');
-        imgElement.style.setProperty('display', 'block', 'important');
-        
-        // Forçar re-render
-        imgElement.offsetHeight;
-        
-        // Marcar como normalizada
-        imgElement.setAttribute('data-normalized', 'true');
-        imgElement.setAttribute('data-normalize-id', normalizeId);
-        imgElement.setAttribute('data-target-width', targetDimensions.width);
-        imgElement.setAttribute('data-target-height', targetDimensions.height);
-    }
-
-    /**
-     * Aplicar estilos de background normalizados vindos do banco (sem salvar novamente)
-     */
-    applyNormalizedBackgroundStylesFromDB(element, targetDimensions, normalizeId) {
-        // Aplicar estilos
-        element.style.width = targetDimensions.width + 'px';
-        element.style.height = targetDimensions.height + 'px';
-        element.style.setProperty('background-size', 'cover', 'important');
-        element.style.setProperty('background-position', 'center', 'important');
-        element.style.setProperty('background-repeat', 'no-repeat', 'important');
-        
-        // Marcar como normalizado
-        element.setAttribute('data-normalized', 'true');
-        element.setAttribute('data-normalize-id', normalizeId);
-        element.setAttribute('data-target-width', targetDimensions.width);
-        element.setAttribute('data-target-height', targetDimensions.height);
     }
 
     /**
@@ -2117,54 +2180,102 @@ class HardemImageEditor {
      */
     restoreNormalizationsFromDatabase(container = document) {
         console.log('Restaurando normalizações do banco de dados...');
-        const elements = document.querySelectorAll('[data-key]');
+        const elements = container.querySelectorAll('[data-key]');
+        let restoredCount = 0;
+        
         elements.forEach(element => {
             const dataKey = element.getAttribute('data-key');
-            // CORREÇÃO: Acessar a propriedade `contentMap` no `this.core`
             const content = this.core.contentMap[dataKey];
             
-            if (content && content.normalization && content.normalization.normalized) {
-                console.log(`🎯 Restaurando normalização para ${dataKey}`);
-                this.applyNormalizationFromDatabase(element, dataKey, content.normalization);
-        }
+            // Verificar tanto em content.normalization quanto em content.properties.normalization
+            const normalizationData = content && (content.normalization || (content.properties && content.properties.normalization));
+            
+            if (normalizationData && normalizationData.normalized) {
+                console.log(`🎯 Restaurando normalização para ${dataKey}`, normalizationData);
+                if (this.applyNormalizationFromDatabase(element, dataKey, normalizationData)) {
+                    restoredCount++;
+                }
+            }
         });
+        
+        if (restoredCount > 0) {
+            console.log(`✅ ${restoredCount} normalizações restauradas do banco de dados`);
+            if (this.core && this.core.ui) {
+                this.core.ui.showAlert(`🎯 ${restoredCount} dimensionamentos restaurados!`, 'success');
+            }
+        }
+    }
+
+    /**
+     * Buscar normalizações diretamente do banco via API
+     */
+    async fetchNormalizationsFromDatabase() {
+        try {
+            console.log('🔍 Buscando normalizações diretamente do banco...');
+            
+            const response = await fetch('api-admin.php?action=get_normalizations', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                console.warn('⚠️ Erro ao buscar normalizações do banco:', response.status);
+                return {};
+            }
+            
+            const data = await response.json();
+            
+            if (data.success && data.normalizations) {
+                console.log(`✅ ${Object.keys(data.normalizations).length} normalizações encontradas no banco`);
+                return data.normalizations;
+            }
+            
+            return {};
+        } catch (error) {
+            console.error('❌ Erro ao buscar normalizações:', error);
+            return {};
+        }
     }
 
     /**
      * Aplicar conteúdo carregado do banco incluindo normalizações
      */
-    applyContentFromDatabase(contentMap) {
+    async applyContentFromDatabase(contentMap) {
         try {
             let appliedNormalizations = 0;
             let elementsWithNormalization = 0;
             
             console.log('🔍 Verificando normalizações no contentMap...');
             
+            // Primeiro, tentar aplicar normalizações do contentMap
             Object.keys(contentMap).forEach(key => {
                 const content = contentMap[key];
                 
+                // Verificar todas as possíveis localizações dos dados de normalização
+                const normalizationData = content && (
+                    content.normalization || 
+                    (content.properties && content.properties.normalization) ||
+                    (content.elementInfo && content.elementInfo.normalization)
+                );
+                
                 // Debug: Verificar se tem dados de normalização
-                if (content && content.normalization) {
+                if (normalizationData) {
                     elementsWithNormalization++;
-                    console.log(`📋 Elemento com normalização encontrado: ${key}`, content.normalization);
+                    console.log(`📋 Elemento com normalização encontrado: ${key}`, normalizationData);
                     
-                    if (content.normalization.normalized) {
+                    if (normalizationData.normalized || normalizationData.target_width) {
                         const element = document.querySelector(`[data-key="${key}"]`);
                         
                         if (element) {
                             console.log(`🎯 Aplicando normalização para: ${key}`, {
-                                width: content.normalization.target_width,
-                                height: content.normalization.target_height,
-                                element: element.tagName
+                                width: normalizationData.target_width,
+                                height: normalizationData.target_height
                             });
                             
-                            // Aplicar dados de propriedades ao elemento
-                            element.setAttribute('data-properties', JSON.stringify({
-                                normalization: content.normalization
-                            }));
-                            
                             // Aplicar normalização
-                            if (this.applyNormalizationFromDatabase(element)) {
+                            if (this.applyNormalizationFromDatabase(element, key, normalizationData)) {
                                 appliedNormalizations++;
                                 console.log(`✅ Normalização aplicada com sucesso: ${key}`);
                             } else {
@@ -2174,10 +2285,30 @@ class HardemImageEditor {
                             console.warn(`❌ Elemento não encontrado para normalização: ${key}`);
                         }
                     } else {
-                        console.log(`⚠️ Normalização não marcada como ativa: ${key}`, content.normalization);
+                        console.log(`⚠️ Normalização não marcada como ativa: ${key}`, normalizationData);
                     }
                 }
             });
+            
+            // Se não encontrou normalizações no contentMap, buscar diretamente do banco
+            if (elementsWithNormalization === 0) {
+                console.log('🔄 Nenhuma normalização encontrada no contentMap, buscando diretamente do banco...');
+                const bankNormalizations = await this.fetchNormalizationsFromDatabase();
+                
+                Object.keys(bankNormalizations).forEach(key => {
+                    const normalizationData = bankNormalizations[key];
+                    const element = document.querySelector(`[data-key="${key}"]`);
+                    
+                    if (element && normalizationData) {
+                        console.log(`🎯 Aplicando normalização do banco para: ${key}`, normalizationData);
+                        
+                        if (this.applyNormalizationFromDatabase(element, key, normalizationData)) {
+                            appliedNormalizations++;
+                            console.log(`✅ Normalização do banco aplicada: ${key}`);
+                        }
+                    }
+                });
+            }
             
             console.log(`📊 Resumo de normalizações: ${elementsWithNormalization} encontradas, ${appliedNormalizations} aplicadas`);
             

@@ -913,33 +913,33 @@ class HardemEditorUI {
                         <strong>Status:</strong> ${isCurrentNormalized ? 
                             `✅ Normalizado (${currentElement.getAttribute('data-target-width')}x${currentElement.getAttribute('data-target-height')})` : 
                             '📏 Tamanho original'}
-                </div>
+                    </div>
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px;">
                         <button onclick="window.hardemEditor.ui.normalizeCurrentElement()" 
                             style="background: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">
                             🎯 Normalizar Este
-                    </button>
+                        </button>
                     
                         <button onclick="window.hardemEditor.ui.removeCurrentNormalization()" 
                                 style="background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;"
                                 ${!isCurrentNormalized ? 'disabled' : ''}>
                             🗑️ Remover
-                    </button>
-                </div>
-                
-                <div style="margin-bottom: 15px;">
-                        <label style="font-size: 12px; font-weight: bold; margin-bottom: 5px; display: block;">Dimensões Específicas:</label>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 80px; gap: 5px; align-items: center;">
-                            <input type="number" id="hardem-normalize-width" placeholder="Largura" value="${isCurrentNormalized ? currentElement.getAttribute('data-target-width') : '400'}" 
-                               style="padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;">
-                            <input type="number" id="hardem-normalize-height" placeholder="Altura" value="${isCurrentNormalized ? currentElement.getAttribute('data-target-height') : '300'}" 
-                               style="padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;">
-                            <button onclick="window.hardemEditor.ui.normalizeCurrentToCustomDimensions()" 
-                                style="background: #6f42c1; color: white; border: none; padding: 6px; border-radius: 4px; cursor: pointer; font-size: 11px;">
-                            ⚙️ Aplicar
                         </button>
                     </div>
+                
+                    <div style="margin-bottom: 15px;">
+                        <label style="font-size: 12px; font-weight: bold; margin-bottom: 5px; display: block;">Dimensões Específicas:</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 80px; gap: 5px; align-items: center;">
+                            <input type="number" id="hardem-normalize-width" placeholder="Largura" value="${isCurrentNormalized ? currentElement.getAttribute('data-target-width') : '300'}" 
+                                style="padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;">
+                            <input type="number" id="hardem-normalize-height" placeholder="Altura" value="${isCurrentNormalized ? currentElement.getAttribute('data-target-height') : '300'}" 
+                                style="padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;">
+                            <button onclick="window.hardemEditor.ui.normalizeCurrentToCustomDimensions()" 
+                                style="background: #6f42c1; color: white; border: none; padding: 6px; border-radius: 4px; cursor: pointer; font-size: 11px;">
+                                ⚙️ Aplicar
+                            </button>
+                        </div>
                     </div>
                 ` : `
                     <div style="background: #fff3cd; padding: 10px; border-radius: 4px; margin-bottom: 15px; border-left: 4px solid #ffc107;">
@@ -1346,6 +1346,44 @@ class HardemEditorUI {
         if (this.core && this.core.storage) {
             await this.core.storage.saveContentInPartsWrapper();
         }
+    }
+
+    /**
+     * Normalizar elemento atual com dimensões personalizadas
+     */
+    normalizeCurrentToCustomDimensions() {
+        const currentElement = this.core.currentElement;
+        if (!currentElement) {
+            this.showAlert('⚠️ Nenhum elemento selecionado para normalizar!', 'warning');
+            return;
+        }
+
+        // Obter valores dos inputs
+        const widthInput = document.getElementById('hardem-normalize-width');
+        const heightInput = document.getElementById('hardem-normalize-height');
+
+        if (!widthInput || !heightInput) {
+            this.showAlert('⚠️ Campos de dimensões não encontrados!', 'error');
+            return;
+        }
+
+        const width = parseInt(widthInput.value);
+        const height = parseInt(heightInput.value);
+
+        if (isNaN(width) || isNaN(height) || width <= 0 || height <= 0) {
+            this.showAlert('⚠️ Por favor, insira dimensões válidas!', 'warning');
+            return;
+        }
+
+        const targetDimensions = {
+            width: width,
+            height: height
+        };
+
+        // Usar o imageEditor para aplicar a normalização
+        this.core.imageEditor.normalizeIndividualImage(currentElement, targetDimensions);
+        
+        this.showAlert(`✅ Dimensões personalizadas aplicadas: ${width}x${height}px`, 'success');
     }
 }
 

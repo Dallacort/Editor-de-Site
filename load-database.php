@@ -234,7 +234,7 @@ function processarImagens($imagens, &$stats) {
     $imagensProcessadas = [];
 
     foreach ($imagens as $imagem) {
-        $key = $imagem['chave'];
+        $key = $imagem['chave'] ?? $imagem['contexto'];
 
         if (isset($imagensProcessadas[$key])) {
             continue; // Já processamos a melhor versão deste contexto
@@ -253,14 +253,16 @@ function processarImagens($imagens, &$stats) {
             'storage_type' => 'database'
         ];
         
+        // Processar propriedades
         if (!empty($imagem['propriedades'])) {
             $elementInfo = json_decode($imagem['propriedades'], true);
             if (json_last_error() === JSON_ERROR_NONE) {
-                // Adiciona o objeto 'normalization' diretamente se ele existir
+                // Adiciona o objeto 'normalization' diretamente no nível raiz
                 if (isset($elementInfo['normalization'])) {
                     $imageData['normalization'] = $elementInfo['normalization'];
+                    safeLog("✅ Normalização carregada para {$key}: " . json_encode($elementInfo['normalization']));
                 }
-                // Adiciona todas as propriedades sob 'elementInfo' para consistência
+                // Mantém todas as propriedades no elementInfo também
                 $imageData['elementInfo'] = $elementInfo;
             }
         }

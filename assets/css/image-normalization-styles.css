@@ -98,22 +98,23 @@ img[data-normalized="true"]:hover {
 /* Loading placeholder para imagens normalizadas */
 img[data-normalized="true"]:not([src]),
 img[data-normalized="true"][src=""] {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: shimmer 2s infinite;
+    background-color: #f0f0f0;
+    position: relative;
 }
 
-@keyframes shimmer {
-    0% {
-        background-position: -200% 0;
-    }
-    100% {
-        background-position: 200% 0;
-    }
+img[data-normalized="true"]:not([src])::after,
+img[data-normalized="true"][src=""]::after {
+    content: "Carregando...";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #888;
+    font-size: 14px;
 }
 
-/* Indicador visual para imagens normalizadas (apenas em modo debug) */
-body.hardem-debug img[data-normalized="true"]::after {
+/* Indicadores visuais para modo de debug */
+body.hardem-debug img[data-normalized="true"]::before {
     content: "✅ Normalizada";
     position: absolute;
     top: 5px;
@@ -133,7 +134,7 @@ body.hardem-debug [data-normalized="true"][style*="background-image"]::before {
     position: absolute;
     top: 5px;
     left: 5px;
-    background: rgba(40, 167, 69, 0.9);
+    background: rgba(0, 123, 255, 0.9);
     color: white;
     padding: 2px 6px;
     border-radius: 3px;
@@ -143,26 +144,7 @@ body.hardem-debug [data-normalized="true"][style*="background-image"]::before {
     pointer-events: none;
 }
 
-/* Correções para carrosséis/slides */
-.swiper-slide img[data-normalized="true"],
-.carousel-item img[data-normalized="true"] {
-    transform: none !important; /* Desabilitar transformações em slides */
-}
-
-.swiper-slide img[data-normalized="true"]:hover,
-.carousel-item img[data-normalized="true"]:hover {
-    transform: none !important;
-}
-
-/* Estilos para modo escuro */
-@media (prefers-color-scheme: dark) {
-    img[data-normalized="true"]:not([src]),
-    img[data-normalized="true"][src=""] {
-        background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
-    }
-}
-
-/* Utilitários para diferentes proporções */
+/* Classes de proporção para imagens normalizadas */
 .hardem-aspect-16-9 {
     aspect-ratio: 16/9;
 }
@@ -186,31 +168,8 @@ body.hardem-debug [data-normalized="true"][style*="background-image"]::before {
     width: auto !important;
     height: auto !important;
     object-fit: initial !important;
+    object-position: initial !important;
     background-size: initial !important;
+    background-position: initial !important;
+    transform: none !important;
 }
-
-/* Correções para elementos específicos */
-.logo img[data-normalized="true"],
-.icon img[data-normalized="true"],
-nav img[data-normalized="true"] {
-    width: auto !important;
-    height: auto !important;
-    object-fit: contain !important;
-    max-width: 100%;
-    max-height: 100%;
-}
-
-/* Print styles */
-@media print {
-    img[data-normalized="true"] {
-        max-width: 100% !important;
-        /* REMOVIDO: height: auto !important; para permitir normalização na impressão */
-        object-fit: contain !important;
-        break-inside: avoid;
-    }
-    
-    .hardem-image-container {
-        break-inside: avoid;
-        page-break-inside: avoid;
-    }
-} 

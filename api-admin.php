@@ -5,11 +5,6 @@
  * @version 1.0.0
  */
 
-// Configurações de erro
-ini_set('display_errors', 0);
-ini_set('display_startup_errors', 0);
-error_reporting(0);
-
 // Headers CORS e JSON
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
@@ -86,6 +81,10 @@ try {
         // PROPRIEDADES DE ELEMENTOS
         case 'update_element_properties':
             handleUpdateElementProperties($db);
+            break;
+            
+        case 'get_normalizations':
+            handleGetNormalizations($db);
             break;
             
         // TEXTOS
@@ -558,7 +557,6 @@ function handleUploadImageDatabaseOnly($imageManager, $db) {
         $altText = $_POST['alt_text'] ?? '';
         $descricao = $_POST['descricao'] ?? '';
         $elementInfo = $_POST['element_info'] ?? '{}';
-        $isHeaderContent = isset($_POST['is_header_content']) ? (bool)$_POST['is_header_content'] : false;
         
         // Validar base64
         if (!base64_decode($dadosBase64, true)) {
@@ -579,7 +577,7 @@ function handleUploadImageDatabaseOnly($imageManager, $db) {
         $db->beginTransaction();
         
         try {
-            // Verificar se imagem já existe (mesmo hash + status ativo)
+            // 1. Verificar se imagem já existe (mesmo hash + status ativo)
             $existingImage = $db->query(
                 "SELECT id FROM imagens WHERE hash_md5 = ? AND status = 'ativo' LIMIT 1",
                 [$hashMd5]
@@ -604,7 +602,6 @@ function handleUploadImageDatabaseOnly($imageManager, $db) {
                     'alt_text' => $altText,
                     'descricao' => $descricao,
                     'status' => 'ativo',
-                    'data_upload' => date('Y-m-d H:i:s'),
                     'created_at' => date('Y-m-d H:i:s'),
                     'updated_at' => date('Y-m-d H:i:s')
                 ]);
@@ -612,17 +609,44 @@ function handleUploadImageDatabaseOnly($imageManager, $db) {
                 safeLog("Nova imagem inserida no banco - ID: {$imageId}");
             }
             
-            // 2. Criar relacionamento na tabela 'pagina_imagens'
-            $relationId = $db->insert('pagina_imagens', [
-                'pagina_id' => $pagina,
-                'imagem_id' => $imageId,
-                'contexto' => $dataKey,
-                'posicao' => 1,
-                'propriedades' => $elementInfo,
-                'status' => 'ativo',
-                'created_at' => date('Y-m-d H:i:s'),
-                'updated_at' => date('Y-m-d H:i:s')
-            ]);
+            // 2. Verificar se já existe um relacionamento ativo para este elemento
+            $existingRelation = $db->query("
+                SELECT id, imagem_id, propriedades 
+                FROM pagina_imagens 
+                WHERE pagina_id = ? AND contexto = ? AND status = 'ativo'
+                LIMIT 1
+            ", [$pagina, $dataKey]);
+            
+            if (!empty($existingRelation)) {
+                // Atualizar relacionamento existente
+                $currentRelation = $existingRelation[0];
+                $currentProperties = json_decode($currentRelation['propriedades'], true) ?: [];
+                $newProperties = json_decode($elementInfo, true) ?: [];
+                $mergedProperties = array_merge($currentProperties, $newProperties);
+                
+                $db->update('pagina_imagens', [
+                    'imagem_id' => $imageId,
+                    'propriedades' => json_encode($mergedProperties),
+                    'updated_at' => date('Y-m-d H:i:s')
+                ], "id = ?", [$currentRelation['id']]);
+                
+                safeLog("Relacionamento existente atualizado: {$currentRelation['id']}");
+                
+            } else {
+                // Criar novo relacionamento
+                $relationId = $db->insert('pagina_imagens', [
+                    'pagina_id' => $pagina,
+                    'imagem_id' => $imageId,
+                    'contexto' => $dataKey,
+                    'posicao' => 0,
+                    'propriedades' => $elementInfo,
+                    'status' => 'ativo',
+                    'created_at' => date('Y-m-d H:i:s'),
+                    'updated_at' => date('Y-m-d H:i:s')
+                ]);
+                
+                safeLog("Novo relacionamento criado: {$relationId}");
+            }
             
             $db->commit();
             
@@ -673,71 +697,128 @@ function handleUpdateElementProperties($db) {
         
         safeLog("Atualizando propriedades do elemento: {$elementKey} na página: {$pageId}");
         
-        $db->beginTransaction();
+        // Buscar registros existentes
+        $existingRecords = $db->query("
+            SELECT 
+                pi.id as relacionamento_id,
+                pi.imagem_id,
+                i.id as real_image_id,
+                pi.propriedades
+            FROM pagina_imagens pi
+            LEFT JOIN imagens i ON i.id = pi.imagem_id
+            WHERE pi.pagina_id = ? 
+            AND pi.contexto = ?
+            AND pi.status = 'ativo'
+            ORDER BY pi.id DESC
+            LIMIT 1
+        ", [$pageId, $elementKey]);
         
-        try {
-            // Verificar se já existe relacionamento
-            $existingRelation = $db->query("
-                SELECT id, propriedades 
-                FROM pagina_imagens 
-                WHERE pagina_id = ? AND contexto = ? AND status = 'ativo' 
-                LIMIT 1
-            ", [$pageId, $elementKey]);
+        if (!empty($existingRecords)) {
+            $record = $existingRecords[0];
+            $relacionamentoId = $record['relacionamento_id'];
+            $imagemId = $record['real_image_id'] ?: $record['imagem_id'];
             
-            if (!empty($existingRelation)) {
-                // Atualizar relacionamento existente
-                $relationId = $existingRelation[0]['id'];
-                
-                // Mesclar propriedades existentes com novas
-                $existingProps = [];
-                if (!empty($existingRelation[0]['propriedades'])) {
-                    $existingProps = json_decode($existingRelation[0]['propriedades'], true) ?: [];
-                }
-                
-                $mergedProperties = array_merge($existingProps, $propertiesData);
-                
-                $db->update('pagina_imagens', [
-                    'propriedades' => json_encode($mergedProperties, JSON_UNESCAPED_UNICODE),
-                    'updated_at' => date('Y-m-d H:i:s')
-                ], 'id = ?', [$relationId]);
-                
-                safeLog("Propriedades atualizadas no relacionamento existente: {$relationId}");
-                
-            } else {
-                // Criar novo relacionamento apenas para propriedades
-                $relationId = $db->insert('pagina_imagens', [
-                    'pagina_id' => $pageId,
-                    'imagem_id' => 0, // ID fictício para elementos sem imagem
-                    'contexto' => $elementKey,
-                    'posicao' => 0,
-                    'propriedades' => json_encode($propertiesData, JSON_UNESCAPED_UNICODE),
-                    'status' => 'ativo',
-                    'created_at' => date('Y-m-d H:i:s'),
-                    'updated_at' => date('Y-m-d H:i:s')
-                ]);
-                
-                safeLog("Novo relacionamento criado para propriedades: {$relationId}");
-            }
+            // Mesclar propriedades existentes com as novas
+            $existingProperties = json_decode($record['propriedades'], true) ?: [];
+            $mergedProperties = array_merge($existingProperties, $propertiesData);
             
-            $db->commit();
+            // Atualizar o registro existente
+            $db->update('pagina_imagens', [
+                'propriedades' => json_encode($mergedProperties),
+                'updated_at' => date('Y-m-d H:i:s')
+            ], "id = ?", [$relacionamentoId]);
             
-            sendJsonResponse([
+            safeLog("Propriedades atualizadas no relacionamento existente: {$relacionamentoId}");
+            
+            echo json_encode([
                 'success' => true,
-                'message' => 'Propriedades do elemento atualizadas com sucesso!',
-                'element_key' => $elementKey,
-                'page_id' => $pageId,
-                'relation_id' => $relationId,
-                'properties' => $propertiesData
+                'message' => 'Propriedades atualizadas com sucesso',
+                'relacionamento_id' => $relacionamentoId,
+                'imagem_id' => $imagemId
+            ]);
+        } else {
+            // Buscar imagem relacionada ao elemento usando JOIN em vez de subconsulta
+            $imageRecords = $db->query("
+                SELECT i.id 
+                FROM imagens i
+                JOIN pagina_imagens pi ON i.id = pi.imagem_id
+                WHERE i.status = 'ativo' 
+                AND pi.contexto = ? 
+                AND pi.status = 'ativo'
+                ORDER BY pi.id DESC 
+                LIMIT 1
+            ", [$elementKey]);
+            
+            $imagemId = !empty($imageRecords) ? $imageRecords[0]['id'] : 0;
+            
+            // Criar novo relacionamento
+            $relacionamentoId = $db->insert('pagina_imagens', [
+                'pagina_id' => $pageId,
+                'imagem_id' => $imagemId,
+                'contexto' => $elementKey,
+                'posicao' => 0,
+                'propriedades' => json_encode($propertiesData),
+                'status' => 'ativo',
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s')
             ]);
             
-        } catch (Exception $e) {
-            $db->rollback();
-            throw $e;
+            safeLog("Novo relacionamento criado para propriedades: {$relacionamentoId}");
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Novo relacionamento criado com sucesso',
+                'relacionamento_id' => $relacionamentoId,
+                'imagem_id' => $imagemId
+            ]);
         }
         
     } catch (Exception $e) {
-        safeLog("Erro ao atualizar propriedades do elemento: " . $e->getMessage());
-        throw new Exception("Erro ao atualizar propriedades: " . $e->getMessage());
+        safeLog("Erro ao atualizar propriedades: " . $e->getMessage());
+        safeLog("Stack trace: " . $e->getTraceAsString());
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Erro ao atualizar propriedades: ' . $e->getMessage()
+        ]);
+    }
+}
+
+function handleGetNormalizations($db) {
+    try {
+        // Buscar todas as normalizações ativas
+        $normalizations = $db->query("
+            SELECT contexto, propriedades 
+            FROM pagina_imagens 
+            WHERE propriedades IS NOT NULL 
+            AND propriedades LIKE '%normalization%' 
+            AND status = 'ativo'
+            ORDER BY updated_at DESC
+        ");
+        
+        $result = [];
+        
+        foreach ($normalizations as $item) {
+            $contexto = $item['contexto'];
+            $propriedades = $item['propriedades'];
+            
+            if (!empty($propriedades)) {
+                $decoded = json_decode($propriedades, true);
+                if (json_last_error() === JSON_ERROR_NONE && isset($decoded['normalization'])) {
+                    $result[$contexto] = $decoded['normalization'];
+                }
+            }
+        }
+        
+        safeLog("Buscadas " . count($result) . " normalizações do banco");
+        
+        sendJsonResponse([
+            'success' => true,
+            'normalizations' => $result
+        ]);
+        
+    } catch (Exception $e) {
+        throw new Exception("Erro ao buscar normalizações: " . $e->getMessage());
     }
 }
 

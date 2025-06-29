@@ -118,7 +118,10 @@ class ImageManager {
             'thumbnail_base64' => $thumbnailBase64,  // Thumbnail em base64
             'hash_md5' => $hash,
             'alt_text' => $imageData['alt'] ?? '',
-            'descricao' => $imageData['title'] ?? ''
+            'descricao' => $imageData['title'] ?? '',
+            'status' => 'ativo',
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
         ]);
         
         // Relacionar com página se especificado
@@ -156,10 +159,13 @@ class ImageManager {
             'nome_original' => $imageData['alt'] ?? basename($url),
             'tipo_mime' => 'image/unknown',
             'tamanho' => 0,
-            'url_externo' => $url,  // URL externa
+            'url_arquivo' => $url,  // URL externa
             'hash_md5' => $hash,
             'alt_text' => $imageData['alt'] ?? '',
-            'descricao' => $imageData['title'] ?? ''
+            'descricao' => $imageData['title'] ?? '',
+            'status' => 'ativo',
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
         ]);
         
         if ($pageId) {
