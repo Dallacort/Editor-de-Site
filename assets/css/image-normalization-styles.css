@@ -173,3 +173,61 @@ body.hardem-debug [data-normalized="true"][style*="background-image"]::before {
     background-position: initial !important;
     transform: none !important;
 }
+
+/**
+ * HARDEM Editor - Estilos de Normalização de Imagens
+ * Garante que backgrounds e imagens sejam exibidos corretamente
+ */
+
+/* Regras gerais para backgrounds */
+[data-hardem-type="background"] {
+    background-size: cover !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+}
+
+/* Regras específicas para elementos com bg-1 e bg-2 */
+.about-right-wrapper-rour .single-right-content.bg-1 {
+    background-image: url(../images/about/06.webp) !important;
+    background-size: cover !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    height: 232px !important;
+    width: 492px !important;
+    margin-bottom: 20px !important;
+}
+
+.about-right-wrapper-rour .single-right-content.bg-2 {
+    background-image: url(../images/about/07.webp) !important;
+    background-size: cover !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    height: 232px !important;
+    width: 492px !important;
+}
+
+/* Regras responsivas */
+@media only screen and (max-width: 575px) {
+    .about-right-wrapper-rour .single-right-content {
+        width: 100% !important;
+    }
+}
+
+/* Regras para elementos editáveis */
+.hardem-editable-element[data-hardem-type="background"] {
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+/* Regras para elementos com data-key específicos */
+[data-key*="div-single-right-content-bg"] {
+    background-size: cover !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    min-height: 232px !important;
+}
+
+/* Regras de fallback */
+.about-right-wrapper-rour .single-right-content:not([style*="background-image"]) {
+    background-color: #f5f5f5 !important;
+}

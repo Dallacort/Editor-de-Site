@@ -8,14 +8,48 @@
 header('Cache-Control: public, max-age=31536000'); // Cache por 1 ano
 header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 31536000) . ' GMT');
 
+// Log seguro
+function safeLog($message) {
+    $logFile = __DIR__ . '/hardem-editor.log';
+    $timestamp = date('Y-m-d H:i:s');
+    file_put_contents($logFile, "[$timestamp] [SERVE-IMAGE] $message\n", FILE_APPEND | LOCK_EX);
+}
+
+// Função para servir imagem de fallback
+function serveDefaultImage($type = 'placeholder') {
+    $fallbackPath = '';
+    switch ($type) {
+        case 'background':
+            $fallbackPath = 'assets/images/about/06.webp';
+            break;
+        case 'background-2':
+            $fallbackPath = 'assets/images/about/07.webp';
+            break;
+        default:
+            $fallbackPath = 'assets/images/banner/01.webp';
+    }
+    
+    if (file_exists($fallbackPath)) {
+        $mime = mime_content_type($fallbackPath);
+        header('Content-Type: ' . $mime);
+        readfile($fallbackPath);
+        exit;
+    }
+    
+    // Se nem o fallback existir, retornar erro
+    http_response_code(404);
+    exit('Imagem não encontrada');
+}
+
 // Verificar parâmetros
 $imageId = $_GET['id'] ?? null;
 $type = $_GET['type'] ?? 'original'; // original ou thumbnail
 $download = isset($_GET['download']); // Force download
+$fallbackType = $_GET['fallback'] ?? 'placeholder'; // tipo de fallback
 
 if (!$imageId) {
-    http_response_code(400);
-    exit('ID da imagem obrigatório');
+    safeLog("Erro: ID da imagem não fornecido");
+    serveDefaultImage($fallbackType);
 }
 
 try {
@@ -24,12 +58,35 @@ try {
     
     $db = Database::getInstance();
     
-    // Buscar imagem no banco
-    $results = $db->query("SELECT * FROM imagens WHERE id = ? AND status = 'ativo'", [$imageId]);
+    // Buscar imagem no banco com retry
+    $maxRetries = 3;
+    $retryDelay = 1; // segundos
+    
+    for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+        try {
+            $results = $db->query("SELECT * FROM imagens WHERE id = ? AND status = 'ativo'", [$imageId]);
+            
+            if (!empty($results)) {
+                break; // Sucesso, sair do loop
+            }
+            
+            if ($attempt < $maxRetries) {
+                safeLog("Tentativa {$attempt} falhou, aguardando {$retryDelay}s antes de tentar novamente");
+                sleep($retryDelay);
+            }
+            
+        } catch (Exception $e) {
+            safeLog("Erro na tentativa {$attempt}: " . $e->getMessage());
+            if ($attempt === $maxRetries) {
+                throw $e; // Última tentativa falhou
+            }
+            sleep($retryDelay);
+        }
+    }
     
     if (empty($results)) {
-        http_response_code(404);
-        exit('Imagem não encontrada');
+        safeLog("Imagem não encontrada após {$maxRetries} tentativas: ID {$imageId}");
+        serveDefaultImage($fallbackType);
     }
     
     $image = $results[0];
@@ -49,16 +106,26 @@ try {
     }
     
     if (!$base64Data) {
-        http_response_code(404);
-        exit('Dados da imagem não encontrados');
+        safeLog("Dados da imagem não encontrados: ID {$imageId}, Tipo {$type}");
+        serveDefaultImage($fallbackType);
     }
     
-    // Decodificar base64
+    // Decodificar base64 com verificação
     $imageContent = base64_decode($base64Data);
     
     if ($imageContent === false) {
-        http_response_code(500);
-        exit('Erro ao decodificar imagem');
+        safeLog("Erro ao decodificar imagem: ID {$imageId}");
+        serveDefaultImage($fallbackType);
+    }
+    
+    // Verificar integridade da imagem
+    if (function_exists('imagecreatefromstring')) {
+        $testImage = @imagecreatefromstring($imageContent);
+        if ($testImage === false) {
+            safeLog("Imagem corrompida detectada: ID {$imageId}");
+            serveDefaultImage($fallbackType);
+        }
+        imagedestroy($testImage);
     }
     
     // Headers da imagem
@@ -87,8 +154,7 @@ try {
     echo $imageContent;
     
 } catch (Exception $e) {
-    error_log("Erro ao servir imagem: " . $e->getMessage());
-    http_response_code(500);
-    exit('Erro interno do servidor');
+    safeLog("Erro ao servir imagem: " . $e->getMessage());
+    serveDefaultImage($fallbackType);
 }
 ?> 

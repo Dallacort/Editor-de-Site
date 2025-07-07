@@ -11,23 +11,27 @@ class HardemImageEditor {
         // Sistema de controle de processamento múltiplo
         this.processingQueue = [];
         this.isProcessing = false;
-        this.maxConcurrentProcessing = 8; // Máximo 8 imagens por vez (foi 3)
+        this.maxConcurrentProcessing = 8;
         this.activeProcessing = new Set();
-        this.processedImages = new Map(); // Cache de imagens processadas
+        this.processedImages = new Map();
         
-        // Controle de memória - AUMENTADO para muitas imagens
-        this.maxMemoryUsage = 500 * 1024 * 1024; // 500MB máximo em memória (foi 50MB)
+        // Controle de memória
+        this.maxMemoryUsage = 500 * 1024 * 1024;
         this.currentMemoryUsage = 0;
         
         // Controle de debounce para salvar propriedades
         this.savePropertiesTimeout = null;
-        this.savePropertiesDelay = 1000; // 1 segundo de delay
+        this.savePropertiesDelay = 1000;
         
         // Iniciar monitoramento do sistema
-        setTimeout(() => this.monitorSystem(), 5000); // Aguardar 5s para inicializar
+        setTimeout(() => this.monitorSystem(), 5000);
         
         // NOVO: Monitorar imagens quebradas e tentar restaurar
         this.startBrokenImageMonitoring();
+        
+        // NOVO: Sistema de retry para imagens com erro
+        this.retryAttempts = new Map();
+        this.maxRetries = 3;
         
         console.log('🚀 Sistema de processamento de imagens inicializado com controle de fila');
     }
@@ -113,38 +117,22 @@ class HardemImageEditor {
      * Verificar se elemento tem background válido
      */
     hasValidBackgroundImage(element) {
-        const computedStyle = getComputedStyle(element);
-        const inlineBackground = element.style.backgroundImage;
-        const computedBackground = computedStyle.backgroundImage;
+        if (!element) return false;
+
+        // Verificar background-image via style
+        const style = window.getComputedStyle(element);
+        const bgImage = style.backgroundImage;
         
-        // Verificar se tem background
-        const hasBackground = (inlineBackground && inlineBackground !== 'none') ||
-                             (computedBackground && computedBackground !== 'none');
-        
-        if (!hasBackground) return false;
+        // Verificar background-image via classe
+        const hasBackgroundClass = element.classList.contains('bg_image') || 
+                                 element.classList.contains('bg-1') ||
+                                 element.classList.contains('bg-2') ||
+                                 element.classList.contains('bg-3') ||
+                                 element.classList.contains('bg-4') ||
+                                 element.classList.contains('bg_footer-1') ||
+                                 /bg[-_]/.test(element.className);
 
-        // Excluir gradientes
-        if ((inlineBackground && inlineBackground.includes('gradient')) ||
-            (computedBackground && computedBackground.includes('gradient'))) {
-            return false;
-        }
-
-        // NOVO: Regras especiais para footer - ser menos restritivo
-        if (element.tagName.toLowerCase() === 'footer' || 
-            element.classList.contains('footer') || 
-            element.closest('footer') ||
-            element.classList.contains('rts-footer')) {
-            // Para footers, aceitar qualquer tamanho desde que tenha background
-            console.log(`🦶 Footer background detectado: ${element.tagName}.${element.className}`);
-            return true;
-        }
-
-        // Verificar tamanho mínimo do elemento (regras normais para outros elementos)
-        if (element.offsetWidth < 100 || element.offsetHeight < 50) {
-            return false;
-        }
-
-        return true;
+        return bgImage && bgImage !== 'none' || hasBackgroundClass;
     }
 
     /**
@@ -715,10 +703,12 @@ class HardemImageEditor {
     }
 
     /**
-     * Redimensionar imagem de background
+     * Redimensionar imagem de background com sistema de retry
      */
-    resizeBackgroundImage(imageSrc, callback) {
+    resizeBackgroundImage(element, imageSrc, callback) {
         const img = new Image();
+        const dataKey = element.getAttribute('data-key');
+        
         img.onload = () => {
             try {
                 const canvas = document.createElement('canvas');
@@ -728,9 +718,9 @@ class HardemImageEditor {
                 const originalHeight = img.height;
                 
                 // Limites otimizados para backgrounds
-                const MAX_WIDTH = 1920;  // Reduzido de 2560
-                const MAX_HEIGHT = 1080; // Reduzido de 1440  
-                const MAX_FILE_SIZE = 1.5 * 1024 * 1024; // Reduzido para 1.5MB (de 5MB)
+                const MAX_WIDTH = 1920;
+                const MAX_HEIGHT = 1080;
+                const MAX_FILE_SIZE = 1.5 * 1024 * 1024;
                 
                 let newWidth = originalWidth;
                 let newHeight = originalHeight;
@@ -749,8 +739,7 @@ class HardemImageEditor {
                 canvas.height = newHeight;
                 ctx.drawImage(img, 0, 0, newWidth, newHeight);
                 
-                // Ajustar qualidade para backgrounds - otimizada
-                let quality = 0.7; // Reduzido de 0.85 para 0.7
+                let quality = 0.7;
                 let resizedSrc;
                 
                 do {
@@ -765,20 +754,58 @@ class HardemImageEditor {
                 } while (quality > 0.3);
                 
                 console.log(`🖼️ Background redimensionado: ${originalWidth}x${originalHeight} → ${newWidth}x${newHeight}, qualidade: ${quality}`);
+                
+                // Limpar tentativas de retry após sucesso
+                if (this.retryAttempts.has(dataKey)) {
+                    this.retryAttempts.delete(dataKey);
+                }
+                
                 callback(resizedSrc);
                 
             } catch (error) {
                 console.error('Erro ao redimensionar background:', error);
-                callback(imageSrc);
+                this.handleImageError(dataKey, imageSrc, callback);
             }
         };
         
         img.onerror = () => {
             console.error('Erro ao carregar background para redimensionamento');
-            callback(imageSrc);
+            this.handleImageError(dataKey, imageSrc, callback);
         };
         
         img.src = imageSrc;
+    }
+
+    /**
+     * NOVO: Sistema de retry para imagens com erro
+     */
+    handleImageError(dataKey, imageSrc, callback) {
+        const attempts = this.retryAttempts.get(dataKey) || 0;
+        
+        if (attempts < this.maxRetries) {
+            console.log(`🔄 Tentativa ${attempts + 1} de ${this.maxRetries} para ${dataKey}`);
+            this.retryAttempts.set(dataKey, attempts + 1);
+            
+            // Tentar novamente após um delay
+            setTimeout(() => {
+                const img = new Image();
+                img.onload = () => callback(imageSrc);
+                img.onerror = () => {
+                    if (attempts + 1 === this.maxRetries) {
+                        console.error(`❌ Todas as tentativas falharam para ${dataKey}`);
+                        this.core.ui.showAlert('Erro ao processar imagem após várias tentativas', 'error');
+                        callback(imageSrc);
+                    } else {
+                        this.handleImageError(dataKey, imageSrc, callback);
+                    }
+                };
+                img.src = imageSrc;
+            }, 1000 * (attempts + 1)); // Aumentar o delay a cada tentativa
+            
+        } else {
+            console.error(`❌ Desistindo após ${this.maxRetries} tentativas para ${dataKey}`);
+            callback(imageSrc);
+        }
     }
 
     /**
@@ -1225,7 +1252,7 @@ class HardemImageEditor {
     }
 
     /**
-     * Tornar background editável
+     * Tornar background editável com sistema de fallback
      */
     makeBackgroundImageEditable(element) {
         // Verificar se já foi processada
@@ -1237,11 +1264,19 @@ class HardemImageEditor {
         
         const dataKey = element.getAttribute('data-key') || this.core.utils.generateDataKey(element);
         element.setAttribute('data-key', dataKey);
-        element.setAttribute('data-hardem-type', 'background'); // Marcar como background
+        element.setAttribute('data-hardem-type', 'background');
+        
+        // NOVO: Aplicar background inicial se disponível no contentMap
+        if (this.core.contentMap[dataKey] && this.core.contentMap[dataKey].backgroundImage) {
+            element.style.setProperty('background-image', `url("${this.core.contentMap[dataKey].backgroundImage}")`, 'important');
+            element.style.setProperty('background-size', 'cover', 'important');
+            element.style.setProperty('background-position', 'center', 'important');
+            element.style.setProperty('background-repeat', 'no-repeat', 'important');
+        }
         
         element.title = `Editar background: ${dataKey}`;
         
-        // Eventos
+        // Eventos com retry em caso de falha
         const handleClick = (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -1251,13 +1286,75 @@ class HardemImageEditor {
         const handleDoubleClick = (e) => {
             e.preventDefault();
             e.stopPropagation();
+            
+            // NOVO: Sistema de retry para upload
+            const retryUpload = (attempts = 0) => {
+                try {
             this.uploadBackgroundImage(element);
+                } catch (error) {
+                    console.error(`Erro no upload (tentativa ${attempts + 1}):`, error);
+                    if (attempts < 2) { // Tentar no máximo 3 vezes
+                        setTimeout(() => retryUpload(attempts + 1), 1000);
+                    } else {
+                        this.core.ui.showAlert('Erro ao iniciar upload após várias tentativas', 'error');
+                    }
+                }
+            };
+            
+            retryUpload();
         };
 
         element.addEventListener('click', handleClick);
         element.addEventListener('dblclick', handleDoubleClick);
         
-        console.log(`🎨 Background editável: ${dataKey}`);
+        // NOVO: Monitorar mudanças no background
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                    const bgImage = window.getComputedStyle(element).backgroundImage;
+                    if (!bgImage || bgImage === 'none') {
+                        console.warn(`🔍 Background perdido em ${dataKey}, tentando restaurar...`);
+                        this.restoreBackground(element);
+                    }
+                }
+            });
+        });
+        
+        observer.observe(element, {
+            attributes: true,
+            attributeFilter: ['style']
+        });
+        
+        console.log(`🎨 Background editável configurado: ${dataKey}`);
+    }
+
+    /**
+     * NOVO: Restaurar background perdido
+     */
+    restoreBackground(element) {
+        const dataKey = element.getAttribute('data-key');
+        if (!dataKey) return;
+        
+        // Tentar restaurar do contentMap
+        if (this.core.contentMap[dataKey] && this.core.contentMap[dataKey].backgroundImage) {
+            console.log(`🔄 Restaurando background ${dataKey} do contentMap...`);
+            element.style.setProperty('background-image', `url("${this.core.contentMap[dataKey].backgroundImage}")`, 'important');
+            element.style.setProperty('background-size', 'cover', 'important');
+            element.style.setProperty('background-position', 'center', 'important');
+            element.style.setProperty('background-repeat', 'no-repeat', 'important');
+            return true;
+        }
+        
+        // Tentar restaurar baseado na classe
+        if (element.classList.contains('bg-1')) {
+            element.style.setProperty('background-image', 'url(assets/images/about/06.webp)', 'important');
+            return true;
+        } else if (element.classList.contains('bg-2')) {
+            element.style.setProperty('background-image', 'url(assets/images/about/07.webp)', 'important');
+            return true;
+        }
+        
+        return false;
     }
 
     /**
