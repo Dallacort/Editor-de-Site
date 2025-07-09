@@ -23,6 +23,13 @@ class HardemImageEditor {
         this.savePropertiesTimeout = null;
         this.savePropertiesDelay = 1000;
         
+        // NOVO: Sistema de controle de z-index
+        this.zIndexManager = {
+            currentMaxZIndex: 1000,
+            imageZIndexMap: new Map(),
+            backgroundZIndexMap: new Map()
+        };
+        
         // Iniciar monitoramento do sistema
         setTimeout(() => this.monitorSystem(), 5000);
         
@@ -33,7 +40,7 @@ class HardemImageEditor {
         this.retryAttempts = new Map();
         this.maxRetries = 3;
         
-        console.log('🚀 Sistema de processamento de imagens inicializado com controle de fila');
+        console.log('🚀 Sistema de processamento de imagens inicializado com controle de fila e z-index');
     }
 
     /**
@@ -85,6 +92,9 @@ class HardemImageEditor {
         });
 
         console.log(`✅ Elementos de imagem configurados: ${imageCount} imagens, ${backgroundCount} backgrounds`);
+        
+        // Restaurar z-indexes salvos
+        this.restoreZIndexes(container);
         
         // Restaurar normalizações salvas no banco de dados
         this.restoreNormalizationsFromDatabase(container);
@@ -340,6 +350,9 @@ class HardemImageEditor {
                         // Aplicar nova imagem
                         imgElement.src = resizedSrc;
                         
+                        // NOVO: Aplicar z-index automático para nova imagem
+                        this.applyAutoZIndex(imgElement);
+                        
                         // NOVO: Aplicar estilos normalizados se temos dimensões alvo
                         if (this.defaultImageDimensions) {
                             this.applyNormalizedImageStyles(imgElement, this.defaultImageDimensions);
@@ -421,6 +434,9 @@ class HardemImageEditor {
                     try {
                         // Aplicar background
                         element.style.setProperty('background-image', `url("${resizedSrc}")`, 'important');
+                        
+                        // NOVO: Aplicar z-index automático para novo background
+                        this.applyAutoZIndex(element);
                         
                         // NOVO: Aplicar dimensões normalizadas se disponível
                         if (this.defaultImageDimensions) {
@@ -509,6 +525,9 @@ class HardemImageEditor {
                         
                         // Aplicar nova imagem
                         imgElement.src = resizedSrc;
+                        
+                        // NOVO: Aplicar z-index automático para nova imagem de slide
+                        this.applyAutoZIndex(imgElement);
                         
                         // NOVO: Aplicar estilos normalizados para slides
                         if (this.defaultImageDimensions) {
@@ -2423,6 +2442,169 @@ class HardemImageEditor {
         } catch (error) {
             console.error('Erro ao aplicar conteúdo do banco:', error);
         }
+    }
+
+    /**
+     * Obter próximo z-index disponível
+     */
+    getNextZIndex() {
+        this.zIndexManager.currentMaxZIndex += 10;
+        return this.zIndexManager.currentMaxZIndex;
+    }
+
+    /**
+     * Aplicar z-index a um elemento de imagem
+     */
+    applyZIndex(element, zIndex = null) {
+        if (!element) return;
+        
+        const dataKey = element.getAttribute('data-key');
+        if (!dataKey) return;
+        
+        // Se não foi fornecido z-index, usar o próximo disponível
+        if (zIndex === null) {
+            zIndex = this.getNextZIndex();
+        }
+        
+        // Aplicar z-index
+        element.style.setProperty('z-index', zIndex, 'important');
+        element.style.setProperty('position', 'relative', 'important');
+        
+        // Salvar no mapa de controle
+        if (element.tagName.toLowerCase() === 'img') {
+            this.zIndexManager.imageZIndexMap.set(dataKey, zIndex);
+        } else {
+            this.zIndexManager.backgroundZIndexMap.set(dataKey, zIndex);
+        }
+        
+        console.log(`🔄 Z-index aplicado: ${dataKey} = ${zIndex}`);
+    }
+
+    /**
+     * Trazer elemento para frente
+     */
+    bringToFront(element) {
+        if (!element) return;
+        
+        const dataKey = element.getAttribute('data-key');
+        const newZIndex = this.getNextZIndex();
+        
+        this.applyZIndex(element, newZIndex);
+        
+        // Salvar no contentMap
+        if (!this.core.contentMap[dataKey]) {
+            this.core.contentMap[dataKey] = {};
+        }
+        this.core.contentMap[dataKey].zIndex = newZIndex;
+        
+        // Feedback visual
+        if (this.core && this.core.ui) {
+            this.core.ui.showAlert(`📏 Elemento trazido para frente (z-index: ${newZIndex})`, 'success');
+        }
+        
+        console.log(`⬆️ Elemento trazido para frente: ${dataKey} (z-index: ${newZIndex})`);
+    }
+
+    /**
+     * Enviar elemento para trás
+     */
+    sendToBack(element) {
+        if (!element) return;
+        
+        const dataKey = element.getAttribute('data-key');
+        const newZIndex = 1; // Z-index baixo
+        
+        this.applyZIndex(element, newZIndex);
+        
+        // Salvar no contentMap
+        if (!this.core.contentMap[dataKey]) {
+            this.core.contentMap[dataKey] = {};
+        }
+        this.core.contentMap[dataKey].zIndex = newZIndex;
+        
+        // Feedback visual
+        if (this.core && this.core.ui) {
+            this.core.ui.showAlert(`📏 Elemento enviado para trás (z-index: ${newZIndex})`, 'info');
+        }
+        
+        console.log(`⬇️ Elemento enviado para trás: ${dataKey} (z-index: ${newZIndex})`);
+    }
+
+    /**
+     * Restaurar z-index salvo
+     */
+    restoreZIndex(element) {
+        if (!element) return;
+        
+        const dataKey = element.getAttribute('data-key');
+        const content = this.core.contentMap[dataKey];
+        
+        if (content && content.zIndex) {
+            this.applyZIndex(element, content.zIndex);
+            console.log(`🔄 Z-index restaurado: ${dataKey} = ${content.zIndex}`);
+        }
+    }
+
+    /**
+     * Restaurar z-indexes salvos para todos os elementos
+     */
+    restoreZIndexes(container = document) {
+        const elements = container.querySelectorAll('[data-key]');
+        let restoredCount = 0;
+        
+        elements.forEach(element => {
+            const dataKey = element.getAttribute('data-key');
+            const content = this.core.contentMap[dataKey];
+            
+            if (content && content.zIndex) {
+                this.applyZIndex(element, content.zIndex);
+                restoredCount++;
+            }
+        });
+        
+        if (restoredCount > 0) {
+            console.log(`🔄 ${restoredCount} z-indexes restaurados`);
+        }
+    }
+
+    /**
+     * Aplicar z-index automaticamente para novas imagens
+     */
+    applyAutoZIndex(element) {
+        if (!element) return;
+        
+        const dataKey = element.getAttribute('data-key');
+        if (!dataKey) return;
+        
+        // Verificar se já tem z-index definido
+        const existingZIndex = this.core.contentMap[dataKey] && this.core.contentMap[dataKey].zIndex;
+        
+        if (!existingZIndex) {
+            // Aplicar z-index automático para novas imagens
+            const newZIndex = this.getNextZIndex();
+            this.applyZIndex(element, newZIndex);
+            
+            // Salvar no contentMap
+            if (!this.core.contentMap[dataKey]) {
+                this.core.contentMap[dataKey] = {};
+            }
+            this.core.contentMap[dataKey].zIndex = newZIndex;
+            
+            console.log(`🆕 Z-index automático aplicado para nova imagem: ${dataKey} = ${newZIndex}`);
+        }
+    }
+
+    /**
+     * Obter estatísticas do sistema de z-index
+     */
+    getZIndexStats() {
+        return {
+            currentMaxZIndex: this.zIndexManager.currentMaxZIndex,
+            totalImages: this.zIndexManager.imageZIndexMap.size,
+            totalBackgrounds: this.zIndexManager.backgroundZIndexMap.size,
+            imageZIndexes: Array.from(this.zIndexManager.imageZIndexMap.entries()),
+            backgroundZIndexes: Array.from(this.zIndexManager.backgroundZIndexMap.entries())
+        };
     }
 }
 

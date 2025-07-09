@@ -4,6 +4,15 @@
  * @version 1.0.0
  */
 
+/* Estilos para controle de z-index */
+.hardem-editable-element {
+    position: relative;
+}
+
+.hardem-editable-element[style*="z-index"] {
+    position: relative !important;
+}
+
 /* Container para imagens normalizadas */
 .hardem-image-container {
     display: inline-block;

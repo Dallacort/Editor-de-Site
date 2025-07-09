@@ -809,6 +809,7 @@ class HardemEditorUI {
     generateImagePanelHTML(element, content) {
         const currentSrc = content.src || element.src;
         const currentAlt = content.alt || element.alt || '';
+        const currentZIndex = element.style.zIndex || 'auto';
         
         return `
             <div class="hardem-form-group">
@@ -826,6 +827,23 @@ class HardemEditorUI {
                 <label for="hardem-alt-input">Texto Alternativo:</label>
                 <input type="text" id="hardem-alt-input" value="${currentAlt}" placeholder="Descrição da imagem">
             </div>
+            <hr>
+            <div class="hardem-form-group">
+                <label><strong>📏 Ordem de Profundidade (Z-Index: ${currentZIndex})</strong></label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+                    <button onclick="window.hardemEditor.imageEditor.bringToFront(window.hardemEditor.core.currentElement)" 
+                            style="background: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                        ⬆️ Trazer para Frente
+                    </button>
+                    <button onclick="window.hardemEditor.imageEditor.sendToBack(window.hardemEditor.core.currentElement)" 
+                            style="background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                        ⬇️ Enviar para Trás
+                    </button>
+                </div>
+                <div style="margin-top: 8px; font-size: 11px; color: #6c757d;">
+                    💡 Use estes botões para controlar se a imagem aparece na frente ou atrás de outras imagens.
+                </div>
+            </div>
         `;
     }
 
@@ -837,6 +855,7 @@ class HardemEditorUI {
         const currentAlt = content.alt || element.alt || '';
         const slideElement = element.closest('.swiper-slide');
         const slideIndex = Array.from(slideElement.parentNode.children).indexOf(slideElement);
+        const currentZIndex = element.style.zIndex || 'auto';
         
         return `
             <h4>🖼️ Imagem do Slide ${slideIndex + 1}</h4>
@@ -857,6 +876,23 @@ class HardemEditorUI {
             </div>
             <hr>
             <div class="hardem-form-group">
+                <label><strong>📏 Ordem de Profundidade (Z-Index: ${currentZIndex})</strong></label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+                    <button onclick="window.hardemEditor.imageEditor.bringToFront(window.hardemEditor.core.currentElement)" 
+                            style="background: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                        ⬆️ Trazer para Frente
+                    </button>
+                    <button onclick="window.hardemEditor.imageEditor.sendToBack(window.hardemEditor.core.currentElement)" 
+                            style="background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                        ⬇️ Enviar para Trás
+                    </button>
+                </div>
+                <div style="margin-top: 8px; font-size: 11px; color: #6c757d;">
+                    💡 Use estes botões para controlar se a imagem aparece na frente ou atrás de outros elementos no slide.
+                </div>
+            </div>
+            <hr>
+            <div class="hardem-form-group">
                 <label><strong>💡 Dica:</strong> Esta é uma imagem dentro de um slide do carrossel.</label>
                 <label>Para alterar o fundo do slide inteiro, clique no fundo do slide.</label>
             </div>
@@ -870,6 +906,7 @@ class HardemEditorUI {
         const currentBg = content.backgroundImage || 
                          element.style.backgroundImage || 
                          getComputedStyle(element).backgroundImage;
+        const currentZIndex = element.style.zIndex || 'auto';
         
         return `
             <div class="hardem-form-group">
@@ -882,6 +919,23 @@ class HardemEditorUI {
                 <button onclick="window.hardemEditor.imageEditor.uploadBackgroundFromPanel()">
                     📤 Upload Background
                 </button>
+            </div>
+            <hr>
+            <div class="hardem-form-group">
+                <label><strong>📏 Ordem de Profundidade (Z-Index: ${currentZIndex})</strong></label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+                    <button onclick="window.hardemEditor.imageEditor.bringToFront(window.hardemEditor.core.currentElement)" 
+                            style="background: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                        ⬆️ Trazer para Frente
+                    </button>
+                    <button onclick="window.hardemEditor.imageEditor.sendToBack(window.hardemEditor.core.currentElement)" 
+                            style="background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                        ⬇️ Enviar para Trás
+                    </button>
+                </div>
+                <div style="margin-top: 8px; font-size: 11px; color: #6c757d;">
+                    💡 Use estes botões para controlar se o background aparece na frente ou atrás de outros elementos.
+                </div>
             </div>
         `;
     }
