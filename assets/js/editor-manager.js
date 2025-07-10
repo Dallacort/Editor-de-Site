@@ -13,17 +13,29 @@ class HardemEditorManager {
     init() {
         console.log('🎛️ Iniciando Gerenciador de Editor...');
         
-        // Verificar se está em modo de edição via URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const editParam = urlParams.get('edit');
-        
-        if (editParam === 'true') {
-            console.log('📝 Modo de edição detectado via URL');
-            this.enableEditMode();
-        } else {
-            console.log('👁️ Modo visualização - Editor desabilitado');
-            this.disableEditMode();
-        }
+        // Carrega os scripts do editor para TODOS os usuários (admin ou visitante).
+        // Isso garante que a renderização do conteúdo salvo (textos, imagens)
+        // seja sempre consistente.
+        this.loadEditorScripts().then(() => {
+            console.log('✅ Scripts do editor carregados para a página.');
+
+            // Agora, verificamos se devemos ativar a INTERFACE de edição.
+            const urlParams = new URLSearchParams(window.location.search);
+            const editParam = urlParams.get('edit');
+            
+            if (editParam === 'true') {
+                console.log('📝 Modo de edição detectado via URL. Ativando interface...');
+                // Somente se for admin, habilita a interface de edição completa.
+                this.enableEditMode();
+            } else {
+                console.log('👁️ Modo visualização - Apenas renderizando conteúdo salvo.');
+                // Para visitantes, os scripts já carregaram e aplicaram o conteúdo.
+                // Não fazemos mais nada para não mostrar a UI de edição.
+                this.disableEditMode();
+            }
+        }).catch(error => {
+            console.error('❌ Falha crítica ao carregar scripts do editor. A página pode não ser renderizada corretamente.', error);
+        });
     }
     
     async enableEditMode() {
@@ -490,15 +502,10 @@ class HardemEditorManager {
     }
     
     disableEditMode() {
-        console.log('👁️ Modo visualização ativo');
-        
-        // CRÍTICO: Limpar qualquer UI do editor que possa existir
+        // Esta função agora serve apenas para garantir que nenhuma UI do editor
+        // seja mostrada acidentalmente para visitantes.
+        console.log('👁️ Modo visualização ativo. Removendo qualquer UI residual.');
         this.removeEditorUI();
-        
-        // NOVO: Mesmo em modo visualização, pré-carregar conteúdo para aplicar instantaneamente
-        this.preloadContentForVisitors();
-        // Não carregar scripts do editor
-        // Página funciona normalmente para usuários finais
     }
 
     /**

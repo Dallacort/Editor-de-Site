@@ -566,3 +566,226 @@
 [2025-07-08 23:59:39] [API-ADMIN] Método: GET, Ação: get_normalizations
 [2025-07-08 23:59:39] [DATABASE] Conexão MySQL estabelecida com sucesso
 [2025-07-08 23:59:39] [API-ADMIN] Buscadas 0 normalizações do banco
+[2025-07-09 00:13:17] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-09 00:13:17] [LOAD-DB] Carregando dados para página: index
+[2025-07-09 00:13:17] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 00:13:17] [LOAD-DB] Carregamento concluído - Textos: 10, Imagens: 2
+[2025-07-09 00:13:17] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-09 00:13:17] [LOAD-DB] Carregando dados para página: index
+[2025-07-09 00:13:17] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 00:13:17] [LOAD-DB] Carregamento concluído - Textos: 10, Imagens: 2
+[2025-07-09 00:13:18] [API-ADMIN] Método: GET, Ação: get_normalizations
+[2025-07-09 00:13:18] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 00:13:18] [API-ADMIN] Buscadas 1 normalizações do banco
+[2025-07-09 00:13:28] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-09 00:13:28] [LOAD-DB] Carregando dados para página: index
+[2025-07-09 00:13:28] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 00:13:28] [LOAD-DB] Carregamento concluído - Textos: 10, Imagens: 2
+[2025-07-09 00:19:10] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-09 00:19:10] [LOAD-DB] Carregando dados para página: index
+[2025-07-09 00:19:10] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 00:19:10] [LOAD-DB] Carregamento concluído - Textos: 10, Imagens: 2
+[2025-07-09 00:19:49] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-09 00:19:49] [LOAD-DB] Carregando dados para página: index
+[2025-07-09 00:19:49] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 00:19:49] [LOAD-DB] Carregamento concluído - Textos: 10, Imagens: 2
+[2025-07-09 00:19:53] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-09 00:19:53] [LOAD-DB] Carregando dados para página: index
+[2025-07-09 00:19:53] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 00:19:53] [LOAD-DB] Carregamento concluído - Textos: 10, Imagens: 2
+[2025-07-09 00:21:17] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-09 00:21:17] [LOAD-DB] Carregando dados para página: index
+[2025-07-09 00:21:17] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 00:21:17] [LOAD-DB] Carregamento concluído - Textos: 10, Imagens: 2
+[2025-07-09 00:21:17] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-09 00:21:17] [LOAD-DB] Carregando dados para página: index
+[2025-07-09 00:21:17] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 00:21:17] [LOAD-DB] Carregamento concluído - Textos: 10, Imagens: 2
+[2025-07-09 00:21:18] [API-ADMIN] Método: GET, Ação: get_normalizations
+[2025-07-09 00:21:18] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 00:21:18] [API-ADMIN] Buscadas 1 normalizações do banco
+[2025-07-09 00:59:11] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-09 00:59:11] [LOAD-DB] Carregando dados para página: index
+[2025-07-09 00:59:11] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 00:59:11] [LOAD-DB] Carregamento concluído - Textos: 10, Imagens: 2
+[2025-07-09 00:59:11] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-09 00:59:11] [LOAD-DB] Carregando dados para página: index
+[2025-07-09 00:59:11] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 00:59:11] [LOAD-DB] Carregamento concluído - Textos: 10, Imagens: 2
+[2025-07-09 00:59:12] [API-ADMIN] Método: GET, Ação: get_normalizations
+[2025-07-09 00:59:12] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 00:59:12] [API-ADMIN] Buscadas 1 normalizações do banco
+[2025-07-09 00:59:18] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-09 00:59:18] [LOAD-DB] Carregando dados para página: index
+[2025-07-09 00:59:18] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 00:59:18] [LOAD-DB] Carregamento concluído - Textos: 10, Imagens: 2
+[2025-07-09 00:59:27] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-09 00:59:27] [LOAD-DB] Carregando dados para página: index
+[2025-07-09 00:59:27] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 00:59:27] [LOAD-DB] Carregamento concluído - Textos: 10, Imagens: 2
+[2025-07-09 22:57:53] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-09 22:57:53] [LOAD-DB] Carregando dados para página: index
+[2025-07-09 22:57:53] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 22:57:53] [LOAD-DB] Carregamento concluído - Textos: 10, Imagens: 2
+[2025-07-09 22:58:10] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-09 22:58:10] [LOAD-DB] Carregando dados para página: index
+[2025-07-09 22:58:10] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 22:58:10] [LOAD-DB] Carregamento concluído - Textos: 10, Imagens: 2
+[2025-07-09 23:42:12] [API-ADMIN] Método: GET, Ação: get_normalizations
+[2025-07-09 23:42:12] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:42:12] [API-ADMIN] Buscadas 1 normalizações do banco
+[2025-07-09 23:42:13] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-09 23:42:13] [LOAD-DB] Carregando dados para página: index
+[2025-07-09 23:42:13] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:42:13] [LOAD-DB] Carregamento concluído - Textos: 10, Imagens: 2
+[2025-07-09 23:43:19] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-09 23:43:19] [LOAD-DB] Carregando dados para página: index
+[2025-07-09 23:43:19] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:43:19] [LOAD-DB] Carregamento concluído - Textos: 10, Imagens: 2
+[2025-07-09 23:43:19] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-09 23:43:19] [LOAD-DB] Carregando dados para página: index
+[2025-07-09 23:43:19] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:43:19] [LOAD-DB] Carregamento concluído - Textos: 10, Imagens: 2
+[2025-07-09 23:43:20] [API-ADMIN] Método: GET, Ação: get_normalizations
+[2025-07-09 23:43:20] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:43:20] [API-ADMIN] Buscadas 1 normalizações do banco
+[2025-07-09 23:43:51] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-07-09 23:43:52] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:43:52] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-07-09 23:43:52] [SAVE-DB] Página identificada: siteContent_index.html
+[2025-07-09 23:43:52] [SAVE-DB] Texto atualizado: text_19 (página: siteContent_index.html)
+[2025-07-09 23:43:52] [SAVE-DB] Texto atualizado: text_28 (página: siteContent_index.html)
+[2025-07-09 23:43:52] [SAVE-DB] Texto atualizado: index_content_label_25 (página: siteContent_index.html)
+[2025-07-09 23:43:52] [SAVE-DB] Texto atualizado: text_30 (página: siteContent_index.html)
+[2025-07-09 23:43:52] [SAVE-DB] Texto atualizado: index_content_label_2 (página: siteContent_index.html)
+[2025-07-09 23:43:52] [SAVE-DB] Texto atualizado: index_content_label_4 (página: siteContent_index.html)
+[2025-07-09 23:43:52] [SAVE-DB] Imagem salva: chave img_18, ID 39
+[2025-07-09 23:43:52] [SAVE-DB] Imagem salva: chave img_19, ID 41
+[2025-07-09 23:43:52] [SAVE-DB] Salvamento concluído - Textos: 6, Imagens: 2, Erros: 0
+[2025-07-09 23:43:52] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-07-09 23:43:52] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:43:52] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-07-09 23:43:52] [SAVE-DB] Página identificada: siteContent_index.html
+[2025-07-09 23:43:52] [SAVE-DB] Texto atualizado: div-rts-banner-area-rts-section-gap-bg-banner-four-bg_image-1752015441675-yk1h4 (página: siteContent_index.html)
+[2025-07-09 23:43:52] [SAVE-DB] Salvamento concluído - Textos: 1, Imagens: 0, Erros: 0
+[2025-07-09 23:43:52] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-07-09 23:43:52] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:43:52] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-07-09 23:43:52] [SAVE-DB] Página identificada: siteContent_index.html
+[2025-07-09 23:43:52] [SAVE-DB] Texto atualizado: div-single-right-content-bg-1-bg_image-1752019010679-y36sb (página: siteContent_index.html)
+[2025-07-09 23:43:52] [SAVE-DB] Salvamento concluído - Textos: 1, Imagens: 0, Erros: 0
+[2025-07-09 23:43:52] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-07-09 23:43:52] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:43:52] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-07-09 23:43:52] [SAVE-DB] Página identificada: siteContent_index.html
+[2025-07-09 23:43:52] [SAVE-DB] Texto atualizado: metadata (página: siteContent_index.html)
+[2025-07-09 23:43:52] [SAVE-DB] Texto atualizado: summary (página: siteContent_index.html)
+[2025-07-09 23:43:52] [SAVE-DB] Salvamento concluído - Textos: 2, Imagens: 0, Erros: 0
+[2025-07-09 23:43:52] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-09 23:43:52] [LOAD-DB] Carregando dados para página: index
+[2025-07-09 23:43:52] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:43:52] [LOAD-DB] Carregamento concluído - Textos: 10, Imagens: 2
+[2025-07-09 23:43:53] [API-ADMIN] Método: GET, Ação: get_normalizations
+[2025-07-09 23:43:53] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:43:53] [API-ADMIN] Buscadas 1 normalizações do banco
+[2025-07-09 23:44:17] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-07-09 23:44:17] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:44:17] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-07-09 23:44:17] [SAVE-DB] Página identificada: siteContent_index.html
+[2025-07-09 23:44:17] [SAVE-DB] Texto atualizado: text_19 (página: siteContent_index.html)
+[2025-07-09 23:44:17] [SAVE-DB] Texto atualizado: text_28 (página: siteContent_index.html)
+[2025-07-09 23:44:17] [SAVE-DB] Texto atualizado: index_content_label_25 (página: siteContent_index.html)
+[2025-07-09 23:44:17] [SAVE-DB] Texto atualizado: text_30 (página: siteContent_index.html)
+[2025-07-09 23:44:17] [SAVE-DB] Texto atualizado: index_content_label_2 (página: siteContent_index.html)
+[2025-07-09 23:44:17] [SAVE-DB] Texto atualizado: index_content_label_4 (página: siteContent_index.html)
+[2025-07-09 23:44:17] [SAVE-DB] Imagem salva: chave img_18, ID 39
+[2025-07-09 23:44:17] [SAVE-DB] Imagem salva: chave img_19, ID 41
+[2025-07-09 23:44:17] [SAVE-DB] Salvamento concluído - Textos: 6, Imagens: 2, Erros: 0
+[2025-07-09 23:44:17] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-07-09 23:44:17] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:44:17] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-07-09 23:44:17] [SAVE-DB] Página identificada: siteContent_index.html
+[2025-07-09 23:44:17] [SAVE-DB] Texto atualizado: div-single-right-content-bg-1-bg_image-1752019010679-y36sb (página: siteContent_index.html)
+[2025-07-09 23:44:17] [SAVE-DB] Salvamento concluído - Textos: 1, Imagens: 0, Erros: 0
+[2025-07-09 23:44:18] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-07-09 23:44:18] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:44:18] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-07-09 23:44:18] [SAVE-DB] Página identificada: siteContent_index.html
+[2025-07-09 23:44:18] [SAVE-DB] Texto atualizado: div-rts-banner-area-rts-section-gap-bg-banner-four-bg_image-1752015441675-yk1h4 (página: siteContent_index.html)
+[2025-07-09 23:44:18] [SAVE-DB] Salvamento concluído - Textos: 1, Imagens: 0, Erros: 0
+[2025-07-09 23:44:18] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-07-09 23:44:18] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:44:18] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-07-09 23:44:18] [SAVE-DB] Página identificada: siteContent_index.html
+[2025-07-09 23:44:18] [SAVE-DB] Novo texto inserido: div-single-right-content-bg-2-bg_image-hardem-editable-hardem-editable-element-1752104614656-ch9vn (página: siteContent_index.html)
+[2025-07-09 23:44:18] [SAVE-DB] Salvamento concluído - Textos: 1, Imagens: 0, Erros: 0
+[2025-07-09 23:44:18] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-07-09 23:44:18] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:44:18] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-07-09 23:44:18] [SAVE-DB] Página identificada: siteContent_index.html
+[2025-07-09 23:44:18] [SAVE-DB] Texto atualizado: metadata (página: siteContent_index.html)
+[2025-07-09 23:44:18] [SAVE-DB] Texto atualizado: summary (página: siteContent_index.html)
+[2025-07-09 23:44:18] [SAVE-DB] Salvamento concluído - Textos: 2, Imagens: 0, Erros: 0
+[2025-07-09 23:44:18] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-09 23:44:18] [LOAD-DB] Carregando dados para página: index
+[2025-07-09 23:44:18] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:44:18] [LOAD-DB] Carregamento concluído - Textos: 11, Imagens: 2
+[2025-07-09 23:44:19] [API-ADMIN] Método: GET, Ação: get_normalizations
+[2025-07-09 23:44:19] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:44:19] [API-ADMIN] Buscadas 1 normalizações do banco
+[2025-07-09 23:44:35] [API-ADMIN] Método: GET, Ação: get_normalizations
+[2025-07-09 23:44:35] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:44:35] [API-ADMIN] Buscadas 1 normalizações do banco
+[2025-07-09 23:44:35] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-09 23:44:35] [LOAD-DB] Carregando dados para página: index
+[2025-07-09 23:44:35] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:44:35] [LOAD-DB] Carregamento concluído - Textos: 11, Imagens: 2
+[2025-07-09 23:49:07] [API-ADMIN] Método: GET, Ação: get_normalizations
+[2025-07-09 23:49:07] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:49:07] [API-ADMIN] Buscadas 1 normalizações do banco
+[2025-07-09 23:49:08] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-09 23:49:08] [LOAD-DB] Carregando dados para página: index
+[2025-07-09 23:49:08] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:49:08] [LOAD-DB] Carregamento concluído - Textos: 11, Imagens: 2
+[2025-07-09 23:49:15] [API-ADMIN] Método: GET, Ação: get_normalizations
+[2025-07-09 23:49:15] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:49:15] [API-ADMIN] Buscadas 1 normalizações do banco
+[2025-07-09 23:49:16] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-09 23:49:16] [LOAD-DB] Carregando dados para página: index
+[2025-07-09 23:49:16] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:49:16] [LOAD-DB] Carregamento concluído - Textos: 11, Imagens: 2
+[2025-07-09 23:52:53] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-09 23:52:53] [LOAD-DB] Carregando dados para página: index
+[2025-07-09 23:52:53] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:52:53] [LOAD-DB] Carregamento concluído - Textos: 11, Imagens: 2
+[2025-07-09 23:52:54] [API-ADMIN] Método: GET, Ação: get_normalizations
+[2025-07-09 23:52:54] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:52:54] [API-ADMIN] Buscadas 1 normalizações do banco
+[2025-07-09 23:53:07] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-09 23:53:07] [LOAD-DB] Carregando dados para página: index
+[2025-07-09 23:53:07] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:53:07] [LOAD-DB] Carregamento concluído - Textos: 11, Imagens: 2
+[2025-07-09 23:53:08] [API-ADMIN] Método: GET, Ação: get_normalizations
+[2025-07-09 23:53:08] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:53:08] [API-ADMIN] Buscadas 1 normalizações do banco
+[2025-07-09 23:53:13] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-09 23:53:13] [LOAD-DB] Carregando dados para página: index
+[2025-07-09 23:53:13] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:53:13] [LOAD-DB] Carregamento concluído - Textos: 11, Imagens: 2
+[2025-07-09 23:53:14] [API-ADMIN] Método: GET, Ação: get_normalizations
+[2025-07-09 23:53:14] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:53:14] [API-ADMIN] Buscadas 1 normalizações do banco
+[2025-07-09 23:53:31] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-09 23:53:31] [LOAD-DB] Carregando dados para página: index
+[2025-07-09 23:53:31] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:53:31] [LOAD-DB] Carregamento concluído - Textos: 11, Imagens: 2
+[2025-07-09 23:53:32] [API-ADMIN] Método: GET, Ação: get_normalizations
+[2025-07-09 23:53:32] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:53:32] [API-ADMIN] Buscadas 1 normalizações do banco
+[2025-07-09 23:54:08] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-09 23:54:08] [LOAD-DB] Carregando dados para página: index
+[2025-07-09 23:54:08] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:54:08] [LOAD-DB] Carregamento concluído - Textos: 11, Imagens: 2
+[2025-07-09 23:54:09] [API-ADMIN] Método: GET, Ação: get_normalizations
+[2025-07-09 23:54:09] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-09 23:54:09] [API-ADMIN] Buscadas 1 normalizações do banco
