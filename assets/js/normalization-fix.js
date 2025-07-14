@@ -7,7 +7,6 @@
 (function() {
     // Executar quando o DOM estiver pronto
     function init() {
-        console.log('🔧 HARDEM: Iniciando correção de normalização de imagens...');
         
         // Verificar se o CSS está carregado, se não estiver, injetar
         checkAndLoadCSS();
@@ -30,7 +29,6 @@
         });
         
         if (!cssLoaded) {
-            console.log('⚠️ HARDEM: CSS de normalização não encontrado, injetando...');
             const link = document.createElement('link');
             link.rel = 'stylesheet';
             link.href = 'assets/css/image-normalization-styles.css';
@@ -43,8 +41,6 @@
         // Encontrar todos os elementos que deveriam estar normalizados
         const normalizedElements = document.querySelectorAll('[data-normalized="true"], [data-target-width], [data-target-height]');
         let fixedCount = 0;
-        
-        console.log(`🔍 HARDEM: Encontrados ${normalizedElements.length} elementos com atributos de normalização`);
         
         // Processar cada elemento
         normalizedElements.forEach(element => {
@@ -116,7 +112,6 @@
             }
         });
         
-        console.log(`✅ HARDEM: ${fixedCount} elementos corrigidos`);
     }
     
     // Executar quando o DOM estiver pronto

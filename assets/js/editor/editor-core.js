@@ -18,14 +18,13 @@ class HardemEditorCore {
         
         this.debouncedSetupEditableElements = this.debounce(() => {
             if (this.editMode && !this.isProcessingElements) {
-                console.log("🔧 HARDEM Editor: Executando setupEditableElements via debounce (editMode ativo).");
                 this.isProcessingElements = true;
                 this.textEditor.setupEditableElements(document.body);
                 setTimeout(() => {
                     this.isProcessingElements = false;
                 }, 100);
             } else if (!this.editMode) {
-                console.log("⏸️ HARDEM Editor: setupEditableElements ignorado (editMode inativo).");
+                // console.log("⏸️ HARDEM Editor: setupEditableElements ignorado (editMode inativo).");
             }
         }, 300);
         
@@ -112,8 +111,6 @@ class HardemEditorCore {
         this.setupMutationObserver();
         this.bindEvents();
         
-        console.log('HARDEM Editor iniciado com sucesso!');
-        
         // Inicializar com edição desativada
         this.editMode = false;
         
@@ -130,17 +127,14 @@ class HardemEditorCore {
         const loadContent = () => {
             if (this.contentHasLoaded) return; // Prevenir cargas duplas
             
-            console.log('📄 DOM completamente carregado, iniciando carregamento de conteúdo...');
             this.storage.loadContent().then(() => {
                 this.contentHasLoaded = true; // Marcar como carregado
                 
                 // NOVO: Detectar contadores automaticamente após carregar conteúdo
                 if (this.textEditor && this.textEditor.detectAndSetupCounters) {
-                    console.log('🔢 Detectando contadores após carregamento...');
                     this.textEditor.detectAndSetupCounters();
                 }
                 
-                console.log('✅ Conteúdo carregado e contadores configurados');
             }).catch(error => {
                 console.error('❌ Erro ao carregar conteúdo:', error);
             });
@@ -494,19 +488,14 @@ class HardemEditorCore {
         const previousState = this.editMode;
         this.editMode = !this.editMode;
         
-        console.log(`🔄 Alternando modo de edição: ${previousState ? 'ATIVO' : 'INATIVO'} → ${this.editMode ? 'ATIVO' : 'INATIVO'}`);
-        
         if (this.editMode) {
-            console.log('✅ Ativando modo de edição...');
             
             // Adicionar classe ao body para indicar modo de edição
             document.body.classList.add('hardem-editor-active');
             
             // Ativar edição de texto
             if (this.textEditor && this.textEditor.setupEditableElements) {
-                console.log(`📝 Chamando setupEditableElements... (editMode: ${this.editMode})`);
                 this.textEditor.setupEditableElements(document.body);
-                console.log('📝 Editor de texto ativado');
             } else {
                 console.error('❌ textEditor ou setupEditableElements não encontrado');
             }
@@ -514,7 +503,6 @@ class HardemEditorCore {
             // Ativar edição de imagens
             if (this.imageEditor && this.imageEditor.setupImageEditing) {
                 this.imageEditor.setupImageEditing();
-                console.log('🖼️ Editor de imagens ativado');
             } else {
                 console.warn('⚠️ imageEditor ou setupImageEditing não encontrado');
             }
@@ -522,7 +510,6 @@ class HardemEditorCore {
             // Ativar edição de carrosséis
             if (this.carouselEditor && this.carouselEditor.setupCarouselEditing) {
                 this.carouselEditor.setupCarouselEditing();
-                console.log('🎠 Editor de carrosséis ativado');
             } else {
                 console.warn('⚠️ carouselEditor ou setupCarouselEditing não encontrado');
             }
@@ -533,7 +520,6 @@ class HardemEditorCore {
                 const toolbar = document.getElementById('hardem-editor-toolbar');
                 if (toolbar) {
                     toolbar.style.display = 'flex';
-                    console.log('🔧 Toolbar sempre visível');
                 }
                 
                 // Mostrar botões específicos do modo de edição
@@ -542,7 +528,6 @@ class HardemEditorCore {
                 const sidePanel = document.querySelector('.hardem-editor-sidepanel');
                 if (sidePanel) {
                     sidePanel.style.display = 'block';
-                    console.log('📋 Painel lateral disponível');
                 } else {
                     console.warn('⚠️ Painel lateral não encontrado');
                 }
@@ -551,12 +536,10 @@ class HardemEditorCore {
             }
             
         } else {
-            console.log('❌ Desativando modo de edição...');
             
             // Desativar edição
             if (this.ui && this.ui.disableEditing) {
                 this.ui.disableEditing();
-                console.log('🚫 Edição desativada');
             }
             
             // Ocultar apenas controles específicos do modo de edição (toolbar permanece visível)
@@ -565,7 +548,6 @@ class HardemEditorCore {
             const sidePanel = document.querySelector('.hardem-editor-sidepanel');
             if (sidePanel) {
                 sidePanel.style.display = 'none';
-                console.log('📋 Painel lateral oculto');
             }
             
             // Remover classe do body
@@ -577,13 +559,10 @@ class HardemEditorCore {
             });
         }
         
-        console.log(`✅ Modo de edição: ${this.editMode ? 'ATIVO' : 'INATIVO'}`);
-        
         // Verificar se há elementos editáveis após ativação
         if (this.editMode) {
             setTimeout(() => {
                 const editableElements = document.querySelectorAll('.hardem-editable');
-                console.log(`🔍 Elementos editáveis encontrados após ativação: ${editableElements.length}`);
                 if (editableElements.length === 0) {
                     console.warn('⚠️ Nenhum elemento editável foi configurado! Pode haver um problema na configuração.');
                 }
@@ -730,7 +709,6 @@ class HardemEditorCore {
         // Popular painel com dados do elemento
         this.ui.populateSidePanel(element);
         
-        console.log('Elemento selecionado:', element);
     }
 
     /**
@@ -943,7 +921,6 @@ class HardemEditorCore {
             }
         });
         
-        console.log('🔧 Controles de edição exibidos');
     }
 
     /**
@@ -966,7 +943,6 @@ class HardemEditorCore {
             }
         });
         
-        console.log('🔧 Controles de edição ocultos (toolbar permanece visível)');
     }
 
     /**
@@ -988,7 +964,6 @@ class HardemEditorCore {
         // Restaurar estado original
         document.body.style.paddingTop = '0';
         
-        console.log('Editor destruído');
     }
 }
 

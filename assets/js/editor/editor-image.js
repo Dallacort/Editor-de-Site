@@ -40,7 +40,6 @@ class HardemImageEditor {
         this.retryAttempts = new Map();
         this.maxRetries = 3;
         
-        console.log('🚀 Sistema de processamento de imagens inicializado com controle de fila e z-index');
     }
 
     /**
@@ -49,7 +48,6 @@ class HardemImageEditor {
     setupImageEditing(container = document) {
         // CRÍTICO: Só configurar imagens editáveis se o modo de edição estiver ativo
         if (!this.core.editMode) {
-            console.log(`⏸️ setupImageEditing ignorado (editMode inativo)`);
             return;
         }
         
@@ -91,7 +89,6 @@ class HardemImageEditor {
             });
         });
 
-        console.log(`✅ Elementos de imagem configurados: ${imageCount} imagens, ${backgroundCount} backgrounds`);
         
         // Restaurar z-indexes salvos
         this.restoreZIndexes(container);
@@ -197,7 +194,6 @@ class HardemImageEditor {
         image.addEventListener('click', handleClick);
         image.addEventListener('dblclick', handleDoubleClick);
         
-        console.log(`🎠 Imagem de slide editável: ${dataKey} (slide ${slideIndex + 1})`);
     }
 
     /**
@@ -386,7 +382,6 @@ class HardemImageEditor {
                             type: 'image'
                         });
                         
-                        console.log(`🖼️ Imagem processada em fila: ${dataKey} (${file.name})`);
                         resolve();
                         
                     } catch (error) {
@@ -475,7 +470,6 @@ class HardemImageEditor {
                             type: 'background'
                         });
                         
-                        console.log(`🎨 Background processado em fila: ${dataKey} (${file.name})`);
                         resolve();
                         
                     } catch (error) {
@@ -562,7 +556,6 @@ class HardemImageEditor {
                             type: 'slide-image'
                         });
                         
-                        console.log(`🎠 Imagem de slide processada em fila: ${dataKey} (slide ${slideIndex}, ${file.name})`);
                         resolve();
                         
                     } catch (error) {
@@ -656,7 +649,6 @@ class HardemImageEditor {
                         type: `svg-${type}`
                     });
                     
-                    console.log(`🎨 SVG processado em fila: ${dataKey} (${type}, ${file.name})`);
                     resolve();
                     
                 } catch (error) {
@@ -772,7 +764,6 @@ class HardemImageEditor {
                     quality -= 0.05;
                 } while (quality > 0.3);
                 
-                console.log(`🖼️ Background redimensionado: ${originalWidth}x${originalHeight} → ${newWidth}x${newHeight}, qualidade: ${quality}`);
                 
                 // Limpar tentativas de retry após sucesso
                 if (this.retryAttempts.has(dataKey)) {
@@ -802,7 +793,6 @@ class HardemImageEditor {
         const attempts = this.retryAttempts.get(dataKey) || 0;
         
         if (attempts < this.maxRetries) {
-            console.log(`🔄 Tentativa ${attempts + 1} de ${this.maxRetries} para ${dataKey}`);
             this.retryAttempts.set(dataKey, attempts + 1);
             
             // Tentar novamente após um delay
@@ -951,7 +941,6 @@ class HardemImageEditor {
                 // Calcular tamanho final para log
                 const finalSize = Math.round((resizedSrc.length - 'data:image/jpeg;base64,'.length) * 3/4);
                 
-                console.log(`📏 Imagem otimizada: ${originalWidth}x${originalHeight} → ${newWidth}x${newHeight}, qualidade: ${quality.toFixed(2)}, tamanho: ${this.formatBytes(finalSize)}`);
                 callback(resizedSrc);
                 
             } catch (error) {
@@ -989,7 +978,6 @@ class HardemImageEditor {
         // Adicionar dados extras se fornecidos
         Object.assign(this.core.contentMap[dataKey], additionalData);
         
-        console.log(`Background salvo: ${dataKey} (header: ${this.core.contentMap[dataKey].isHeaderContent})`, this.core.contentMap[dataKey]);
     }
 
     /**
@@ -1016,7 +1004,6 @@ class HardemImageEditor {
             if (content.type === 'slide-image') {
                 element.setAttribute('data-hardem-type', 'slide-image');
                 const slideIndex = content.slideIndex || 0;
-                console.log(`🎠 Imagem de slide restaurada: slide ${slideIndex + 1}`);
             }
         }
         
@@ -1030,7 +1017,6 @@ class HardemImageEditor {
             if (content.type === 'carousel-slide-background' || content.type === 'slide-background') {
                 element.setAttribute('data-hardem-type', 'slide-background');
                 const slideIndex = content.slideIndex || 0;
-                console.log(`🎨 Background de slide restaurado: slide ${slideIndex + 1}`);
             }
         }
     }
@@ -1085,7 +1071,6 @@ class HardemImageEditor {
             this.activeProcessing.add(item.id);
             item.status = 'processing';
             
-            console.log(`🔄 Processando: ${item.type} (${item.file.name}) - Fila: ${this.processingQueue.length + this.activeProcessing.size}`);
             
             // Verificar memória antes de processar
             if (this.shouldOptimizeMemory(item.file)) {
@@ -1150,19 +1135,16 @@ class HardemImageEditor {
      * Otimizar uso de memória - VERSÃO CORRIGIDA
      */
     async optimizeMemoryUsage() {
-        console.log('🧹 Otimizando uso de memória...');
         
         // PRIMEIRO: Verificar quantas imagens estão realmente em uso
         const activeImages = document.querySelectorAll('img[data-key]').length;
         const activeBackgrounds = document.querySelectorAll('[data-hardem-type="background"]').length;
         const totalActiveElements = activeImages + activeBackgrounds;
         
-        console.log(`📊 Elementos ativos: ${totalActiveElements} (${activeImages} imagens + ${activeBackgrounds} backgrounds)`);
         
         // SÓ limpar se houver MUITO mais cache que elementos ativos
         const cacheSize = this.processedImages.size;
         if (cacheSize > totalActiveElements * 3) { // Só se cache for 3x maior que elementos ativos
-            console.log(`🧹 Cache muito grande (${cacheSize} vs ${totalActiveElements} ativos). Limpando apenas elementos realmente antigos...`);
             
             const now = Date.now();
             let removedCount = 0;
@@ -1177,19 +1159,15 @@ class HardemImageEditor {
                         this.currentMemoryUsage -= (data.size || 0);
                         removedCount++;
                     } else {
-                        console.log(`⚠️ Elemento ${key} ainda existe, mantendo no cache`);
                     }
                 }
             }
             
-            console.log(`🧹 Removidos ${removedCount} itens do cache (elementos órfãos)`);
         } else {
-            console.log(`✅ Cache em tamanho adequado (${cacheSize} itens), não limpando`);
         }
         
         // Forçar garbage collection se disponível (só se realmente necessário)
         if (this.currentMemoryUsage > this.maxMemoryUsage * 0.8 && window.gc) {
-            console.log('🗑️ Forçando garbage collection...');
             window.gc();
         }
         
@@ -1267,7 +1245,6 @@ class HardemImageEditor {
         image.addEventListener('click', handleClick);
         image.addEventListener('dblclick', handleDoubleClick);
         
-        console.log(`🖼️ Imagem editável: ${dataKey}`);
     }
 
     /**
@@ -1344,7 +1321,6 @@ class HardemImageEditor {
             attributeFilter: ['style']
         });
         
-        console.log(`🎨 Background editável configurado: ${dataKey}`);
     }
 
     /**
@@ -1356,7 +1332,6 @@ class HardemImageEditor {
         
         // Tentar restaurar do contentMap
         if (this.core.contentMap[dataKey] && this.core.contentMap[dataKey].backgroundImage) {
-            console.log(`🔄 Restaurando background ${dataKey} do contentMap...`);
             element.style.setProperty('background-image', `url("${this.core.contentMap[dataKey].backgroundImage}")`, 'important');
             element.style.setProperty('background-size', 'cover', 'important');
             element.style.setProperty('background-position', 'center', 'important');
@@ -1412,7 +1387,6 @@ class HardemImageEditor {
      * Limpar fila de processamento (função de emergência)
      */
     clearProcessingQueue() {
-        console.log('🚨 Limpando fila de processamento...');
         
         this.processingQueue = [];
         this.activeProcessing.clear();
@@ -1435,7 +1409,6 @@ class HardemImageEditor {
      * Resetar sistema de processamento de imagens
      */
     resetImageSystem() {
-        console.log('🔄 Resetando sistema de processamento de imagens...');
         
         // Limpar fila
         this.clearProcessingQueue();
@@ -1469,7 +1442,6 @@ class HardemImageEditor {
             memoryPercent: Math.round((this.currentMemoryUsage / this.maxMemoryUsage) * 100)
         };
         
-        console.log('📊 Estatísticas do sistema de imagens:', stats);
         return stats;
     }
 
@@ -1532,7 +1504,6 @@ class HardemImageEditor {
      * NOVO: Monitorar imagens quebradas e tentar restaurar
      */
     startBrokenImageMonitoring() {
-        console.log('🔍 Iniciando monitoramento de imagens quebradas...');
         
         // Verificar a cada 10 segundos
         setInterval(() => {
@@ -1568,7 +1539,6 @@ class HardemImageEditor {
                 
                 // Tentar restaurar do contentMap
                 if (this.core.contentMap[dataKey] && this.core.contentMap[dataKey].src) {
-                    console.log(`🔄 Restaurando imagem ${dataKey} do contentMap...`);
                     img.src = this.core.contentMap[dataKey].src;
                     fixedCount++;
                 }
@@ -1584,7 +1554,6 @@ class HardemImageEditor {
             
             // Verificar se background está vazio ou quebrado
             if ((!bgImage || bgImage === 'none') && this.core.contentMap[dataKey] && this.core.contentMap[dataKey].backgroundImage) {
-                console.log(`🔄 Restaurando background ${dataKey} do contentMap...`);
                 element.style.setProperty('background-image', `url("${this.core.contentMap[dataKey].backgroundImage}")`, 'important');
                 element.style.setProperty('background-size', 'cover', 'important');
                 element.style.setProperty('background-position', 'center', 'important');
@@ -1594,7 +1563,6 @@ class HardemImageEditor {
         });
         
         if (fixedCount > 0) {
-            console.log(`🔧 ${fixedCount} imagens quebradas foram restauradas!`);
             this.core.ui.showAlert(`🔧 ${fixedCount} imagens restauradas automaticamente`, 'success');
         }
     }
@@ -1603,7 +1571,6 @@ class HardemImageEditor {
      * Forçar restauração de todas as imagens do contentMap
      */
     forceRestoreAllImages() {
-        console.log('🔄 Forçando restauração de todas as imagens...');
         let restoredCount = 0;
         
         Object.entries(this.core.contentMap).forEach(([dataKey, content]) => {
@@ -1612,7 +1579,6 @@ class HardemImageEditor {
                 if (content.src && element.tagName.toLowerCase() === 'img') {
                     element.src = content.src;
                     restoredCount++;
-                    console.log(`🖼️ Restaurada imagem: ${dataKey}`);
                 }
                 
                 if (content.backgroundImage) {
@@ -1621,7 +1587,6 @@ class HardemImageEditor {
                     element.style.setProperty('background-position', 'center', 'important');
                     element.style.setProperty('background-repeat', 'no-repeat', 'important');
                     restoredCount++;
-                    console.log(`🎨 Restaurado background: ${dataKey}`);
                 }
             }
         });
@@ -1657,7 +1622,6 @@ class HardemImageEditor {
             this.applyNormalizedBackgroundStyles(element, targetDimensions);
         }
         
-        console.log(`🎯 Elemento normalizado individualmente: ${element.tagName}.${element.className}`);
     }
 
     /**
@@ -1665,7 +1629,6 @@ class HardemImageEditor {
      */
     normalizeAllImageSizes() {
         console.warn('⚠️ ATENÇÃO: normalizeAllImageSizes() aplica as mesmas dimensões para TODAS as imagens!');
-        console.log('💡 Para normalização individual, use: normalizeIndividualImage(elemento)');
         
         const confirmGlobal = confirm(
             'ATENÇÃO: Esta função vai aplicar as mesmas dimensões para TODAS as imagens da página.\n\n' +
@@ -1674,11 +1637,9 @@ class HardemImageEditor {
         );
         
         if (!confirmGlobal) {
-            console.log('❌ Normalização global cancelada pelo usuário');
             return;
         }
         
-        console.log('🔧 Iniciando normalização GLOBAL de tamanhos de imagens...');
         
         // Detectar as dimensões do background principal
         const backgroundDimensions = this.detectBackgroundDimensions();
@@ -1688,7 +1649,6 @@ class HardemImageEditor {
             return;
         }
         
-        console.log(`📐 Dimensões do background detectadas: ${backgroundDimensions.width}x${backgroundDimensions.height}`);
         
         // Normalizar todas as imagens existentes
         this.normalizeExistingImages(backgroundDimensions);
@@ -1761,7 +1721,6 @@ class HardemImageEditor {
             }
         });
         
-        console.log(`✅ ${processedCount} elementos normalizados`);
     }
 
     /**
@@ -1775,7 +1734,6 @@ class HardemImageEditor {
         const isAlreadyNormalized = imgElement.hasAttribute('data-normalized');
         
         if (isAlreadyNormalized) {
-            console.log('🔄 Atualizando normalização existente...');
             // Remover normalização anterior
             this.removeIndividualNormalization(imgElement);
         }
@@ -1808,7 +1766,6 @@ class HardemImageEditor {
         // Salvar dimensões de normalização no banco de dados
         this.saveNormalizationToDatabase(imgElement, targetDimensions);
         
-        console.log(`📷 Imagem normalizada individualmente: ${imgElement.src ? imgElement.src.substring(0, 50) + '...' : 'sem src'} (${targetDimensions.width}x${targetDimensions.height})`);
     }
 
     /**
@@ -1822,7 +1779,6 @@ class HardemImageEditor {
         const isAlreadyNormalized = element.hasAttribute('data-normalized');
         
         if (isAlreadyNormalized) {
-            console.log('🔄 Atualizando normalização de background existente...');
             // Remover normalização anterior
             this.removeIndividualNormalization(element);
         }
@@ -1860,7 +1816,6 @@ class HardemImageEditor {
         // Salvar dimensões de normalização no banco de dados
         this.saveNormalizationToDatabase(element, targetDimensions);
         
-        console.log(`🎨 Background normalizado individualmente: ${element.tagName}.${element.className} (${targetDimensions.width}x${targetDimensions.height})`);
     }
 
     /**
@@ -1872,7 +1827,6 @@ class HardemImageEditor {
         }
         
         const normalizeId = element.getAttribute('data-normalize-id');
-        console.log(`🗑️ Removendo normalização individual: ${normalizeId}`);
         
         // Restaurar estilos originais
         if (element.tagName.toLowerCase() === 'img') {
@@ -1920,7 +1874,6 @@ class HardemImageEditor {
         // Remover normalização do banco de dados
         this.removeNormalizationFromDatabase(element);
         
-        console.log(`✅ Normalização removida: ${element.tagName}.${element.className}`);
     }
 
     /**
@@ -1957,7 +1910,6 @@ class HardemImageEditor {
         this.resizeTargetWidth = targetDimensions.width;
         this.resizeTargetHeight = targetDimensions.height;
         
-        console.log(`⚙️ Configurações atualizadas para: ${targetDimensions.width}x${targetDimensions.height}`);
     }
 
     /**
@@ -2014,7 +1966,6 @@ class HardemImageEditor {
                 let quality = 0.8;
                 let resizedSrc = canvas.toDataURL('image/jpeg', quality);
                 
-                console.log(`🎯 Imagem redimensionada para dimensões alvo: ${targetWidth}x${targetHeight}`);
                 callback(resizedSrc);
                 
             } catch (error) {
@@ -2088,11 +2039,9 @@ class HardemImageEditor {
                         throw new Error(result.message || 'Erro ao salvar normalização');
                     }
 
-                    console.log(`✅ Normalização salva para ${dataKey}`);
                     resolve(true);
 
                 } catch (error) {
-                    console.error('❌ Erro ao salvar normalização:', error);
                     reject(error);
                 }
             }, this.savePropertiesDelay);
@@ -2115,7 +2064,6 @@ class HardemImageEditor {
         try {
             const dataKey = element.getAttribute('data-key');
             if (!dataKey) {
-                console.log('⚠️ Elemento sem data-key, nada para remover do banco');
                 return;
             }
 
@@ -2127,7 +2075,6 @@ class HardemImageEditor {
                     existingProperties = JSON.parse(currentProperties);
                 }
             } catch (e) {
-                console.log('Propriedades existentes inválidas');
                 return;
             }
 
@@ -2153,9 +2100,7 @@ class HardemImageEditor {
             if (result.success) {
                 // Atualizar atributo local
                 element.setAttribute('data-properties', JSON.stringify(existingProperties));
-                console.log(`🗑️ Normalização removida do banco: ${dataKey}`);
             } else {
-                console.warn(`⚠️ Erro ao remover normalização: ${result.message}`);
             }
 
         } catch (error) {
@@ -2198,11 +2143,9 @@ class HardemImageEditor {
             
             // Verificar se temos dados de normalização válidos
             if (!normalizationData || !normalizationData.normalized) {
-                console.log(`⏩ Normalização pulada para ${dataKey} (sem dados de normalização)`);
                 return false;
             }
 
-            console.log(`🔄 Aplicando normalização do banco: ${element.tagName}`, normalizationData);
             
             const targetDimensions = {
                 width: normalizationData.target_width,
@@ -2295,7 +2238,6 @@ class HardemImageEditor {
      * Restaurar normalizações salvas no banco de dados
      */
     restoreNormalizationsFromDatabase(container = document) {
-        console.log('Restaurando normalizações do banco de dados...');
         const elements = container.querySelectorAll('[data-key]');
         let restoredCount = 0;
         
@@ -2307,7 +2249,6 @@ class HardemImageEditor {
             const normalizationData = content && (content.normalization || (content.properties && content.properties.normalization));
             
             if (normalizationData && normalizationData.normalized) {
-                console.log(`🎯 Restaurando normalização para ${dataKey}`, normalizationData);
                 if (this.applyNormalizationFromDatabase(element, dataKey, normalizationData)) {
                     restoredCount++;
                 }
@@ -2315,7 +2256,6 @@ class HardemImageEditor {
         });
         
         if (restoredCount > 0) {
-            console.log(`✅ ${restoredCount} normalizações restauradas do banco de dados`);
             if (this.core && this.core.ui) {
                 this.core.ui.showAlert(`🎯 ${restoredCount} dimensionamentos restaurados!`, 'success');
             }
@@ -2327,7 +2267,6 @@ class HardemImageEditor {
      */
     async fetchNormalizationsFromDatabase() {
         try {
-            console.log('🔍 Buscando normalizações diretamente do banco...');
             
             const response = await fetch('api-admin.php?action=get_normalizations', {
                 method: 'GET',
@@ -2344,7 +2283,6 @@ class HardemImageEditor {
             const data = await response.json();
             
             if (data.success && data.normalizations) {
-                console.log(`✅ ${Object.keys(data.normalizations).length} normalizações encontradas no banco`);
                 return data.normalizations;
             }
             
@@ -2363,7 +2301,6 @@ class HardemImageEditor {
             let appliedNormalizations = 0;
             let elementsWithNormalization = 0;
             
-            console.log('🔍 Verificando normalizações no contentMap...');
             
             // Primeiro, tentar aplicar normalizações do contentMap
             Object.keys(contentMap).forEach(key => {
@@ -2379,7 +2316,6 @@ class HardemImageEditor {
                 // Debug: Verificar se tem dados de normalização
                 if (normalizationData) {
                     elementsWithNormalization++;
-                    console.log(`📋 Elemento com normalização encontrado: ${key}`, normalizationData);
                     
                     if (normalizationData.normalized || normalizationData.target_width) {
                         const element = document.querySelector(`[data-key="${key}"]`);
@@ -2393,22 +2329,17 @@ class HardemImageEditor {
                             // Aplicar normalização
                             if (this.applyNormalizationFromDatabase(element, key, normalizationData)) {
                                 appliedNormalizations++;
-                                console.log(`✅ Normalização aplicada com sucesso: ${key}`);
                             } else {
-                                console.warn(`⚠️ Falha ao aplicar normalização: ${key}`);
                             }
                         } else {
-                            console.warn(`❌ Elemento não encontrado para normalização: ${key}`);
                         }
                     } else {
-                        console.log(`⚠️ Normalização não marcada como ativa: ${key}`, normalizationData);
                     }
                 }
             });
             
             // Se não encontrou normalizações no contentMap, buscar diretamente do banco
             if (elementsWithNormalization === 0) {
-                console.log('🔄 Nenhuma normalização encontrada no contentMap, buscando diretamente do banco...');
                 const bankNormalizations = await this.fetchNormalizationsFromDatabase();
                 
                 Object.keys(bankNormalizations).forEach(key => {
@@ -2416,27 +2347,22 @@ class HardemImageEditor {
                     const element = document.querySelector(`[data-key="${key}"]`);
                     
                     if (element && normalizationData) {
-                        console.log(`🎯 Aplicando normalização do banco para: ${key}`, normalizationData);
                         
                         if (this.applyNormalizationFromDatabase(element, key, normalizationData)) {
                             appliedNormalizations++;
-                            console.log(`✅ Normalização do banco aplicada: ${key}`);
                         }
                     }
                 });
             }
             
-            console.log(`📊 Resumo de normalizações: ${elementsWithNormalization} encontradas, ${appliedNormalizations} aplicadas`);
             
             if (appliedNormalizations > 0) {
-                console.log(`💾 ${appliedNormalizations} normalizações aplicadas do banco de dados`);
                 
                 // Mostrar feedback visual
                 if (this.core && this.core.ui) {
                     this.core.ui.showAlert(`🎯 ${appliedNormalizations} dimensionamentos restaurados!`, 'success');
                 }
             } else if (elementsWithNormalization > 0) {
-                console.warn(`⚠️ ${elementsWithNormalization} normalizações encontradas mas não aplicadas`);
             }
             
         } catch (error) {
@@ -2477,7 +2403,6 @@ class HardemImageEditor {
             this.zIndexManager.backgroundZIndexMap.set(dataKey, zIndex);
         }
         
-        console.log(`🔄 Z-index aplicado: ${dataKey} = ${zIndex}`);
     }
 
     /**
@@ -2502,7 +2427,6 @@ class HardemImageEditor {
             this.core.ui.showAlert(`📏 Elemento trazido para frente (z-index: ${newZIndex})`, 'success');
         }
         
-        console.log(`⬆️ Elemento trazido para frente: ${dataKey} (z-index: ${newZIndex})`);
     }
 
     /**
@@ -2527,7 +2451,6 @@ class HardemImageEditor {
             this.core.ui.showAlert(`📏 Elemento enviado para trás (z-index: ${newZIndex})`, 'info');
         }
         
-        console.log(`⬇️ Elemento enviado para trás: ${dataKey} (z-index: ${newZIndex})`);
     }
 
     /**
@@ -2541,7 +2464,6 @@ class HardemImageEditor {
         
         if (content && content.zIndex) {
             this.applyZIndex(element, content.zIndex);
-            console.log(`🔄 Z-index restaurado: ${dataKey} = ${content.zIndex}`);
         }
     }
 
@@ -2563,7 +2485,6 @@ class HardemImageEditor {
         });
         
         if (restoredCount > 0) {
-            console.log(`🔄 ${restoredCount} z-indexes restaurados`);
         }
     }
 
@@ -2590,7 +2511,6 @@ class HardemImageEditor {
             }
             this.core.contentMap[dataKey].zIndex = newZIndex;
             
-            console.log(`🆕 Z-index automático aplicado para nova imagem: ${dataKey} = ${newZIndex}`);
         }
     }
 

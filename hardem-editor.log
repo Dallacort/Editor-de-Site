@@ -2132,3 +2132,36 @@
 [2025-07-14 00:54:55] [API-ADMIN] Método: GET, Ação: get_normalizations
 [2025-07-14 00:54:55] [DATABASE] Conexão MySQL estabelecida com sucesso
 [2025-07-14 00:54:55] [API-ADMIN] Buscadas 2 normalizações do banco
+[2025-07-14 00:57:53] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-14 00:57:53] [LOAD-DB] Carregando dados para página: index
+[2025-07-14 00:57:53] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-14 00:57:53] [LOAD-DB] Carregamento concluído - Textos: 11, Imagens: 3
+[2025-07-14 00:57:53] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-14 00:57:53] [LOAD-DB] Carregando dados para página: index
+[2025-07-14 00:57:53] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-14 00:57:53] [LOAD-DB] Carregamento concluído - Textos: 11, Imagens: 3
+[2025-07-14 00:57:53] [API-ADMIN] Método: GET, Ação: get_normalizations
+[2025-07-14 00:57:53] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-14 00:57:53] [API-ADMIN] Buscadas 2 normalizações do banco
+[2025-07-14 01:00:38] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-14 01:00:38] [LOAD-DB] Carregando dados para página: index
+[2025-07-14 01:00:38] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-14 01:00:38] [LOAD-DB] Carregamento concluído - Textos: 11, Imagens: 3
+[2025-07-14 01:00:38] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-14 01:00:38] [LOAD-DB] Carregando dados para página: index
+[2025-07-14 01:00:38] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-14 01:00:38] [LOAD-DB] Carregamento concluído - Textos: 11, Imagens: 3
+[2025-07-14 01:00:39] [API-ADMIN] Método: GET, Ação: get_normalizations
+[2025-07-14 01:00:39] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-14 01:00:39] [API-ADMIN] Buscadas 2 normalizações do banco
+[2025-07-14 01:08:58] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-14 01:08:58] [LOAD-DB] Carregando dados para página: index
+[2025-07-14 01:08:58] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-14 01:08:59] [LOAD-DB] Carregamento concluído - Textos: 11, Imagens: 3
+[2025-07-14 01:08:59] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-14 01:08:59] [LOAD-DB] Carregando dados para página: index
+[2025-07-14 01:08:59] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-14 01:08:59] [LOAD-DB] Carregamento concluído - Textos: 11, Imagens: 3
+[2025-07-14 01:08:59] [API-ADMIN] Método: GET, Ação: get_normalizations
+[2025-07-14 01:08:59] [DATABASE] Conexão MySQL estabelecida com sucesso
+[2025-07-14 01:08:59] [API-ADMIN] Buscadas 2 normalizações do banco

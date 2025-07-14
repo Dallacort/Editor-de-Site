@@ -8,8 +8,6 @@
 (function() {
     'use strict';
     
-    console.log('🚀 Iniciando HARDEM Editor Refatorado...');
-    
     // Verificar se todos os módulos foram carregados
     function checkModules() {
         const requiredModules = [
@@ -49,7 +47,6 @@
         
         try {
             window.hardemEditor = new HardemEditorCore();
-            console.log('✅ HARDEM Editor Refatorado iniciado com sucesso!');
         } catch (error) {
             console.error('❌ Erro ao inicializar editor:', error);
         }

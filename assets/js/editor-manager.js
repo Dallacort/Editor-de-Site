@@ -11,24 +11,18 @@ class HardemEditorManager {
     }
     
     init() {
-        console.log('🎛️ Iniciando Gerenciador de Editor...');
-        
         // Carrega os scripts do editor para TODOS os usuários (admin ou visitante).
         // Isso garante que a renderização do conteúdo salvo (textos, imagens)
         // seja sempre consistente.
         this.loadEditorScripts().then(() => {
-            console.log('✅ Scripts do editor carregados para a página.');
-
             // Agora, verificamos se devemos ativar a INTERFACE de edição.
             const urlParams = new URLSearchParams(window.location.search);
             const editParam = urlParams.get('edit');
             
             if (editParam === 'true') {
-                console.log('📝 Modo de edição detectado via URL. Ativando interface...');
                 // Somente se for admin, habilita a interface de edição completa.
                 this.enableEditMode();
             } else {
-                console.log('👁️ Modo visualização - Apenas renderizando conteúdo salvo.');
                 // Para visitantes, os scripts já carregaram e aplicaram o conteúdo.
                 // Não fazemos mais nada para não mostrar a UI de edição.
                 this.disableEditMode();
@@ -39,15 +33,12 @@ class HardemEditorManager {
     }
     
     async enableEditMode() {
-        console.log('🔓 Habilitando modo de edição...');
-        
         // CRÍTICO: Obter o parâmetro da URL novamente para garantir
         const urlParams = new URLSearchParams(window.location.search);
         const isEditUrl = urlParams.get('edit') === 'true';
 
         // Se não estamos em uma URL de edição, parar imediatamente.
         if (!isEditUrl) {
-            console.log('👁️ URL não é de edição. Forçando modo de visualização.');
             this.disableEditMode();
             return;
         }
@@ -56,12 +47,10 @@ class HardemEditorManager {
         const isAuth = await this.checkAuthentication();
         
         if (!isAuth) {
-            console.log('❌ Não autenticado - redirecionando para admin');
             this.redirectToAdmin();
             return;
         }
         
-        console.log('✅ Autenticado e em URL de edição - carregando editor...');
         this.loadEditor();
     }
     
@@ -77,7 +66,6 @@ class HardemEditorManager {
             
             if (data.authenticated) {
                 this.isAuthenticated = true;
-                console.log('🔐 Usuário autenticado:', data.user.username);
                 return true;
             } else {
                 this.isAuthenticated = false;
@@ -90,7 +78,6 @@ class HardemEditorManager {
     }
     
     redirectToAdmin() {
-        console.log('❌ Não autenticado - mostrando modal de login');
         this.showLoginModal();
     }
     
@@ -247,7 +234,6 @@ class HardemEditorManager {
         
         // Carregar os scripts principais do editor
         this.loadEditorScripts().then(() => {
-            console.log('📝 Editor e seus módulos carregados com sucesso.');
             // Agora que os scripts estão prontos, esperamos a instância do editor ser criada
             this.waitForEditorInstance();
         });
@@ -260,7 +246,6 @@ class HardemEditorManager {
             attempts++;
             if (window.hardemEditor) {
                 clearInterval(interval);
-                console.log('✅ Instância do editor pronta. Criando interface de controle.');
                 // O editor está pronto, mas inativo. Criamos nossa UI de controle.
                 this.createEditorControls();
             } else if (attempts > maxAttempts) {
@@ -280,7 +265,6 @@ class HardemEditorManager {
         const toolbar = document.getElementById('hardem-editor-toolbar');
         if (toolbar) {
             toolbar.style.display = 'flex';
-            console.log('🔧 Toolbar sempre visível');
         }
 
         // Conectar ao botão de toggle existente na toolbar
@@ -296,7 +280,6 @@ class HardemEditorManager {
             toggleBtn.disabled = false;
             toggleBtn.title = 'Ativar Modo de Edição';
             
-            console.log('🔗 Conectado ao botão da toolbar existente');
         } else {
             console.warn('⚠️ Botão hardem-toggle-edit não encontrado na toolbar');
         }
@@ -355,15 +338,12 @@ class HardemEditorManager {
             return;
         }
         
-        console.log('🎛️ Alternando ativação do editor...');
-        
         // Chama o método do core que ativa/desativa o editor
         window.hardemEditor.toggleEditMode();
         
         // Aguarda um pouco para garantir que o estado foi alterado
         setTimeout(() => {
             this.updateEditorControls();
-            console.log(`🎛️ Interface atualizada. Editor ${window.hardemEditor.editMode ? 'ATIVO' : 'INATIVO'}`);
         }, 100);
     }
 
@@ -444,13 +424,11 @@ class HardemEditorManager {
         const toolbar = document.getElementById('hardem-editor-toolbar');
         if (toolbar) {
             toolbar.style.display = 'none';
-            console.log('🔧 Toolbar oculta após logout');
         }
         
         const sidePanel = document.querySelector('.hardem-editor-sidepanel');
         if(sidePanel) sidePanel.remove();
 
-        console.log('🗑️ UI do editor removida (toolbar mantida oculta).');
     }
 
     async loadEditorScripts() {
@@ -465,13 +443,10 @@ class HardemEditorManager {
             'assets/js/editor-refatorado.js'
         ];
         
-        console.log('📦 Carregando scripts do editor...');
-        
         for (const scriptSrc of scripts) {
             await this.loadScript(scriptSrc);
         }
         
-        console.log('✅ Todos os scripts carregados');
     }
     
     loadScript(src) {
@@ -485,11 +460,9 @@ class HardemEditorManager {
             const script = document.createElement('script');
             script.src = src;
             script.onload = () => {
-                console.log(`✅ Script carregado: ${src}`);
                 resolve();
             };
             script.onerror = () => {
-                console.error(`❌ Erro ao carregar script: ${src}`);
                 reject(new Error(`Failed to load script: ${src}`));
             };
             document.head.appendChild(script);
@@ -498,13 +471,11 @@ class HardemEditorManager {
     
     createEditModeIndicator() {
         // Não criar mais o indicador vermelho - a toolbar já tem o controle
-        console.log('📝 Modo de edição gerenciado pela toolbar principal');
     }
     
     disableEditMode() {
         // Esta função agora serve apenas para garantir que nenhuma UI do editor
         // seja mostrada acidentalmente para visitantes.
-        console.log('👁️ Modo visualização ativo. Removendo qualquer UI residual.');
         this.removeEditorUI();
     }
 
@@ -513,7 +484,6 @@ class HardemEditorManager {
      */
     preloadContent() {
         const pageKey = this.getPageKey();
-        console.log('⚡ Pré-carregando conteúdo para modo edição...');
         
         fetch(`load-database.php?page=${encodeURIComponent(pageKey)}`, {
             method: 'GET',
@@ -527,7 +497,6 @@ class HardemEditorManager {
             if (result.success && result.data) {
                 // Armazenar em cache temporário
                 window.hardemPreloadedContent = result.data;
-                console.log('⚡ Conteúdo pré-carregado em cache para edição');
             }
         })
         .catch(error => {
@@ -540,7 +509,6 @@ class HardemEditorManager {
      */
     preloadContentForVisitors() {
         const pageKey = this.getPageKey();
-        console.log('⚡ Carregando conteúdo para visitantes...');
         
         // Adicionar um parâmetro de cache-busting para garantir dados novos
         const cacheBuster = `?v=${new Date().getTime()}`;
@@ -556,7 +524,6 @@ class HardemEditorManager {
         .then(response => response.json())
         .then(result => {
             if (result.success && result.data) {
-                console.log('⚡ Aplicando conteúdo instantaneamente para visitantes');
                 this.applyContentInstantly(result.data);
                 
                 // Remover loading após aplicar conteúdo
@@ -618,7 +585,6 @@ class HardemEditorManager {
                 // Aplicar também via sistema persistente se disponível
                 setTimeout(() => {
                     if (window.hardemPersistentDims) {
-                        console.log(`🔄 Aplicando normalização persistente: ${key} = ${width}x${height}`);
                         window.hardemPersistentDims.applyPersistentDimensions(key, width, height, true);
                     } else {
                         // Aplicar diretamente se sistema persistente não estiver disponível
@@ -641,7 +607,6 @@ class HardemEditorManager {
                             // Forçar re-render
                             element.offsetHeight;
                             
-                            console.log(`🎨 Normalização aplicada diretamente: ${key} = ${width}x${height}`);
                         }
                     }
                 }, 100);
@@ -706,7 +671,6 @@ class HardemEditorManager {
                             background-repeat: no-repeat !important;
                         }
                     `);
-                    console.log(`🎨 Background aplicado com fallback inteligente: ${key} -> ${fallbackSelector}`);
                 }
                 
                 appliedCount++;
@@ -745,7 +709,6 @@ class HardemEditorManager {
                         element.textContent = counterValue;
                     }
                     
-                    console.log(`🔢 Contador aplicado instantaneamente: ${key} = ${counterValue}`);
                     appliedCount++;
                 }
             }
@@ -794,7 +757,6 @@ class HardemEditorManager {
             }
         }, 300);
         
-        console.log('⚡ Loading instantâneo removido para visitantes');
     }
     
     exitEditMode() {
