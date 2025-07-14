@@ -708,7 +708,6 @@ class HardemImageEditor {
             
             return true;
         } catch (error) {
-            console.warn('Erro na validação SVG:', error);
             return false;
         }
     }
@@ -773,13 +772,11 @@ class HardemImageEditor {
                 callback(resizedSrc);
                 
             } catch (error) {
-                console.error('Erro ao redimensionar background:', error);
                 this.handleImageError(dataKey, imageSrc, callback);
             }
         };
         
         img.onerror = () => {
-            console.error('Erro ao carregar background para redimensionamento');
             this.handleImageError(dataKey, imageSrc, callback);
         };
         
@@ -801,7 +798,6 @@ class HardemImageEditor {
                 img.onload = () => callback(imageSrc);
                 img.onerror = () => {
                     if (attempts + 1 === this.maxRetries) {
-                        console.error(`❌ Todas as tentativas falharam para ${dataKey}`);
                         this.core.ui.showAlert('Erro ao processar imagem após várias tentativas', 'error');
                         callback(imageSrc);
                     } else {
@@ -812,7 +808,6 @@ class HardemImageEditor {
             }, 1000 * (attempts + 1)); // Aumentar o delay a cada tentativa
             
         } else {
-            console.error(`❌ Desistindo após ${this.maxRetries} tentativas para ${dataKey}`);
             callback(imageSrc);
         }
     }
@@ -944,14 +939,12 @@ class HardemImageEditor {
                 callback(resizedSrc);
                 
             } catch (error) {
-                console.error('Erro ao redimensionar imagem:', error);
                 // Fallback: usar imagem original
                 callback(newImageSrc);
             }
         };
         
         img.onerror = () => {
-            console.error('Erro ao carregar imagem para redimensionamento');
             callback(newImageSrc);
         };
         
@@ -1096,7 +1089,6 @@ class HardemImageEditor {
             item.status = 'completed';
             
         } catch (error) {
-            console.error(`❌ Erro ao processar ${item.type}:`, error);
             item.status = 'error';
             this.core.ui.showAlert(`Erro ao processar ${item.file.name}: ${error.message}`, 'error');
             
@@ -1288,7 +1280,6 @@ class HardemImageEditor {
                 try {
             this.uploadBackgroundImage(element);
                 } catch (error) {
-                    console.error(`Erro no upload (tentativa ${attempts + 1}):`, error);
                     if (attempts < 2) { // Tentar no máximo 3 vezes
                         setTimeout(() => retryUpload(attempts + 1), 1000);
                     } else {
@@ -1309,7 +1300,6 @@ class HardemImageEditor {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
                     const bgImage = window.getComputedStyle(element).backgroundImage;
                     if (!bgImage || bgImage === 'none') {
-                        console.warn(`🔍 Background perdido em ${dataKey}, tentando restaurar...`);
                         this.restoreBackground(element);
                     }
                 }
@@ -1469,13 +1459,11 @@ class HardemImageEditor {
             
             // Alertar se memória está muito alta
             if (stats.memoryPercent > 90) {
-                console.warn('⚠️ Uso de memória alto:', stats.memoryPercent + '%');
                 this.optimizeMemoryUsage();
             }
             
             // Alertar se fila está muito longa
             if (stats.queueLength > 10) {
-                console.warn('⚠️ Fila de processamento longa:', stats.queueLength, 'itens');
             }
             
             // Alertar se há processamento travado
@@ -1493,7 +1481,6 @@ class HardemImageEditor {
                 }
                 
                 if (hasStuckProcessing) {
-                    console.warn('⚠️ Processamento pode estar travado. Use clearProcessingQueue() se necessário.');
                 }
             }
             
@@ -1535,7 +1522,6 @@ class HardemImageEditor {
             // Verificar se a imagem está quebrada
             if (img.naturalWidth === 0 && img.complete && img.src.startsWith('data:')) {
                 const dataKey = img.getAttribute('data-key');
-                console.warn(`🔧 Imagem quebrada detectada: ${dataKey}`);
                 
                 // Tentar restaurar do contentMap
                 if (this.core.contentMap[dataKey] && this.core.contentMap[dataKey].src) {
@@ -1628,7 +1614,6 @@ class HardemImageEditor {
      * Normalizar todas as imagens (mantido para compatibilidade, mas com aviso)
      */
     normalizeAllImageSizes() {
-        console.warn('⚠️ ATENÇÃO: normalizeAllImageSizes() aplica as mesmas dimensões para TODAS as imagens!');
         
         const confirmGlobal = confirm(
             'ATENÇÃO: Esta função vai aplicar as mesmas dimensões para TODAS as imagens da página.\n\n' +
@@ -1969,13 +1954,11 @@ class HardemImageEditor {
                 callback(resizedSrc);
                 
             } catch (error) {
-                console.error('Erro ao redimensionar para dimensões alvo:', error);
                 callback(newImageSrc);
             }
         };
         
         img.onerror = () => {
-            console.error('Erro ao carregar imagem para redimensionamento alvo');
             callback(newImageSrc);
         };
         
@@ -1995,7 +1978,6 @@ class HardemImageEditor {
                 try {
                     const dataKey = element.getAttribute('data-key');
                     if (!dataKey) {
-                        console.warn('Elemento sem data-key, não é possível salvar normalização');
                         resolve(false);
                         return;
                     }
@@ -2003,7 +1985,6 @@ class HardemImageEditor {
                     // Obter ID da página do elemento atual
                     const pageId = this.getPageId();
                     if (!pageId) {
-                        console.warn('ID da página não encontrado');
                         resolve(false);
                         return;
                     }
@@ -2104,7 +2085,6 @@ class HardemImageEditor {
             }
 
         } catch (error) {
-            console.error('Erro ao remover normalização do banco:', error);
         }
     }
 
@@ -2133,7 +2113,6 @@ class HardemImageEditor {
                         const parsedProps = JSON.parse(properties);
                         normalizationData = parsedProps.normalization;
                     } catch (e) {
-                        console.warn('Erro ao parsear propriedades:', e);
                     }
                 }
             }
@@ -2209,7 +2188,6 @@ class HardemImageEditor {
 
             return true;
         } catch (error) {
-            console.error('Erro ao aplicar normalização do banco:', error);
             return false;
         }
     }
@@ -2276,7 +2254,6 @@ class HardemImageEditor {
             });
             
             if (!response.ok) {
-                console.warn('⚠️ Erro ao buscar normalizações do banco:', response.status);
                 return {};
             }
             
@@ -2288,7 +2265,6 @@ class HardemImageEditor {
             
             return {};
         } catch (error) {
-            console.error('❌ Erro ao buscar normalizações:', error);
             return {};
         }
     }
@@ -2321,11 +2297,7 @@ class HardemImageEditor {
                         const element = document.querySelector(`[data-key="${key}"]`);
                         
                         if (element) {
-                            console.log(`🎯 Aplicando normalização para: ${key}`, {
-                                width: normalizationData.target_width,
-                                height: normalizationData.target_height
-                            });
-                            
+     
                             // Aplicar normalização
                             if (this.applyNormalizationFromDatabase(element, key, normalizationData)) {
                                 appliedNormalizations++;
@@ -2366,7 +2338,6 @@ class HardemImageEditor {
             }
             
         } catch (error) {
-            console.error('Erro ao aplicar conteúdo do banco:', error);
         }
     }
 

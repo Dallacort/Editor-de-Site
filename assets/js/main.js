@@ -359,7 +359,6 @@
             const currentText = $element.text().trim();
             const dataKey = $element.attr('data-key');
 
-            console.log(`🔍 Processando contador: ${dataKey}, texto atual: "${currentText}"`);
 
             // Primeiro, tentar obter valor do contentMap (dados salvos)
             if (window.hardemEditor && window.hardemEditor.contentMap && dataKey && 
@@ -368,7 +367,6 @@
                 window.hardemEditor.contentMap[dataKey].counterValue !== undefined) {
               
               countNumber = window.hardemEditor.contentMap[dataKey].counterValue;
-              console.log(`🔢 Usando valor salvo do contentMap para ${dataKey}: ${countNumber}`);
               
             } else if (window.hardemEditor && window.hardemEditor.contentMap && dataKey && 
                        window.hardemEditor.contentMap[dataKey] && 
@@ -376,17 +374,14 @@
               
               // Se não é contador mas tem texto salvo
               countNumber = window.hardemEditor.contentMap[dataKey].text;
-              console.log(`📝 Usando texto salvo do contentMap para ${dataKey}: ${countNumber}`);
               
             } else if (currentText && currentText !== '00' && currentText !== '0') {
               // Se não há dados salvos, mas o texto foi alterado, usar o texto atual
               countNumber = currentText;
-              console.log(`📝 Usando texto atual para ${dataKey}: ${countNumber}`);
               
             } else {
               // Fallback para data-count
               countNumber = $element.attr('data-count');
-              console.log(`📊 Usando data-count para ${dataKey}: ${countNumber}`);
             }
 
             // Odometer.js needs a dot as a decimal separator.
@@ -400,7 +395,6 @@
               countNumber = numericValue.toString();
             }
 
-            console.log(`🎯 Valor final para animação ${dataKey}: "${countNumber}"`);
             
             $element.html(countNumber);
             $element.addClass('odometer-triggered'); // Add a class to prevent re-triggering
@@ -426,7 +420,6 @@
 
       // Wait for the editor to finish loading its content
       document.addEventListener('hardem-editor-content-loaded', function() {
-        console.log('Odometer received content loaded event. Initializing.');
         initOdometer();
       });
 
@@ -1032,10 +1025,8 @@
 
         });
         swiper_1.on('slideChange', function () {
-          console.log('slider moved');
           var activeslide = swiper_1.realIndex;
           var totalslide = swiper_1.slides.length;
-          console.log(activeslide);
           $(".activeslide").html('0' + (activeslide + 1));
           $(".totalslide").html('0' + (totalslide));
         });

@@ -620,7 +620,6 @@ class HardemEditorUI {
                         this.showAlert('✅ Salvamento por partes concluído!', 'success');
                     }
                 }).catch(error => {
-                    console.error('Erro no salvamento por partes:', error);
                     this.showAlert('❌ Erro no salvamento por partes', 'error');
                 });
             }
@@ -655,9 +654,7 @@ class HardemEditorUI {
         const savedPosition = localStorage.getItem('hardem-editor-panel-position');
         if (savedPosition === 'left') {
             panel.classList.add('sidepanel-left');
-            console.log('🔄 Posição restaurada: esquerda');
         } else {
-            console.log('🔄 Posição restaurada: direita');
         }
 
         // Listener para fechar
@@ -665,25 +662,19 @@ class HardemEditorUI {
         
         // Listener para mover painel
         panel.querySelector('.hardem-editor-move-panel').addEventListener('click', () => {
-            console.log('🔧 Botão de movimento clicado');
-            console.log('📍 Classes atuais do painel:', panel.className);
-            console.log('📍 Posição atual do painel:', panel.style.cssText);
             
             if (panel.classList.contains('sidepanel-left')) {
                 panel.classList.remove('sidepanel-left');
                 localStorage.setItem('hardem-editor-panel-position', 'right');
-                console.log('➡️ Movendo para direita - classes após:', panel.className);
                 this.showAlert('Painel movido para a direita.', 'info', 2000);
             } else {
                 panel.classList.add('sidepanel-left');
                 localStorage.setItem('hardem-editor-panel-position', 'left');
-                console.log('⬅️ Movendo para esquerda - classes após:', panel.className);
                 this.showAlert('Painel movido para a esquerda.', 'info', 2000);
             }
             
             // Forçar re-renderização
             panel.offsetHeight;
-            console.log('🔄 Re-renderização forçada');
         });
     }
 
@@ -731,7 +722,6 @@ class HardemEditorUI {
         const panelContent = this.sidepanelContent || document.querySelector('.hardem-editor-sidepanel-content');
         
         if (!panelContent) {
-            console.error('Conteúdo do painel lateral não encontrado');
             return;
         }
         
@@ -1080,7 +1070,6 @@ class HardemEditorUI {
         }
 
         this.showAlert('Texto atualizado com sucesso!', 'success');
-        console.log('Alterações aplicadas para:', dataKey);
     }
 
     /**
@@ -1151,7 +1140,6 @@ class HardemEditorUI {
                 processing.hide();
                 this.showAlert('Imagem do slide atualizada com sucesso!', 'success');
                 
-                console.log(`🖼️ Imagem do slide atualizada: ${dataKey}`, this.core.contentMap[dataKey]);
                 
                 // Atualizar painel
                 setTimeout(() => {
@@ -1159,14 +1147,12 @@ class HardemEditorUI {
                 }, 100);
                 
             } catch (error) {
-                console.error('Erro ao processar imagem:', error);
                 processing.hide();
                 this.showAlert('Erro ao processar imagem do slide!', 'error');
             }
         };
         
         reader.onerror = (error) => {
-            console.error('Erro ao ler arquivo:', error);
             processing.hide();
             this.showAlert('Erro ao ler arquivo de imagem!', 'error');
         };
@@ -1222,7 +1208,6 @@ class HardemEditorUI {
      * Mostrar alerta
      */
     showAlert(message, type = 'info', duration = 4000) {
-        console.log(`📢 ${type.toUpperCase()}: ${message}`);
         
         // Remover alertas anteriores
         const existingAlerts = document.querySelectorAll('.editor-alert');
@@ -1363,7 +1348,6 @@ class HardemEditorUI {
         const safetyTimeout = setTimeout(() => {
             if (overlay.parentNode) {
                 overlay.remove();
-                console.warn('Overlay de processamento removido por timeout de segurança');
             }
         }, 10000);
         

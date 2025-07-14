@@ -15,7 +15,6 @@ class HardemTextEditor {
     setupEditableElements(container = document) {
         if (!this.core.editMode) return;
         
-        console.log('🔧 Configurando elementos editáveis...');
         
         // Detectar automaticamente contadores existentes
         this.detectAndSetupCounters(container);
@@ -42,7 +41,6 @@ class HardemTextEditor {
                 const odometerSpan = element.querySelector('span.odometer');
                 if (odometerSpan && (odometerSpan.classList.contains('odometer-animating-up') || 
                                    odometerSpan.classList.contains('odometer-animating-down'))) {
-                    console.log(`⏳ Contador em animação, aguardando: ${element.textContent?.trim()}`);
                     return; // Não processar contadores em animação
                 }
             }
@@ -55,7 +53,6 @@ class HardemTextEditor {
      * NOVO: Detectar e configurar contadores automaticamente
      */
     detectAndSetupCounters(container = document) {
-        console.log('🔍 Detectando contadores automaticamente...');
         
         // Encontrar todos os elementos span.odometer com data-key
         const odometerElements = container.querySelectorAll('span.odometer[data-key]');
@@ -66,7 +63,6 @@ class HardemTextEditor {
             const currentText = odometerSpan.textContent.trim();
             const parentElement = odometerSpan.closest('[data-key]');
             
-            console.log(`🔢 Contador detectado: ${dataKey} (data-count: ${dataCount}, texto: "${currentText}")`);
             
             // Verificar se já existe no contentMap
             if (!this.core.contentMap[dataKey]) {
@@ -85,7 +81,6 @@ class HardemTextEditor {
                     this.core.utils.collectElementInfo(parentElement || odometerSpan) : null;
                 this.core.contentMap[dataKey].timestamp = new Date().toISOString();
                 
-                console.log(`📝 Contador inicializado: ${dataKey} = ${initialValue}${suffix}`);
             } else if (this.core.contentMap[dataKey].text && !this.core.contentMap[dataKey].isCounter) {
                 // Se já tem texto salvo, converter para contador
                 const numericValue = parseFloat(this.core.contentMap[dataKey].text) || 0;
@@ -95,15 +90,12 @@ class HardemTextEditor {
                 this.core.contentMap[dataKey].counterValue = numericValue;
                 this.core.contentMap[dataKey].counterSuffix = suffix;
                 
-                console.log(`🔄 Texto convertido para contador: ${dataKey} = ${numericValue}${suffix}`);
             }
             
             // Configurar o elemento pai para edição apenas se o modo de edição estiver ativo
             if (parentElement && this.core.editMode) {
-                console.log(`🔢 Configurando contador para edição: ${dataKey} (editMode: ${this.core.editMode})`);
                 this.makeCounterEditable(parentElement);
             } else if (parentElement && !this.core.editMode) {
-                console.log(`⏸️ Contador detectado mas não configurado para edição: ${dataKey} (editMode: ${this.core.editMode})`);
             }
         });
     }
@@ -114,7 +106,6 @@ class HardemTextEditor {
     makeTextElementEditable(element) {
         // CRÍTICO: Só configurar elementos editáveis se o modo de edição estiver ativo
         if (!this.core.editMode) {
-            console.log(`⏸️ makeTextElementEditable ignorado (editMode inativo): ${element.tagName}`);
             return;
         }
         
@@ -133,7 +124,6 @@ class HardemTextEditor {
         
         // Verificar explicitamente se é um container de serviço
         if (this.core.utils.isServiceMenuContainer(element)) {
-            console.log('Ignorando container de serviço:', element);
             return; // Não tornar editável
         }
         
@@ -164,7 +154,6 @@ class HardemTextEditor {
                 (element.tagName === 'SPAN' || element.tagName === 'P' || 
                  (element.tagName === 'A' && !element.querySelector('.rts-mega-menu, .submenu')))) {
                 // Permitir edição de textos simples em dropdowns
-                console.log(`🔓 Permitindo edição de texto em dropdown: ${element.tagName} - "${element.textContent?.trim().substring(0, 30)}..."`);
             }
         }
         
@@ -254,15 +243,12 @@ class HardemTextEditor {
                 // NOVO: Debug melhorado para dropdowns
                 const isInDropdown = element.closest('.submenu, .has-dropdown') !== null;
                 if (isInDropdown) {
-                    console.log(`🔽 Texto de dropdown salvo: ${dataKey} = "${newText}" (header: ${this.core.contentMap[dataKey].isHeaderContent})`);
                     this.core.contentMap[dataKey].isDropdownContent = true;
                 } else {
-                    console.log(`📝 Texto atualizado: ${dataKey} = "${newText}" (header: ${this.core.contentMap[dataKey].isHeaderContent})`);
                 }
                 
                 // Forçar salvamento imediato para elementos de dropdown
                 if (isInDropdown) {
-                    console.log(`💾 Forçando salvamento imediato para dropdown: ${dataKey}`);
                     this.core.storage.saveContent();
                 }
                 
@@ -393,7 +379,6 @@ class HardemTextEditor {
                     !clickedElement.classList.contains('details') && 
                     clickedElement.tagName !== 'IMG') {
                 
-                console.log('Clique ignorado em elemento não editável do menu de serviços');
                 return [];
             }
             
@@ -450,7 +435,6 @@ class HardemTextEditor {
                         elements.push(distances[0].el);
                         return elements;
                     } else {
-                        console.log('Clique muito distante de elementos editáveis específicos');
                         return [];
                     }
                 }
@@ -546,7 +530,6 @@ class HardemTextEditor {
         const panelContent = document.querySelector('.hardem-editor-sidepanel-content');
         
         if (!panelContent) {
-            console.error('Painel lateral não encontrado');
             return;
         }
         
@@ -751,14 +734,11 @@ class HardemTextEditor {
             // NOVO: Debug melhorado para dropdowns via painel
             const isInDropdown = element.closest('.submenu, .has-dropdown') !== null;
             if (isInDropdown) {
-                console.log(`🔽 Texto de dropdown salvo via painel: ${dataKey} = "${newText}" (header: ${this.core.contentMap[dataKey].isHeaderContent})`);
                 this.core.contentMap[dataKey].isDropdownContent = true;
                 
                 // Forçar salvamento imediato para elementos de dropdown
-                console.log(`💾 Forçando salvamento imediato para dropdown via painel: ${dataKey}`);
                 this.core.storage.saveContent();
             } else {
-                console.log(`📝 Texto atualizado via painel: ${dataKey} = "${newText}" (header: ${this.core.contentMap[dataKey].isHeaderContent})`);
             }
             
             this.core.ui.showAlert('Texto atualizado!', 'success');
@@ -778,7 +758,6 @@ class HardemTextEditor {
     makeCounterEditable(element) {
         // CRÍTICO: Só configurar contadores editáveis se o modo de edição estiver ativo
         if (!this.core.editMode) {
-            console.log(`⏸️ makeCounterEditable ignorado (editMode inativo): ${element.tagName}`);
             return;
         }
         
@@ -858,7 +837,6 @@ class HardemTextEditor {
         // Neutralizar efeitos problemáticos
         this.neutralizeElementEffects(element);
         
-        console.log(`✅ Contador editável configurado: ${dataKey} (${currentNumber}${suffix})`);
     }
 
     /**
@@ -959,7 +937,6 @@ class HardemTextEditor {
                         this.core.utils.collectElementInfo(element) : null;
                     this.core.contentMap[dataKey].timestamp = new Date().toISOString();
                     
-                    console.log(`🔢 Contador atualizado: ${dataKey} = ${newNumber}${suffix}`);
                     
                     this.core.ui.showAlert(`Contador atualizado para ${newNumber}${suffix}!`, 'success');
                 }
@@ -985,7 +962,6 @@ class HardemTextEditor {
                 }
                 
             } catch (error) {
-                console.warn('Erro ao finalizar edição do contador:', error);
                 
                 // Fallback: tentar restaurar estado básico
                 try {
@@ -996,7 +972,6 @@ class HardemTextEditor {
                         editContainer.remove();
                     }
                 } catch (fallbackError) {
-                    console.warn('Erro no fallback de limpeza:', fallbackError);
                 }
             }
         };
@@ -1028,7 +1003,6 @@ class HardemTextEditor {
                         }, 100);
                     }
                 } catch (error) {
-                    console.warn('Erro ao cancelar edição do contador:', error);
                 }
             }
         });

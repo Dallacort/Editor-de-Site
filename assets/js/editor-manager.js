@@ -28,7 +28,6 @@ class HardemEditorManager {
                 this.disableEditMode();
             }
         }).catch(error => {
-            console.error('❌ Falha crítica ao carregar scripts do editor. A página pode não ser renderizada corretamente.', error);
         });
     }
     
@@ -72,7 +71,6 @@ class HardemEditorManager {
                 return false;
             }
         } catch (error) {
-            console.error('❌ Erro ao verificar autenticação:', error);
             return false;
         }
     }
@@ -250,7 +248,6 @@ class HardemEditorManager {
                 this.createEditorControls();
             } else if (attempts > maxAttempts) {
                 clearInterval(interval);
-                console.error('❌ Falha ao encontrar a instância do editor a tempo.');
             }
         }, 100);
     }
@@ -281,7 +278,6 @@ class HardemEditorManager {
             toggleBtn.title = 'Ativar Modo de Edição';
             
         } else {
-            console.warn('⚠️ Botão hardem-toggle-edit não encontrado na toolbar');
         }
 
         // Inicializar controles de edição como ocultos (editor inativo por padrão)
@@ -334,7 +330,6 @@ class HardemEditorManager {
 
     toggleEditorActivation() {
         if (!window.hardemEditor) {
-            console.error('❌ Editor não encontrado para ativar/desativar');
             return;
         }
         
@@ -392,7 +387,6 @@ class HardemEditorManager {
                 body: "action=logout"
             });
         } catch (error) {
-            console.error("Erro no logout:", error);
         } finally {
             // Garante que a UI seja removida e o estado resetado
             this.removeEditorUI();
@@ -500,7 +494,6 @@ class HardemEditorManager {
             }
         })
         .catch(error => {
-            console.log('⚠️ Erro no pré-carregamento (não crítico):', error);
         });
     }
 
@@ -536,7 +529,6 @@ class HardemEditorManager {
             }
         })
         .catch(error => {
-            console.log('⚠️ Erro ao carregar conteúdo para visitantes:', error);
             // Remover loading em caso de erro
             this.removeInstantLoading();
         });
@@ -723,7 +715,6 @@ class HardemEditorManager {
         }
         
         if (appliedCount > 0) {
-            console.log(`⚡ ${appliedCount} elementos aplicados instantaneamente para visitantes`);
         }
     }
 

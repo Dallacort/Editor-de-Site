@@ -23,15 +23,6 @@
         const missingModules = requiredModules.filter(module => typeof window[module] === 'undefined');
         
         if (missingModules.length > 0) {
-            console.error('❌ Módulos não encontrados:', missingModules);
-            console.error('Certifique-se de que todos os arquivos do editor foram carregados:');
-            console.error('- editor-core.js');
-            console.error('- editor-ui.js'); 
-            console.error('- editor-text.js');
-            console.error('- editor-image.js');
-            console.error('- editor-carousel.js');
-            console.error('- editor-storage.js');
-            console.error('- editor-utils.js');
             return false;
         }
         

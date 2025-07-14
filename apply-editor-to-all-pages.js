@@ -102,7 +102,6 @@ function cleanOldScripts(content) {
 }
 
 function processFile(filePath) {
-    console.log(`Processando: ${filePath}`);
     
     try {
         let content = fs.readFileSync(filePath, 'utf8');
@@ -162,27 +161,17 @@ function processFile(filePath) {
 
         if (content !== originalContent) {
             fs.writeFileSync(filePath, content, 'utf8');
-            console.log(`✅ Sistema de edição ATUALIZADO em: ${path.basename(filePath)}`);
         } else {
-            console.log(`⏭️ Arquivo ${path.basename(filePath)} não precisou de atualização.`);
         }
     } catch (error) {
-        console.error(`❌ Erro ao processar ${path.basename(filePath)}:`, error.message);
     }
 }
 
-console.log('🚀 Iniciando a GRANDE ATUALIZAÇÃO do sistema de edição...');
-console.log('Esta operação vai remover todos os scripts de edição antigos e instalar o novo "editor-manager".');
-console.log('---');
 
 pagesToEdit.forEach(page => {
     const filePath = path.join(__dirname, page);
     if (fs.existsSync(filePath)) {
         processFile(filePath);
     } else {
-        console.warn(`⚠️ Arquivo ${page} não encontrado, pulando.`);
     }
 });
-
-console.log('---');
-console.log('🎉 Atualização concluída!'); 

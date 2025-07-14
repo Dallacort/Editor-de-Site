@@ -579,7 +579,6 @@
                     document.getElementById('total-size').textContent = formatFileSize(data.data.total_size);
                 }
             } catch (error) {
-                console.error('Erro ao carregar estatísticas:', error);
             }
         }
         
@@ -726,12 +725,10 @@
         }
         
         function editText(id) {
-            console.log('Editar texto:', id);
         }
         
         function deleteText(id) {
             if (confirm('Tem certeza que deseja excluir este texto?')) {
-                console.log('Excluir texto:', id);
             }
         }
         
@@ -739,7 +736,6 @@
         
         function optimizeDatabase() {
             if (confirm('Esta ação irá otimizar o banco de dados. Continuar?')) {
-                console.log('Otimizar banco');
             }
         }
         

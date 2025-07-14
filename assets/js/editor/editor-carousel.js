@@ -15,7 +15,6 @@ class HardemCarouselEditor {
     setupCarouselEditing(container = document) {
         // CRÍTICO: Só configurar carrosséis editáveis se o modo de edição estiver ativo
         if (!this.core.editMode) {
-            console.log(`⏸️ setupCarouselEditing ignorado (editMode inativo)`);
             return;
         }
         
@@ -36,7 +35,6 @@ class HardemCarouselEditor {
             });
         });
         
-        console.log('Carrosséis configurados para edição');
     }
 
     /**
@@ -66,7 +64,6 @@ class HardemCarouselEditor {
         carousel.addEventListener('click', handleClick);
         carousel.addEventListener('dblclick', handleDoubleClick);
         
-        console.log(`Carrossel editável: ${dataKey}`);
     }
 
     /**
@@ -83,7 +80,6 @@ class HardemCarouselEditor {
         const panelContent = document.querySelector('.hardem-editor-sidepanel-content');
         
         if (!panelContent) {
-            console.error('Conteúdo do painel lateral não encontrado');
             return;
         }
         
@@ -284,7 +280,6 @@ class HardemCarouselEditor {
             processing.hide();
             this.core.ui.showAlert(`Imagem do slide ${slideIndex + 1} atualizada!`, 'success');
             
-            console.log(`Imagem do slide atualizada: ${dataKey}`);
         };
         
         reader.readAsDataURL(file);
@@ -340,7 +335,6 @@ class HardemCarouselEditor {
                 
                 this.core.ui.showAlert(`Background do slide ${slideIndex + 1} atualizado!`, 'success');
                 
-                console.log(`Background do slide atualizado: ${dataKey}`, this.core.contentMap[dataKey]);
                 
                 // Atualizar painel se estiver aberto
                 if (this.core.currentElement === slideElement) {
@@ -349,14 +343,12 @@ class HardemCarouselEditor {
                     }, 100);
                 }
             } catch (error) {
-                console.error('Erro ao processar background:', error);
                 processing.hide();
                 this.core.ui.showAlert('Erro ao processar background do slide!', 'error');
             }
         };
         
         reader.onerror = (error) => {
-            console.error('Erro ao ler arquivo:', error);
             processing.hide();
             this.core.ui.showAlert('Erro ao ler arquivo de imagem!', 'error');
         };
@@ -474,7 +466,6 @@ class HardemCarouselEditor {
             });
             
             this.core.ui.showAlert('Carrossel restaurado aos padrões!', 'success');
-            console.log(`Carrossel restaurado: ${carouselDataKey}`);
         }
     }
 
@@ -485,7 +476,6 @@ class HardemCarouselEditor {
         const panelContent = document.querySelector('.hardem-editor-sidepanel-content');
         
         if (!panelContent) {
-            console.error('Conteúdo do painel lateral não encontrado');
             return;
         }
         
@@ -579,7 +569,6 @@ class HardemCarouselEditor {
         }
         
         this.core.ui.showAlert('Mudanças do slide aplicadas!', 'success');
-        console.log('Mudanças do slide aplicadas para:', dataKey);
     }
 
     /**
@@ -673,7 +662,6 @@ class HardemCarouselEditor {
                 processing.hide();
                 this.core.ui.showAlert(`Thumbnail ${thumbIndex + 1} atualizado!`, 'success');
                 
-                console.log(`Thumbnail atualizado: ${dataKey}`);
             }
         };
         

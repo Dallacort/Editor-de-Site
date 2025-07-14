@@ -136,7 +136,6 @@ class HardemEditorCore {
                 }
                 
             }).catch(error => {
-                console.error('❌ Erro ao carregar conteúdo:', error);
             });
         };
 
@@ -150,7 +149,6 @@ class HardemEditorCore {
         // Fallback com timeout
         setTimeout(() => {
             if (!this.contentHasLoaded) {
-                console.log('⏰ Timeout: Forçando carregamento de conteúdo...');
                 loadContent();
             }
         }, 2000);
@@ -172,15 +170,12 @@ class HardemEditorCore {
                 // Verificar se há objetos [object Object] corrompidos
                 for (const [key, value] of Object.entries(parsed)) {
                     if (typeof value === 'string' && value.includes('[object Object]')) {
-                        console.warn(`Dados corrompidos detectados para ${key}, removendo...`);
                         delete parsed[key];
                     }
                 }
                 localStorage.setItem(pageKey, JSON.stringify(parsed));
-                console.log(`🔧 Dados verificados para página: ${pageKey}`);
             }
         } catch (error) {
-            console.warn('Dados do localStorage corrompidos, limpando...', error);
             const path = window.location.pathname;
             const fileName = path.split('/').pop() || 'index.html';
             const pageKey = `siteContent_${fileName}`;
@@ -204,7 +199,6 @@ class HardemEditorCore {
             
             sessionStorage.clear();
             this.contentMap = {};
-            console.log(`Reset de emergência executado para: ${pageKey}`);
             location.reload();
         }
     }
@@ -230,7 +224,6 @@ class HardemEditorCore {
         }
         
         this.ui.showAlert('🧹 Elementos presos removidos!', 'success');
-        console.log('🧹 Limpeza de emergência executada');
     }
 
     /**
@@ -260,7 +253,6 @@ class HardemEditorCore {
             stats.imageSystem = this.imageEditor.getSystemStats();
         }
         
-        console.log('📊 Estatísticas do sistema:', stats);
         return stats;
     }
 
@@ -278,14 +270,12 @@ class HardemEditorCore {
                 }
             });
             
-            console.log('🔧 Resposta do teste PHP:', response.status, response.statusText);
             
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
             
             const data = await response.json();
-            console.log('🔧 Resultado do teste PHP:', data);
             
             // Remover alerta de teste
             const testAlerts = document.querySelectorAll('.editor-alert');
@@ -316,20 +306,12 @@ class HardemEditorCore {
                 
                 this.ui.showAlert(message, alertType);
                 
-                // Log informações úteis
-                console.log('📋 Informações do PHP:', {
-                    version: data.php_info.php_version,
-                    memory_limit: data.php_info.memory_limit,
-                    writable: data.php_info.is_writable,
-                    save_php_exists: data.save_php.exists
-                });
                 
             } else {
                 this.ui.showAlert('❌ Erro no teste PHP: ' + data.message, 'error');
             }
             
         } catch (error) {
-            console.error('❌ Erro ao testar PHP:', error);
             
             // Remover alerta de teste
             const testAlerts = document.querySelectorAll('.editor-alert');
@@ -497,21 +479,18 @@ class HardemEditorCore {
             if (this.textEditor && this.textEditor.setupEditableElements) {
                 this.textEditor.setupEditableElements(document.body);
             } else {
-                console.error('❌ textEditor ou setupEditableElements não encontrado');
             }
             
             // Ativar edição de imagens
             if (this.imageEditor && this.imageEditor.setupImageEditing) {
                 this.imageEditor.setupImageEditing();
             } else {
-                console.warn('⚠️ imageEditor ou setupImageEditing não encontrado');
             }
             
             // Ativar edição de carrosséis
             if (this.carouselEditor && this.carouselEditor.setupCarouselEditing) {
                 this.carouselEditor.setupCarouselEditing();
             } else {
-                console.warn('⚠️ carouselEditor ou setupCarouselEditing não encontrado');
             }
             
             // Mostrar controles específicos do modo de edição
@@ -529,10 +508,8 @@ class HardemEditorCore {
                 if (sidePanel) {
                     sidePanel.style.display = 'block';
                 } else {
-                    console.warn('⚠️ Painel lateral não encontrado');
                 }
             } else {
-                console.error('❌ UI do editor não encontrada');
             }
             
         } else {
@@ -564,7 +541,6 @@ class HardemEditorCore {
             setTimeout(() => {
                 const editableElements = document.querySelectorAll('.hardem-editable');
                 if (editableElements.length === 0) {
-                    console.warn('⚠️ Nenhum elemento editável foi configurado! Pode haver um problema na configuração.');
                 }
             }, 500);
         }
@@ -600,7 +576,6 @@ class HardemEditorCore {
         const publishBtn = document.getElementById('hardem-publish-changes');
         if (!publishBtn) {
             // Se o botão não existe, apenas salvar o conteúdo
-            console.log('Botão de publicação não encontrado, salvando conteúdo...');
             await this.storage.saveContent();
             return;
         }
@@ -669,7 +644,6 @@ class HardemEditorCore {
             }
             
         } catch (error) {
-            console.error('Erro ao publicar:', error);
             
             publishBtn.innerHTML = '❌';
             publishBtn.classList.add('error');

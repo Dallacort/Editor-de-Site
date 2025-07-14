@@ -16,7 +16,6 @@ class HardemEditorStorage {
         try {
             // Verificar se há conteúdo para salvar
             if (!this.core.contentMap || Object.keys(this.core.contentMap).length === 0) {
-                console.warn('Nenhum conteúdo para salvar');
                 this.core.ui.showAlert('Nenhum conteúdo editado para salvar.', 'warning');
                 return null;
             }
@@ -34,7 +33,6 @@ class HardemEditorStorage {
             // Debug: Verificar dados de normalização
             Object.entries(filteredContent).forEach(([key, value]) => {
                 if (value.normalization) {
-                    console.log(`🔍 Dados de normalização encontrados para ${key}:`, value.normalization);
                 }
             });
 
@@ -52,7 +50,6 @@ class HardemEditorStorage {
 
             // Verificar se há dados válidos para salvar
             if (Object.keys(filteredContent).length === 0) {
-                console.warn('Nenhum conteúdo válido para salvar');
                 this.core.ui.showAlert('Nenhum conteúdo válido para salvar.', 'warning');
                 return null;
             }
@@ -68,10 +65,8 @@ class HardemEditorStorage {
             const preliminarySize = JSON.stringify(preliminaryData).length;
             const phpPostLimit = 8 * 1024 * 1024; // 8MB (limite padrão do PHP)
             
-            console.log(`📊 Tamanho dos dados: ${this.formatBytes(preliminarySize)}`);
             
             if (preliminarySize > phpPostLimit * 0.7) { // 70% do limite para mais margem de segurança
-                console.warn(`⚠️ Dados muito grandes para PHP (${this.formatBytes(preliminarySize)}). Otimizando...`);
                 this.core.ui.showSaveProgressAlert('optimizing', `${this.formatBytes(preliminarySize)} → otimizando`);
                 
                 // Mostrar botão de salvamento por partes
@@ -86,11 +81,9 @@ class HardemEditorStorage {
                     metadata: exportData.metadata
                 }).length;
                 
-                console.log(`🗜️ Após otimização: ${this.formatBytes(optimizedSize)}`);
                 
                 if (optimizedSize > phpPostLimit * 0.7) {
                     // Ainda muito grande - tentar salvamento por partes
-                    console.log('🔄 Dados ainda muito grandes após otimização. Tentando salvamento por partes...');
                     
                     this.core.ui.showAlert('📦 Dados grandes detectados. Salvando por partes...', 'info');
                     
@@ -130,14 +123,12 @@ class HardemEditorStorage {
             this.core.ui.showSaveProgressAlert('validating', `${Object.keys(filteredContent).length} elementos`);
             
             // **SISTEMA HÍBRIDO: Sempre usar salvamento por partes para separar imagens normais**
-            console.log('🔄 Usando sistema híbrido (backgrounds em textos, imagens normais em tabela imagens)...');
             this.core.ui.showSaveProgressAlert('hybrid-save', 'Sistema híbrido...');
             
             try {
                 // SEMPRE usar salvamento híbrido por partes
                 const partResult = await this.saveContentInParts(exportData);
                 if (partResult) {
-                    console.log('✅ Sistema híbrido bem-sucedido! Não salvando no localStorage.');
                     this.core.ui.showSaveProgressAlert('complete', `${Object.keys(filteredContent).length} elementos salvos (sistema híbrido)`);
                     
                     // Recarregar conteúdo após salvamento para garantir que está aplicado
@@ -145,14 +136,12 @@ class HardemEditorStorage {
                     return exportData;
                 }
             } catch (hybridError) {
-                console.warn('❌ Erro no sistema híbrido, tentando salvamento tradicional como fallback:', hybridError);
                 
                 // Fallback: tentar salvamento tradicional
                 try {
                     const serverSuccess = await this.exportToServerAsync(exportData);
                     
                     if (serverSuccess) {
-                        console.log('✅ Salvamento tradicional bem-sucedido como fallback!');
                         this.core.ui.showSaveProgressAlert('complete', `${Object.keys(filteredContent).length} elementos salvos (fallback tradicional)`);
                         
                         // Recarregar conteúdo após salvamento para garantir que está aplicado
@@ -160,19 +149,16 @@ class HardemEditorStorage {
                         return exportData;
                     }
                 } catch (serverError) {
-                    console.warn('❌ Erro no salvamento tradicional também, tentando localStorage como último recurso:', serverError);
                 }
             }
             
             // **FALLBACK: Se servidor falhar, salvar no localStorage**
-            console.log('🔄 Servidor falhou, usando localStorage como fallback...');
             
             // Verificar tamanho total dos dados
             const dataSize = JSON.stringify(filteredContent).length;
             const maxLocalStorageSize = 5 * 1024 * 1024; // 5MB para localStorage
             
             if (dataSize > maxLocalStorageSize) {
-                console.warn(`Dados muito grandes (${this.formatBytes(dataSize)}). Tentando otimização...`);
                 this.core.ui.showSaveProgressAlert('optimizing', this.formatBytes(dataSize));
                 
                 // Tentar compactar dados ou salvar apenas no servidor
@@ -183,9 +169,7 @@ class HardemEditorStorage {
                     
                     this.core.ui.showSaveProgressAlert('local-save', 'dados essenciais');
                     localStorage.setItem(pageKey, JSON.stringify(essentialData));
-                    console.log(`💾 Dados essenciais salvos localmente: ${pageKey}`);
                 } catch (localError) {
-                    console.warn('Impossível salvar localmente, dados perdidos');
                     this.core.ui.showDetailedErrorAlert(
                         'Storage Cheio - Dados Muito Grandes',
                         `Não foi possível salvar nem no servidor nem localmente. Tamanho dos dados: ${this.formatBytes(dataSize)}`,
@@ -203,19 +187,16 @@ class HardemEditorStorage {
                 this.core.ui.showSaveProgressAlert('local-save', this.formatBytes(dataSize));
                 const pageKey = this.getPageKey();
                 localStorage.setItem(pageKey, JSON.stringify(filteredContent));
-                console.log(`💾 Conteúdo salvo localmente como fallback: ${pageKey} (${this.formatBytes(dataSize)})`);
             }
             
             this.core.ui.showSaveProgressAlert('complete', `${Object.keys(filteredContent).length} elementos`);
             
-            console.log('💾 Conteúdo salvo:', exportData);
             
             // Recarregar conteúdo após salvamento para garantir que está aplicado
             this.reloadAfterSave();
             
             return exportData;
         } catch (error) {
-            console.error('Erro ao salvar:', error);
             
             // Se o erro for de quota do localStorage, tentar salvar apenas no servidor
             if (error.name === 'QuotaExceededError') {
@@ -271,11 +252,9 @@ class HardemEditorStorage {
                 
                 // Se a otimização reduziu significativamente, usar a versão otimizada
                 if (optimizedData.length < imageData.length * 0.8) {
-                    console.log(`🗜️ SVG otimizado: ${this.formatBytes(imageData.length)} → ${this.formatBytes(optimizedData.length)}`);
                     return optimizedData;
                 }
             } catch (error) {
-                console.warn('Erro ao otimizar SVG:', error);
             }
         }
         
@@ -359,7 +338,6 @@ class HardemEditorStorage {
             }
         });
         
-        console.log(`🔍 getBasicFilteredContent: ${Object.keys(filteredContent).length} itens filtrados`);
         
         // Debug específico para contadores
         const counters = Object.keys(filteredContent).filter(key => {
@@ -367,7 +345,6 @@ class HardemEditorStorage {
             return content.isCounter || content.counterValue !== undefined || 
                    key.includes('counter') || key.includes('label') || key.includes('odometer');
         });
-        console.log(`🔢 Contadores no filteredContent: ${counters.length}`, counters);
         
         return filteredContent;
     }
@@ -409,7 +386,6 @@ class HardemEditorStorage {
             return;
         }
         
-        console.log(`🏠 Carregando conteúdo de header compartilhado da home...`);
         
         try {
             // Tentar carregar do banco de dados primeiro
@@ -427,12 +403,10 @@ class HardemEditorStorage {
                     
                     if (result.success && result.data) {
                         this.mergeSharedHeaderContent(result.data);
-                        console.log(`🏠 Header compartilhado carregado do banco`);
                         return;
                     }
                 }
             } catch (dbError) {
-                console.warn('❌ Erro ao carregar header do banco, tentando localStorage:', dbError);
             }
             
             // Fallback para localStorage se banco falhar
@@ -441,13 +415,10 @@ class HardemEditorStorage {
             if (homeContentSaved) {
                 const homeContent = JSON.parse(homeContentSaved);
                 this.mergeSharedHeaderContent(homeContent);
-                console.log(`🏠 Header compartilhado carregado do localStorage`);
             } else {
-                console.log(`🏠 Nenhum conteúdo de header encontrado na home para compartilhar`);
             }
             
         } catch (error) {
-            console.error('❌ Erro ao carregar header compartilhado:', error);
         }
     }
 
@@ -482,7 +453,6 @@ class HardemEditorStorage {
                         };
                         
                         mergedCount++;
-                        console.log(`🔗 Header compartilhado: ${dataKey} → ${mappedContent.newDataKey}`);
                     }
                 }
             }
@@ -490,14 +460,11 @@ class HardemEditorStorage {
         
         // FASE 2: Sincronização forçada por similaridade (para casos onde mapeamento direto falha)
         if (mergedCount === 0) {
-            console.log(`🔍 Nenhum mapeamento direto encontrado. Tentando sincronização forçada...`);
             mergedCount += this.forceSyncSimilarHeaders(homeContent);
         }
         
         if (mergedCount > 0) {
-            console.log(`✅ ${mergedCount} elementos de header compartilhados da home`);
         } else {
-            console.log(`⚠️ Nenhum elemento de header compatível encontrado para sincronização`);
         }
     }
 
@@ -645,13 +612,11 @@ class HardemEditorStorage {
      * Para casos onde cada página tem header diferente mas com conteúdo similar
      */
     forceSyncSimilarHeaders(homeContent) {
-        console.log(`🚀 Iniciando sincronização forçada de headers similares...`);
         
         let syncedCount = 0;
         const currentPageHeaders = document.querySelectorAll('header');
         
         if (currentPageHeaders.length === 0) {
-            console.log(`❌ Nenhum header encontrado na página atual`);
             return 0;
         }
         
@@ -659,22 +624,18 @@ class HardemEditorStorage {
         const homeHeaderContent = this.extractHeaderContentFromHome(homeContent);
         
         if (homeHeaderContent.length === 0) {
-            console.log(`❌ Nenhum conteúdo de header identificado na home`);
             return 0;
         }
         
-        console.log(`📋 Encontrados ${homeHeaderContent.length} itens de header da home para sincronizar`);
         
         // Para cada header da página atual
         currentPageHeaders.forEach((header, headerIndex) => {
-            console.log(`🔍 Analisando header ${headerIndex + 1}...`);
             
             // Sincronizar cada item de conteúdo da home
             homeHeaderContent.forEach(homeItem => {
                 const syncResult = this.syncHeaderItem(header, homeItem);
                 if (syncResult) {
                     syncedCount++;
-                    console.log(`✅ Sincronizado: "${homeItem.text || homeItem.src || 'conteúdo'}" → ${syncResult.targetKey}`);
                 }
             });
         });
@@ -929,7 +890,6 @@ class HardemEditorStorage {
                 const syncResult = this.syncHeaderItem(header, homeItem);
                 if (syncResult) {
                     appliedCount++;
-                    console.log(`🔗 Órfão aplicado: ${orphanKey} → ${syncResult.targetKey} (${syncResult.matchType})`);
                     break; // Aplicou com sucesso, não precisar tentar outros headers
                 }
             }
@@ -944,7 +904,6 @@ class HardemEditorStorage {
     async loadContent(forceReload = false) {
         try {
             const pageKey = this.getPageKey();
-            console.log(`📡 Carregando conteúdo do banco para: ${pageKey}`);
             
             // NOVO: O loading instantâneo já está ativo via CSS
             // Não precisamos criar overlay aqui, apenas garantir que está ativo
@@ -966,21 +925,17 @@ class HardemEditorStorage {
                         this.core.contentMap = result.data;
                         this.contentLoaded = true;
                         
-                        console.log(`📥 Conteúdo carregado do ${result.source} para ${pageKey}:`, this.core.contentMap);
-                        console.log(`📊 Stats: ${result.stats?.textos_carregados || 0} textos, ${result.stats?.imagens_carregadas || 0} imagens`);
                         
                         // NOVO: Aplicar cache instantâneo para visitantes normais
                         this.applyInstantCache();
                         
                         if (result.source === 'json_fallback') {
-                            console.warn('⚠️ Dados carregados do JSON (banco indisponível)');
                         }
                         
                         // Carregar conteúdo de header compartilhado se não for página home
                         await this.loadSharedHeaderContent();
                         
                         if (forceReload) {
-                            console.log('🔄 Carregamento forçado - aplicando imediatamente');
                             this.applyLoadedContent();
                         } else {
                             this.waitForDOMAndApplyContent();
@@ -989,34 +944,29 @@ class HardemEditorStorage {
                     }
                 }
             } catch (dbError) {
-                console.warn('❌ Erro ao carregar do banco, tentando localStorage:', dbError);
             }
             
             // Fallback para localStorage se banco falhar
             const saved = localStorage.getItem(pageKey);
             
             if (!saved) {
-                console.log(`📄 Nenhum conteúdo encontrado para: ${pageKey} (banco e localStorage vazios)`);
                 // Ainda assim, tentar carregar header compartilhado
                 await this.loadSharedHeaderContent();
                 return;
             }
 
             this.core.contentMap = JSON.parse(saved);
-            console.log(`📥 Conteúdo carregado do localStorage para ${pageKey}:`, this.core.contentMap);
             
             // Carregar conteúdo de header compartilhado se não for página home
             await this.loadSharedHeaderContent();
             
             if (forceReload) {
-                console.log('🔄 Carregamento forçado - aplicando imediatamente');
                 this.applyLoadedContent();
             } else {
                 this.waitForDOMAndApplyContent();
             }
             
         } catch (error) {
-            console.error('❌ Erro crítico ao carregar conteúdo:', error);
             this.core.ui.showAlert('Erro ao carregar conteúdo salvo!', 'error');
             
             // NOVO: Remover loading em caso de erro
@@ -1029,7 +979,6 @@ class HardemEditorStorage {
      * Recarregar conteúdo após salvamento
      */
     reloadAfterSave() {
-        console.log('🔄 Recarregando conteúdo após salvamento...');
         
         // Aguardar um momento para o salvamento ser concluído
         setTimeout(() => {
@@ -1054,11 +1003,9 @@ class HardemEditorStorage {
             // Verificar se o editor está completamente inicializado
             const editorReady = this.core.ui && this.core.textEditor && this.core.imageEditor;
             
-            console.log(`🔍 Tentativa ${attempts}: ${elementsWithDataKey.length} elementos com data-key, ${hasEditableElements ? 'elementos editáveis encontrados' : 'aguardando elementos editáveis'}, editor ${editorReady ? 'pronto' : 'não pronto'}`);
             
             // Aplicar se encontrou elementos OU se atingiu o máximo de tentativas OU se o editor está pronto
             if (elementsWithDataKey.length > 0 || hasEditableElements || attempts >= maxAttempts || editorReady) {
-                console.log('✅ DOM pronto para aplicar conteúdo');
                 this.applyLoadedContent();
             } else {
                 // Aguardar mais um pouco
@@ -1076,7 +1023,6 @@ class HardemEditorStorage {
     applyLoadedContent() {
         if (!this.core.contentMap) return;
 
-        console.log('🔄 Iniciando aplicação de conteúdo carregado...');
         let appliedCount = 0;
         let orphanedKeys = [];
         let dropdownOrphans = [];
@@ -1093,14 +1039,12 @@ class HardemEditorStorage {
             if (element) {
                 this.applyContentToElement(element, content, dataKey);
                 appliedCount++;
-                console.log(`✅ Conteúdo aplicado: ${dataKey}`);
             } else {
                 if (content.elementInfo && content.elementInfo.isInDropdown) {
                     dropdownOrphans.push({ [dataKey]: content });
                 } else {
                     orphanedKeys.push(dataKey);
                 }
-                console.log(`❌ Elemento não encontrado para data-key: ${dataKey}`);
             }
         }
 
@@ -1122,12 +1066,10 @@ class HardemEditorStorage {
             this.retryDropdownElements(dropdownOrphans);
         }
 
-        console.log(`✅ ${appliedCount} elementos aplicados, ${orphanedKeys.length} órfãos processados`);
         this.core.ui.showAlert(`${appliedCount} elementos restaurados!`, 'success');
 
         // NOVO: Aplicar normalizações salvas no banco de dados
         if (this.core.imageEditor && this.core.imageEditor.applyContentFromDatabase) {
-            console.log('🎯 Aplicando normalizações do banco de dados...');
             // Aguardar um pouco para garantir que todos os elementos tenham data-key
             setTimeout(async () => {
                 await this.core.imageEditor.applyContentFromDatabase(this.core.contentMap);
@@ -1137,7 +1079,6 @@ class HardemEditorStorage {
         // Disparar evento para notificar que o conteúdo foi carregado
         const event = new Event('hardem-editor-content-loaded');
         document.dispatchEvent(event);
-        console.log('✅ Evento hardem-editor-content-loaded disparado.');
 
         // NOVO: Remover loading instantâneo e mostrar conteúdo
         setTimeout(() => {
@@ -1151,7 +1092,6 @@ class HardemEditorStorage {
      * NOVO: Buscar elementos de dropdown especificamente
      */
     findDropdownElement(dataKey, content) {
-        console.log(`🔽 Procurando dropdown detalhadamente: ${dataKey}`, content.elementInfo?.dropdownInfo);
         
         // Usar informações específicas de dropdown se disponíveis
         if (content.elementInfo?.dropdownInfo?.isInDropdown) {
@@ -1175,7 +1115,6 @@ class HardemEditorStorage {
                             if (element.textContent && element.textContent.trim() === content.text.trim()) {
                                 // Verificar se o contexto bate (textos de elementos próximos)
                                 if (this.validateDropdownContext(element, dropdownInfo)) {
-                                    console.log(`🔽 Dropdown encontrado por texto e contexto: ${dataKey}`);
                                     element.setAttribute('data-key', dataKey);
                                     return element;
                                 }
@@ -1189,7 +1128,6 @@ class HardemEditorStorage {
                         const targetElement = dropdownItems[dropdownInfo.itemIndex];
                         
                         if (targetElement && !targetElement.hasAttribute('data-key')) {
-                            console.log(`🔽 Dropdown encontrado por posição: ${dataKey} (índice ${dropdownInfo.itemIndex})`);
                             targetElement.setAttribute('data-key', dataKey);
                             return targetElement;
                         }
@@ -1207,7 +1145,6 @@ class HardemEditorStorage {
                 const textElements = container.querySelectorAll('a, span, p, li');
                 for (let element of textElements) {
                     if (element.textContent && element.textContent.trim() === content.text.trim()) {
-                        console.log(`🔽 Dropdown encontrado por texto (fallback): ${dataKey}`);
                         element.setAttribute('data-key', dataKey);
                         return element;
                     }
@@ -1221,7 +1158,6 @@ class HardemEditorStorage {
                     if (!element.hasAttribute('data-key') && 
                         element.textContent && 
                         element.textContent.trim().length > 0) {
-                        console.log(`🔽 Dropdown encontrado por estrutura (fallback): ${dataKey}`);
                         element.setAttribute('data-key', dataKey);
                         return element;
                     }
@@ -1259,7 +1195,6 @@ class HardemEditorStorage {
         
         const matchRatio = matches.length / Math.max(dropdownInfo.siblingTexts.length, currentSiblingTexts.length);
         
-        console.log(`🔍 Validação de contexto: ${matches.length}/${dropdownInfo.siblingTexts.length} matches (${(matchRatio * 100).toFixed(1)}%)`);
         
         return matchRatio >= 0.5; // Pelo menos 50% de correspondência
     }
@@ -1279,15 +1214,12 @@ class HardemEditorStorage {
                 try {
                     this.applyContentToElement(element, content, dataKey);
                     recoveredCount++;
-                    console.log(`🔽 Elemento de dropdown recuperado: ${dataKey}`);
                 } catch (error) {
-                    console.error(`❌ Erro ao recuperar dropdown ${dataKey}:`, error);
                 }
             }
         });
         
         if (recoveredCount > 0) {
-            console.log(`✅ ${recoveredCount} elementos de dropdown recuperados!`);
             this.core.ui.showAlert(`${recoveredCount} elementos de dropdown recuperados!`, 'success');
         }
     }
@@ -1300,13 +1232,11 @@ class HardemEditorStorage {
             // Aplicar texto
             if (content.text && this.core.textEditor.isTextElement(element)) {
                 element.textContent = content.text;
-                console.log(`📝 Texto aplicado: ${dataKey}`);
             }
             
             // NOVO: Aplicar texto a span odometer diretamente
             if (content.text && element.classList.contains('odometer')) {
                 element.textContent = content.text;
-                console.log(`🔢 Texto aplicado ao odometer: ${dataKey} = ${content.text}`);
             }
             
             // Aplicar imagem
@@ -1320,9 +1250,7 @@ class HardemEditorStorage {
                 if (content.type === 'slide-image') {
                     element.setAttribute('data-hardem-type', 'slide-image');
                     const slideIndex = content.slideIndex || 0;
-                    console.log(`🎠 Imagem de slide aplicada: ${dataKey} (slide ${slideIndex + 1})`);
                 } else {
-                    console.log(`🖼️ Imagem aplicada: ${dataKey}`);
                 }
             }
             
@@ -1338,7 +1266,6 @@ class HardemEditorStorage {
                 element.offsetHeight; // Trigger reflow
                 element.style.display = '';
                 
-                console.log(`🎨 Background aplicado: ${dataKey}`);
             }
             
             // CORREÇÃO: Aplicação melhorada de contadores
@@ -1353,14 +1280,12 @@ class HardemEditorStorage {
                 if (odometerSpan) {
                     odometerSpan.setAttribute('data-count', value.toString());
                     odometerSpan.textContent = value.toString();
-                    console.log(`🔢 Contador aplicado (elemento pai): ${dataKey} = ${value}${content.counterSuffix || ''}`);
                 }
                 
                 // Caso 2: Elemento é diretamente o odometer
                 else if (element.classList.contains('odometer')) {
                     element.setAttribute('data-count', value.toString());
                     element.textContent = value.toString();
-                    console.log(`🎯 Contador aplicado (odometer direto): ${dataKey} = ${value}`);
                 }
                 
                 // Caso 3: Buscar odometer por data-key semelhante
@@ -1370,9 +1295,7 @@ class HardemEditorStorage {
                     if (relatedOdometer) {
                         relatedOdometer.setAttribute('data-count', value.toString());
                         relatedOdometer.textContent = value.toString();
-                        console.log(`🔗 Contador aplicado (busca relacionada): ${dataKey} = ${value}`);
                     } else {
-                        console.warn(`⚠️ Nenhum odometer encontrado para contador: ${dataKey}`, {element, content});
                     }
                 }
             }
@@ -1382,7 +1305,6 @@ class HardemEditorStorage {
                 const titleElement = element.querySelector('.title, h1, h2, h3, h4, h5, h6');
                 if (titleElement) {
                     titleElement.textContent = content.title;
-                    console.log(`📋 Título aplicado: ${dataKey}`);
                 }
             }
             
@@ -1390,12 +1312,10 @@ class HardemEditorStorage {
                 const descElement = element.querySelector('.disc, .description, p');
                 if (descElement) {
                     descElement.textContent = content.description;
-                    console.log(`📄 Descrição aplicada: ${dataKey}`);
                 }
             }
             
         } catch (error) {
-            console.error(`Erro ao aplicar conteúdo para ${dataKey}:`, error);
             throw error; // Re-throw para ser capturado pela função chamadora
         }
     }
@@ -1404,7 +1324,6 @@ class HardemEditorStorage {
      * Forçar re-renderização de elementos com background
      */
     forceRerender() {
-        console.log('🔄 Forçando re-renderização...');
         
         // Encontrar todos os elementos com background aplicado
         const elementsWithBackground = document.querySelectorAll('[data-key]');
@@ -1420,7 +1339,6 @@ class HardemEditorStorage {
                 element.style.setProperty('background-position', 'center', 'important');
                 element.style.setProperty('background-repeat', 'no-repeat', 'important');
                 
-                console.log(`🔄 Background re-aplicado: ${dataKey}`);
             }
         });
     }
@@ -1429,13 +1347,11 @@ class HardemEditorStorage {
      * Encontrar elemento por informações detalhadas
      */
     findElementByDetailedInfo(elementInfo, dataKey) {
-        console.log(`🔍 Procurando elemento órfão: ${dataKey}`, elementInfo);
         
         // Tentar por seletor CSS
         if (elementInfo.cssSelector) {
             const elements = document.querySelectorAll(elementInfo.cssSelector);
             if (elements.length === 1) {
-                console.log(`✅ Encontrado por CSS selector: ${dataKey}`);
                 elements[0].setAttribute('data-key', dataKey);
                 return elements[0];
             }
@@ -1452,12 +1368,10 @@ class HardemEditorStorage {
                     null
                 );
                 if (result.singleNodeValue) {
-                    console.log(`✅ Encontrado por XPath: ${dataKey}`);
                     result.singleNodeValue.setAttribute('data-key', dataKey);
                     return result.singleNodeValue;
                 }
             } catch (e) {
-                console.warn('XPath inválido:', elementInfo.xpath);
             }
         }
         
@@ -1476,7 +1390,6 @@ class HardemEditorStorage {
             const slideImages = document.querySelectorAll('.swiper-slide img, .carousel-item img, .slide img, .owl-item img, .item img');
             for (const img of slideImages) {
                 if (!img.hasAttribute('data-key') && this.elementMatchesInfo(img, elementInfo, false)) {
-                    console.log(`✅ Imagem de slide encontrada: ${dataKey}`);
                     img.setAttribute('data-key', dataKey);
                     return img;
                 }
@@ -1493,7 +1406,6 @@ class HardemEditorStorage {
                 // Verificar se tem background e corresponde às características
                 if (bgImage && bgImage !== 'none' && !bgImage.includes('gradient')) {
                     if (this.elementMatchesInfo(element, elementInfo)) {
-                        console.log(`✅ Encontrado elemento com background: ${dataKey}`);
                         element.setAttribute('data-key', dataKey);
                         return element;
                     }
@@ -1507,7 +1419,6 @@ class HardemEditorStorage {
         
         for (const candidate of candidates) {
             if (this.elementMatchesInfo(candidate, elementInfo)) {
-                console.log(`✅ Encontrado por características: ${dataKey}`);
                 candidate.setAttribute('data-key', dataKey);
                 return candidate;
             }
@@ -1523,7 +1434,6 @@ class HardemEditorStorage {
                 const elements = document.querySelectorAll(`.${className}`);
                 for (const element of elements) {
                     if (this.elementMatchesInfo(element, elementInfo, false)) {
-                        console.log(`✅ Encontrado por classe principal: ${dataKey} (${className})`);
                         element.setAttribute('data-key', dataKey);
                         return element;
                     }
@@ -1531,7 +1441,6 @@ class HardemEditorStorage {
             }
         }
         
-        console.warn(`❌ Elemento não encontrado após busca inteligente: ${dataKey}`);
         return null;
     }
 
@@ -1590,7 +1499,6 @@ class HardemEditorStorage {
     cleanOrphanedContent(orphanedKeys) {
         if (!orphanedKeys || orphanedKeys.length === 0) return;
 
-        console.log(`🗑️ Processando ${orphanedKeys.length} elementos órfãos...`);
         
         // NOVO: Separar elementos de dropdown dos outros órfãos
         const dropdownOrphans = orphanedKeys.filter(key => 
@@ -1602,13 +1510,11 @@ class HardemEditorStorage {
         
         // Remover órfãos regulares imediatamente
         regularOrphans.forEach(key => {
-            console.log(`🗑️ Conteúdo órfão removido: ${key}`);
             delete this.core.contentMap[key];
         });
         
         // NOVO: Para elementos de dropdown, dar mais tempo antes de remover
         if (dropdownOrphans.length > 0) {
-            console.log(`⏳ Aguardando para remover ${dropdownOrphans.length} elementos de dropdown órfãos...`);
             
             // Tentar recuperar uma vez mais após 2 segundos
             setTimeout(() => {
@@ -1632,7 +1538,6 @@ class HardemEditorStorage {
             const element = document.querySelector(`[data-key="${dataKey}"]`);
             if (element) {
                 recoveredCount++;
-                console.log(`✅ Elemento de dropdown recuperado na última tentativa: ${dataKey}`);
                 return;
             }
             
@@ -1642,22 +1547,17 @@ class HardemEditorStorage {
                 try {
                     this.applyContentToElement(foundElement, content, dataKey);
                     recoveredCount++;
-                    console.log(`✅ Elemento de dropdown recuperado na limpeza final: ${dataKey}`);
                 } catch (error) {
-                    console.error(`❌ Erro na recuperação final do dropdown ${dataKey}:`, error);
                     // Só agora remover se realmente não conseguiu recuperar
-                    console.log(`🗑️ Conteúdo de dropdown órfão removido: ${dataKey}`);
                     delete this.core.contentMap[dataKey];
                 }
             } else {
                 // Não conseguiu encontrar, remover
-                console.log(`🗑️ Conteúdo de dropdown órfão removido: ${dataKey}`);
                 delete this.core.contentMap[dataKey];
             }
         });
         
         if (recoveredCount > 0) {
-            console.log(`🎉 Recuperação final: ${recoveredCount} elementos de dropdown salvos!`);
             this.core.ui.showAlert(`${recoveredCount} elementos de dropdown recuperados na última tentativa!`, 'success');
         }
     }
@@ -1666,7 +1566,6 @@ class HardemEditorStorage {
      * Tentar aplicar backgrounds órfãos
      */
     tryApplyOrphanedBackgrounds(orphanedKeys) {
-        console.log('🔄 Tentando aplicar backgrounds órfãos...', orphanedKeys);
         
         orphanedKeys.forEach(dataKey => {
             const content = this.core.contentMap[dataKey];
@@ -1676,7 +1575,6 @@ class HardemEditorStorage {
                 
                 if (similarElements.length > 0) {
                     const targetElement = similarElements[0]; // Usar o primeiro candidato
-                    console.log(`🎯 Aplicando background órfão ${dataKey} em elemento similar:`, targetElement);
                     
                     targetElement.setAttribute('data-key', dataKey);
                     this.applyContentToElement(targetElement, content, dataKey);
@@ -1757,19 +1655,12 @@ class HardemEditorStorage {
         const pageKey = this.getPageKey();
         const currentPageData = this.core.contentMap;
         
-        console.log('🔍 =========================');
-        console.log(`📄 Página Atual: ${pageKey}`);
-        console.log(`📊 Elementos na página: ${Object.keys(currentPageData).length}`);
-        console.log('📋 ContentMap atual:', currentPageData);
         
         // Mostrar dados de todas as páginas
-        console.log('🌐 Dados de todas as páginas:');
         const allPageData = this.getAllPagesData();
         Object.entries(allPageData).forEach(([page, data]) => {
-            console.log(`  📄 ${page}: ${Object.keys(data).length} elementos`);
         });
         
-        console.log('🔍 =========================');
         
         // Mostrar alerta visual
         this.core.ui.showAlert(`Página: ${pageKey} | ${Object.keys(currentPageData).length} elementos`, 'info');
@@ -1789,7 +1680,6 @@ class HardemEditorStorage {
                     const pageName = key.replace('siteContent_', '');
                     allData[pageName] = data;
                 } catch (e) {
-                    console.warn(`Dados corrompidos para ${key}`);
                 }
             }
         }
@@ -1803,7 +1693,6 @@ class HardemEditorStorage {
     clearPageData(pageName) {
         const pageKey = `siteContent_${pageName}`;
         localStorage.removeItem(pageKey);
-        console.log(`🗑️ Dados removidos para: ${pageName}`);
     }
 
     /**
@@ -1815,7 +1704,6 @@ class HardemEditorStorage {
             Object.keys(allData).forEach(pageName => {
                 this.clearPageData(pageName);
             });
-            console.log('🗑️ Todos os dados de páginas foram removidos');
             this.core.ui.showAlert('Todos os dados foram limpos!', 'success');
         }
     }
@@ -1830,7 +1718,6 @@ class HardemEditorStorage {
                 const isLocalFile = window.location.protocol === 'file:';
                 
                 if (isLocalFile) {
-                    console.log('🏠 Ambiente local detectado (file://). Gerando download...');
                     this.core.ui.showAlert('Ambiente local detectado. Gerando arquivo para download...', 'info');
                     this.generateJSONDownload(exportData);
                     resolve(true);
@@ -1854,7 +1741,6 @@ class HardemEditorStorage {
                     body: formData
                 })
                 .then(response => {
-                    console.log('📡 Resposta do servidor:', response.status, response.statusText);
                     
                     if (!response.ok) {
                         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -1863,30 +1749,24 @@ class HardemEditorStorage {
                     // Verificar se o content-type é JSON
                     const contentType = response.headers.get('content-type');
                     if (!contentType || !contentType.includes('application/json')) {
-                        console.warn('⚠️ Servidor não retornou JSON. Content-Type:', contentType);
                         throw new Error('Servidor retornou resposta não-JSON');
                     }
                     
                     return response.json();
                 })
                 .then(data => {
-                    console.log('📥 Resposta processada:', data);
                     
                     if (data.success) {
-                        console.log('📁 Arquivo salvo em:', data.file_path || data.filename || 'servidor');
                         resolve(true);
                     } else {
-                        console.error('❌ Erro do servidor:', data.message);
                         reject(new Error(data.message || 'Erro desconhecido do servidor'));
                     }
                 })
                 .catch(error => {
-                    console.warn('❌ Erro na comunicação com save-database.php:', error);
                     reject(error);
                 });
                 
             } catch (error) {
-                console.error('❌ Erro crítico no exportToServerAsync:', error);
                 reject(error);
             }
         });
@@ -1898,7 +1778,6 @@ class HardemEditorStorage {
             const isLocalFile = window.location.protocol === 'file:';
             
             if (isLocalFile) {
-                console.log('🏠 Ambiente local detectado (file://). Gerando download...');
                 this.core.ui.showAlert('Ambiente local detectado. Gerando arquivo para download...', 'info');
                 this.generateJSONDownload(exportData);
                 return exportData;
@@ -1924,7 +1803,6 @@ class HardemEditorStorage {
                 body: formData
             })
             .then(response => {
-                console.log('📡 Resposta do servidor:', response.status, response.statusText);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -1933,11 +1811,9 @@ class HardemEditorStorage {
                 // Verificar se o content-type é JSON
                 const contentType = response.headers.get('content-type');
                 if (!contentType || !contentType.includes('application/json')) {
-                    console.warn('⚠️ Servidor não retornou JSON. Content-Type:', contentType);
                     
                     // Tentar ler como texto para debug
                     return response.text().then(text => {
-                        console.error('📄 Resposta não-JSON do servidor:', text.substring(0, 500));
                         
                         // Análise específica do erro POST Content-Length
                         if (text.includes('POST Content-Length') && text.includes('exceeds the limit')) {
@@ -1990,11 +1866,9 @@ class HardemEditorStorage {
                 return response.json();
             })
             .then(data => {
-                console.log('📥 Resposta processada:', data);
                 
                 if (data.success) {
                     this.core.ui.showSaveProgressAlert('complete', 'Salvo no servidor!');
-                    console.log('📁 Arquivo salvo em:', data.file_path || data.filename || 'servidor');
                     
                     // Mostrar detalhes do salvamento
                     const details = [];
@@ -2008,7 +1882,6 @@ class HardemEditorStorage {
                     }, 1000);
                 } else {
                     this.core.ui.showSaveProgressAlert('error', data.message);
-                    console.error('❌ Erro do servidor:', data.message);
                     
                     // Análise específica do erro
                     if (data.message.includes('POST Content-Length') && data.message.includes('exceeds the limit')) {
@@ -2058,7 +1931,6 @@ class HardemEditorStorage {
                 }
             })
             .catch(error => {
-                console.warn('❌ Erro na comunicação com save-database.php:', error);
                 this.core.ui.showSaveProgressAlert('error', 'Servidor indisponível');
                 
                 // Verificar tipo de erro
@@ -2108,10 +1980,8 @@ class HardemEditorStorage {
                 }
             });
 
-            console.log('📤 Dados preparados para exportação:', requestData);
             return exportData;
         } catch (error) {
-            console.error('❌ Erro crítico ao exportar:', error);
             this.core.ui.showSaveProgressAlert('error', 'Erro crítico');
             
             setTimeout(() => {
@@ -2140,9 +2010,7 @@ class HardemEditorStorage {
             
             URL.revokeObjectURL(url);
             
-            console.log('📥 JSON gerado para download');
         } catch (error) {
-            console.error('Erro ao gerar JSON:', error);
         }
     }
 
@@ -2164,11 +2032,9 @@ class HardemEditorStorage {
         })
         .then(response => response.json())
         .then(data => {
-            console.log('🔗 Teste de conexão com servidor:', data);
             return data.success;
         })
         .catch(error => {
-            console.error('❌ Erro na conexão com servidor:', error);
             return false;
         });
     }
@@ -2261,7 +2127,6 @@ class HardemEditorStorage {
             }
             
         } catch (error) {
-            console.warn('Erro na otimização agressiva de imagem:', error);
         }
         
         return imageData;
@@ -2308,18 +2173,15 @@ class HardemEditorStorage {
                         // Aceitar se conseguir pelo menos 50% de redução
                         if (compressedData.length < bestResult.length * 0.5) {
                             bestResult = compressedData;
-                            console.log(`🗜️ JPEG super comprimido: ${this.formatBytes(jpegData.length)} → ${this.formatBytes(compressedData.length)} (${quality * 100}%)`);
                             break;
                         }
                     } catch (error) {
-                        console.warn(`Erro ao comprimir com qualidade ${quality}:`, error);
                     }
                 }
                 
                 return bestResult;
             }
         } catch (error) {
-            console.warn('Erro na compressão super agressiva:', error);
         }
         
         return jpegData;
@@ -2331,14 +2193,12 @@ class HardemEditorStorage {
     saveToLocalStorage(exportData) {
         const pageKey = this.getPageKey();
         localStorage.setItem(pageKey, JSON.stringify(exportData.content));
-        console.log(`💾 Conteúdo salvo para página: ${pageKey} (${this.formatBytes(JSON.stringify(exportData.content).length)})`);
     }
 
     /**
      * Salvamento individual por imagem - divide dados grandes em partes menores
      */
     async saveContentInParts(exportData) {
-        console.log('🔄 Iniciando salvamento por partes...');
         this.core.ui.showSaveProgressAlert('processing', 'Salvando por partes...');
         
         const content = exportData.contentMap || exportData.content;
@@ -2371,48 +2231,7 @@ class HardemEditorStorage {
             !(key && key.includes('odometer'))
         );
         
-        console.log(`📊 Dividindo salvamento: ${images.length} imagens, ${backgrounds.length} backgrounds, ${texts.length} textos, ${counters.length} contadores, ${others.length} outros`);
         
-        // Debug detalhado das imagens
-        if (images.length > 0) {
-            console.log('🖼️ Imagens detectadas:', images.map(([key, value]) => ({
-                key,
-                type: value.type,
-                hasData: !!value.src,
-                dataSize: value.src ? Math.round(value.src.length / 1024) + 'KB' : '0KB'
-            })));
-        }
-        
-        // Debug detalhado dos backgrounds
-        if (backgrounds.length > 0) {
-            console.log('🎨 Backgrounds detectados:', backgrounds.map(([key, value]) => ({
-                key,
-                type: value.type,
-                hasData: !!value.backgroundImage,
-                dataSize: value.backgroundImage ? Math.round(value.backgroundImage.length / 1024) + 'KB' : '0KB'
-            })));
-        }
-        
-        // Debug detalhado dos contadores
-        if (counters.length > 0) {
-            console.log('🔢 Contadores detectados:', counters.map(([key, value]) => ({
-                key,
-                counterValue: value.counterValue,
-                counterSuffix: value.counterSuffix,
-                isCounter: value.isCounter
-            })));
-        }
-        
-        // Debug de outros elementos que podem ser imagens
-        console.log('🔍 Todos os elementos no contentMap:', entries.map(([key, value]) => ({
-            key,
-            type: value.type,
-            properties: Object.keys(value),
-            hasSrc: !!value.src,
-            hasBackgroundImage: !!value.backgroundImage,
-            hasText: !!(value.text || value.title || value.description),
-            isCounter: !!value.isCounter
-        })));
         
         const results = [];
         let partNumber = 1;
@@ -2481,17 +2300,12 @@ class HardemEditorStorage {
                         'success'
                     );
                 }, 1000);
-                
-                console.log('✅ Salvamento por partes concluído:', {
-                    totalParts: partNumber,
-                    files: [...results.map(r => r.filename), indexResult.filename]
-                });
+
                 
                 return exportData;
             }
             
         } catch (error) {
-            console.error('❌ Erro no salvamento por partes:', error);
             this.core.ui.showSaveProgressAlert('error', 'Erro no salvamento por partes');
             
             // Fallback para download
@@ -2508,7 +2322,6 @@ class HardemEditorStorage {
      * Salvar imagem na tabela 'imagens' (database-only)
      */
     async saveImageToDatabase(dataKey, imageData, imageNumber) {
-        console.log(`🖼️ Salvando imagem ${imageNumber} na tabela 'imagens': ${dataKey}`, imageData);
         
         try {
             // Verificar se temos dados de imagem válidos
@@ -2535,7 +2348,6 @@ class HardemEditorStorage {
             const extension = mimeType.split('/')[1] || 'jpg';
             const fileName = `img_${timestamp}_${imageNumber}.${extension}`;
             
-            console.log(`📊 Preparando upload: ${fileName}, ${this.formatBytes(estimatedSize)}, tipo: ${mimeType}`);
             
             // Preparar dados para API
             const imagePayload = {
@@ -2553,11 +2365,9 @@ class HardemEditorStorage {
                 timestamp: new Date().toISOString()
             };
             
-            console.log(`📡 Enviando para API: ${Object.keys(imagePayload).join(', ')}`);
             
             // Enviar para API
             const apiUrl = 'api-admin.php';
-            console.log(`📡 URL da API: ${apiUrl}`);
             
             const response = await fetch(apiUrl, {
                 method: 'POST',
@@ -2567,25 +2377,15 @@ class HardemEditorStorage {
                 body: new URLSearchParams(imagePayload).toString()
             });
             
-            console.log(`📡 Resposta da API: ${response.status} ${response.statusText}`);
             
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error(`❌ Erro HTTP ${response.status}:`, errorText);
-                console.error(`📋 Detalhes completos do erro:`, {
-                    status: response.status,
-                    statusText: response.statusText,
-                    headers: Object.fromEntries(response.headers.entries()),
-                    body: errorText
-                });
                 throw new Error(`HTTP ${response.status}: ${response.statusText}\n\nDetalhes: ${errorText}`);
             }
             
             const result = await response.json();
-            console.log(`📥 Resultado da API:`, result);
             
             if (result.success) {
-                console.log(`✅ Imagem ${imageNumber} salva na tabela 'imagens': ID ${result.image_id}`);
                 return {
                     partNumber: imageNumber,
                     description: `imagem-database-${imageNumber}`,
@@ -2599,10 +2399,8 @@ class HardemEditorStorage {
             }
             
         } catch (error) {
-            console.error(`❌ Erro ao salvar imagem ${imageNumber} na base:`, error);
             
             // Fallback: salvar como texto (método antigo)
-            console.log(`🔄 Fallback: salvando imagem ${imageNumber} como texto...`);
             const imageDataFallback = { [dataKey]: imageData };
             return await this.saveDataPart(imageDataFallback, 1000 + imageNumber, `imagem-fallback-${imageNumber}`);
         }
@@ -2613,7 +2411,6 @@ class HardemEditorStorage {
      */
     async saveDataPart(partData, partNumber, description) {
         const partSize = JSON.stringify(partData).length;
-        console.log(`📦 Salvando parte ${partNumber} (${description}): ${this.formatBytes(partSize)}`);
         
         const partExportData = {
             contentMap: partData,
@@ -2643,7 +2440,6 @@ class HardemEditorStorage {
             const result = await response.json();
             
             if (result.success) {
-                console.log(`✅ Parte ${partNumber} salva: ${result.filename || result.file_info?.filename}`);
                 return {
                     partNumber: partNumber,
                     description: description,
@@ -2655,17 +2451,14 @@ class HardemEditorStorage {
             }
             
         } catch (error) {
-            console.error(`❌ Erro ao salvar parte ${partNumber}:`, error);
             
             // Se for erro de tamanho, tentar otimizar ainda mais
             if (error.message.includes('POST Content-Length') || error.message.includes('too large')) {
-                console.log(`🗜️ Tentando otimizar parte ${partNumber}...`);
                 
                 const optimizedData = this.aggressiveOptimization(partData);
                 const optimizedSize = JSON.stringify(optimizedData).length;
                 
                 if (optimizedSize < partSize * 0.8) { // Se conseguiu reduzir pelo menos 20%
-                    console.log(`🗜️ Parte ${partNumber} otimizada: ${this.formatBytes(partSize)} → ${this.formatBytes(optimizedSize)}`);
                     
                     const optimizedExportData = {
                         ...partExportData,
@@ -2690,7 +2483,6 @@ class HardemEditorStorage {
             const filteredContent = this.getBasicFilteredContent();
             
             if (Object.keys(filteredContent).length === 0) {
-                console.warn('Nenhum conteúdo válido para salvar');
                 this.core.ui.showAlert('Nenhum conteúdo válido para salvar.', 'warning');
                 return null;
             }
@@ -2716,7 +2508,6 @@ class HardemEditorStorage {
             return exportData;
             
         } catch (error) {
-            console.error('❌ Erro ao preparar dados de exportação:', error);
             return null;
         }
     }
@@ -2739,7 +2530,6 @@ class HardemEditorStorage {
             return await this.saveContentInParts(exportData);
             
         } catch (error) {
-            console.error('❌ Erro no wrapper de salvamento por partes:', error);
             this.core.ui.showAlert('❌ Erro no salvamento por partes', 'error');
             return null;
         }
@@ -2799,7 +2589,6 @@ class HardemEditorStorage {
         `;
         
         document.body.appendChild(overlay);
-        console.log('🔄 Overlay de carregamento criado');
     }
 
     /**
@@ -2814,7 +2603,6 @@ class HardemEditorStorage {
             
             setTimeout(() => {
                 overlay.remove();
-                console.log('✅ Overlay de carregamento removido');
             }, 300);
         }
     }
@@ -2832,7 +2620,6 @@ class HardemEditorStorage {
             element.setAttribute('data-hardem-hidden', 'true');
         });
         
-        console.log(`🫥 ${elementsToHide.length} elementos escondidos durante carregamento`);
     }
 
     /**
@@ -2847,7 +2634,6 @@ class HardemEditorStorage {
             element.removeAttribute('data-hardem-hidden');
         });
         
-        console.log(`👁️ ${hiddenElements.length} elementos mostrados após carregamento`);
     }
 
     /**
@@ -2919,7 +2705,6 @@ class HardemEditorStorage {
             styleElement.textContent = cssRules.join('\n');
             document.head.appendChild(styleElement);
             
-            console.log(`⚡ Cache CSS criado: ${appliedCount} estilos aplicados instantaneamente`);
         }
     }
 
@@ -2931,7 +2716,6 @@ class HardemEditorStorage {
         const isEditMode = window.location.search.includes('edit=true');
         if (isEditMode) return;
         
-        console.log('⚡ Aplicando cache instantâneo...');
         this.createInstantStyleCache();
     }
 
@@ -2951,7 +2735,6 @@ class HardemEditorStorage {
             }
         }, 300);
         
-        console.log('✅ Loading instantâneo removido - conteúdo visível');
     }
 }
 

@@ -2165,3 +2165,126 @@
 [2025-07-14 01:08:59] [API-ADMIN] Método: GET, Ação: get_normalizations
 [2025-07-14 01:08:59] [DATABASE] Conexão MySQL estabelecida com sucesso
 [2025-07-14 01:08:59] [API-ADMIN] Buscadas 2 normalizações do banco
+[2025-07-14 01:33:30] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-14 01:33:30] [LOAD-DB] Carregando dados para página: index
+[2025-07-14 01:33:30] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 01:33:30] [LOAD-DB] Carregamento concluído - Textos: 0, Imagens: 0
+[2025-07-14 01:33:31] [API-ADMIN] Método: GET, Ação: get_normalizations
+[2025-07-14 01:33:31] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 01:33:31] [API-ADMIN] Buscadas 0 normalizações do banco
+[2025-07-14 01:33:44] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-14 01:33:44] [LOAD-DB] Carregando dados para página: index
+[2025-07-14 01:33:44] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 01:33:44] [LOAD-DB] Carregamento concluído - Textos: 0, Imagens: 0
+[2025-07-14 01:33:45] [API-ADMIN] Método: GET, Ação: get_normalizations
+[2025-07-14 01:33:45] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 01:33:45] [API-ADMIN] Buscadas 0 normalizações do banco
+[2025-07-14 01:33:57] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-14 01:33:57] [LOAD-DB] Carregando dados para página: admin
+[2025-07-14 01:33:57] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 01:33:57] [LOAD-DB] Carregamento concluído - Textos: 0, Imagens: 0
+[2025-07-14 01:33:57] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-14 01:33:57] [LOAD-DB] Carregando dados para página: index
+[2025-07-14 01:33:57] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 01:33:57] [LOAD-DB] Carregamento concluído - Textos: 0, Imagens: 0
+[2025-07-14 01:33:58] [API-ADMIN] Método: GET, Ação: get_normalizations
+[2025-07-14 01:33:58] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 01:33:58] [API-ADMIN] Buscadas 0 normalizações do banco
+[2025-07-14 01:34:09] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-14 01:34:09] [LOAD-DB] Carregando dados para página: index
+[2025-07-14 01:34:09] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 01:34:09] [LOAD-DB] Carregamento concluído - Textos: 0, Imagens: 0
+[2025-07-14 01:34:10] [API-ADMIN] Método: GET, Ação: get_normalizations
+[2025-07-14 01:34:10] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 01:34:10] [API-ADMIN] Buscadas 0 normalizações do banco
+[2025-07-14 01:35:02] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-14 01:35:02] [LOAD-DB] Carregando dados para página: index
+[2025-07-14 01:35:02] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 01:35:02] [LOAD-DB] Carregamento concluído - Textos: 0, Imagens: 0
+[2025-07-14 01:35:03] [API-ADMIN] Método: GET, Ação: get_normalizations
+[2025-07-14 01:35:03] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 01:35:03] [API-ADMIN] Buscadas 0 normalizações do banco
+[2025-07-14 01:35:24] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-14 01:35:24] [LOAD-DB] Carregando dados para página: index
+[2025-07-14 01:35:24] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 01:35:24] [LOAD-DB] Carregamento concluído - Textos: 0, Imagens: 0
+[2025-07-14 01:35:25] [API-ADMIN] Método: GET, Ação: get_normalizations
+[2025-07-14 01:35:25] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 01:35:25] [API-ADMIN] Buscadas 0 normalizações do banco
+[2025-07-14 01:35:37] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-14 01:35:37] [LOAD-DB] Carregando dados para página: index
+[2025-07-14 01:35:37] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 01:35:37] [LOAD-DB] Carregamento concluído - Textos: 0, Imagens: 0
+[2025-07-14 01:35:37] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-14 01:35:37] [LOAD-DB] Carregando dados para página: index
+[2025-07-14 01:35:37] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 01:35:37] [LOAD-DB] Carregamento concluído - Textos: 0, Imagens: 0
+[2025-07-14 01:35:38] [API-ADMIN] Método: GET, Ação: get_normalizations
+[2025-07-14 01:35:38] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 01:35:38] [API-ADMIN] Buscadas 0 normalizações do banco
+[2025-07-14 01:35:41] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-14 01:35:41] [LOAD-DB] Carregando dados para página: index
+[2025-07-14 01:35:41] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 01:35:41] [LOAD-DB] Carregamento concluído - Textos: 0, Imagens: 0
+[2025-07-14 01:35:42] [API-ADMIN] Método: GET, Ação: get_normalizations
+[2025-07-14 01:35:42] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 01:35:42] [API-ADMIN] Buscadas 0 normalizações do banco
+[2025-07-14 01:42:46] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-14 01:42:46] [LOAD-DB] Carregando dados para página: index
+[2025-07-14 01:42:46] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 01:42:46] [LOAD-DB] Carregamento concluído - Textos: 0, Imagens: 0
+[2025-07-14 01:42:46] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-14 01:42:46] [LOAD-DB] Carregando dados para página: index
+[2025-07-14 01:42:46] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 01:42:46] [LOAD-DB] Carregamento concluído - Textos: 0, Imagens: 0
+[2025-07-14 01:42:47] [API-ADMIN] Método: GET, Ação: get_normalizations
+[2025-07-14 01:42:47] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 01:42:47] [API-ADMIN] Buscadas 0 normalizações do banco
+[2025-07-14 02:00:17] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-14 02:00:17] [LOAD-DB] Carregando dados para página: index
+[2025-07-14 02:00:17] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 02:00:17] [LOAD-DB] Carregamento concluído - Textos: 0, Imagens: 0
+[2025-07-14 02:00:17] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-14 02:00:17] [LOAD-DB] Carregando dados para página: index
+[2025-07-14 02:00:17] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 02:00:17] [LOAD-DB] Carregamento concluído - Textos: 0, Imagens: 0
+[2025-07-14 02:00:18] [API-ADMIN] Método: GET, Ação: get_normalizations
+[2025-07-14 02:00:18] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 02:00:18] [API-ADMIN] Buscadas 0 normalizações do banco
+[2025-07-14 02:09:51] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-14 02:09:51] [LOAD-DB] Carregando dados para página: index
+[2025-07-14 02:09:51] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 02:09:51] [LOAD-DB] Carregamento concluído - Textos: 0, Imagens: 0
+[2025-07-14 02:09:51] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-14 02:09:51] [LOAD-DB] Carregando dados para página: index
+[2025-07-14 02:09:51] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 02:09:51] [LOAD-DB] Carregamento concluído - Textos: 0, Imagens: 0
+[2025-07-14 02:09:52] [API-ADMIN] Método: GET, Ação: get_normalizations
+[2025-07-14 02:09:52] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 02:09:52] [API-ADMIN] Buscadas 0 normalizações do banco
+[2025-07-14 02:10:51] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-07-14 02:10:51] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 02:10:51] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-07-14 02:10:51] [SAVE-DB] Página identificada: siteContent_index.html
+[2025-07-14 02:10:51] [SAVE-DB] Iniciando processamento de salvamento no banco de dados
+[2025-07-14 02:10:51] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 02:10:51] [SAVE-DB] Conexão com banco estabelecida com sucesso
+[2025-07-14 02:10:51] [SAVE-DB] Página identificada: siteContent_index.html
+[2025-07-14 02:10:51] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-14 02:10:51] [LOAD-DB] Carregando dados para página: index
+[2025-07-14 02:10:51] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 02:10:51] [LOAD-DB] Carregamento concluído - Textos: 0, Imagens: 0
+[2025-07-14 02:10:52] [API-ADMIN] Método: GET, Ação: get_normalizations
+[2025-07-14 02:10:52] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 02:10:52] [API-ADMIN] Buscadas 0 normalizações do banco
+[2025-07-14 02:20:25] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-14 02:20:25] [LOAD-DB] Carregando dados para página: index
+[2025-07-14 02:20:25] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 02:20:25] [LOAD-DB] Carregamento concluído - Textos: 0, Imagens: 0
+[2025-07-14 02:20:25] [LOAD-DB] Iniciando carregamento de dados do banco
+[2025-07-14 02:20:25] [LOAD-DB] Carregando dados para página: index
+[2025-07-14 02:20:25] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 02:20:25] [LOAD-DB] Carregamento concluído - Textos: 0, Imagens: 0
+[2025-07-14 02:20:25] [API-ADMIN] Método: GET, Ação: get_normalizations
+[2025-07-14 02:20:25] [DATABASE] MySQLi não disponível, usando JSON como banco
+[2025-07-14 02:20:25] [API-ADMIN] Buscadas 0 normalizações do banco

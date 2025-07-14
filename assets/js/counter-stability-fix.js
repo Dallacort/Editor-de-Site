@@ -165,7 +165,6 @@
         const processedCount = processAllVisibleCounters();
         
         if (processedCount > 0) {
-            console.log(`🛡️ Sistema de contadores estáveis ativo (${processedCount} contadores protegidos)`);
         }
         
         // Observar novos contadores que possam aparecer
@@ -188,7 +187,6 @@
     window.resetCounter = function(dataKey) {
         processedCounters.delete(dataKey);
         $(`.odometer[data-key="${dataKey}"]`).removeClass('odometer-processed odometer-triggered');
-        console.log(`🔄 Contador ${dataKey} liberado para reprocessamento`);
     };
     
     // Função pública para resetar todos os contadores
@@ -196,7 +194,6 @@
         processedCounters.clear();
         $('.odometer').removeClass('odometer-processed odometer-triggered');
         systemInitialized = false;
-        console.log('🔄 Todos os contadores liberados');
     };
     
     // Inicializar quando jQuery estiver disponível

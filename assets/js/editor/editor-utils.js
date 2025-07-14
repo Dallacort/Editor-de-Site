@@ -135,7 +135,6 @@ class HardemEditorUtils {
         }
         
         if (attempt >= maxAttempts) {
-            console.warn('Não foi possível gerar data-key único após 100 tentativas');
             finalKey = `fallback-${Date.now()}-${Math.random().toString(36).substr(2, 8)}`;
         }
         
@@ -670,7 +669,6 @@ class HardemEditorUtils {
         const isValid = file.size <= maxSizeBytes;
         
         if (!isValid) {
-            console.warn(`Arquivo muito grande: ${this.formatBytes(file.size)}, máximo permitido: ${maxSizeMB}MB`);
         }
         
         return isValid;
@@ -845,7 +843,6 @@ class HardemEditorUtils {
             // Isso assume que o src é uma URL utilizável (direta, data URI, ou proxy).
             return imageSrc;
         }
-        console.warn('extractImageUrl recebeu uma fonte de imagem inválida:', imageSrc);
         return ''; // Retorna uma string vazia para evitar erros
     }
 }
